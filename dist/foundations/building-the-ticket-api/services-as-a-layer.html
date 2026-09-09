@@ -41,7 +41,7 @@ adds a layer Laravel never pushed you toward: <strong>services</strong>, sitting
 controllers and data. <code>getAllTickets</code> in the controller (previous slide) doesn't
 touch the ticket data itself — it calls <code>ticketService.getAllTickets()</code> and
 returns whatever comes back.</p>
-<pre><code class="hljs language-js"><span class="hljs-comment">// Figure 1.8: the ticket service (src/services/ticket.service.js, excerpt)</span>
+<pre><code class="hljs language-js"><span class="hljs-comment">// Figure 1.9: the ticket service (src/services/ticket.service.js, excerpt)</span>
 <span class="hljs-keyword">let</span> tickets = [
   { <span class="hljs-attr">id</span>: <span class="hljs-number">1</span>, <span class="hljs-attr">subject</span>: <span class="hljs-string">&#x27;Cannot log in&#x27;</span>, <span class="hljs-attr">description</span>: <span class="hljs-string">&#x27;Password reset email never arrives&#x27;</span>, <span class="hljs-attr">status</span>: <span class="hljs-string">&#x27;open&#x27;</span> },
   { <span class="hljs-attr">id</span>: <span class="hljs-number">2</span>, <span class="hljs-attr">subject</span>: <span class="hljs-string">&#x27;Invoice discrepancy&#x27;</span>, <span class="hljs-attr">description</span>: <span class="hljs-string">&#x27;Charged twice for March&#x27;</span>, <span class="hljs-attr">status</span>: <span class="hljs-string">&#x27;open&#x27;</span> },

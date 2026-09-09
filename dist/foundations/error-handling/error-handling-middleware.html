@@ -42,8 +42,8 @@ isn't just a convention; Express literally counts a middleware function's
 argument count to decide whether it's a normal handler or an error handler.
 Four arguments, and Express only ever calls it when something upstream called
 <code>next(err)</code> — exactly what <code>asyncHandler</code> does (previous slide).</p>
-<p>Figure 1.10 is this project's one error handler:</p>
-<pre><code class="hljs language-js"><span class="hljs-comment">// Figure 1.10: turning an error into a response (src/middleware/errorHandler.js)</span>
+<p>Figure 1.11 is this project's one error handler:</p>
+<pre><code class="hljs language-js"><span class="hljs-comment">// Figure 1.11: turning an error into a response (src/middleware/errorHandler.js)</span>
 <span class="hljs-keyword">export</span> <span class="hljs-title function_">default</span> (err, req, res, next) =&gt; {
   <span class="hljs-keyword">const</span> status = err.<span class="hljs-property">status</span> || <span class="hljs-number">500</span>;
 

@@ -36,10 +36,10 @@
     
 
     
-      <div class="slide-body"><p>Figure 1.9 is the entire <code>asyncHandler</code> — small, but worth reading slowly with
+      <div class="slide-body"><p>Figure 1.10 is the entire <code>asyncHandler</code> — small, but worth reading slowly with
 the closures topic from earlier in this lesson, and the previous slide's
 Express-specific async gap, both fresh:</p>
-<pre><code class="hljs language-js"><span class="hljs-comment">// Figure 1.9: catching async errors (src/middleware/asyncHandler.js)</span>
+<pre><code class="hljs language-js"><span class="hljs-comment">// Figure 1.10: catching async errors (src/middleware/asyncHandler.js)</span>
 <span class="hljs-keyword">export</span> <span class="hljs-title function_">default</span> (fn) =&gt; <span class="hljs-function">(<span class="hljs-params">req, res, next</span>) =&gt;</span> {
   <span class="hljs-title class_">Promise</span>.<span class="hljs-title function_">resolve</span>(<span class="hljs-title function_">fn</span>(req, res, next)).<span class="hljs-title function_">catch</span>(next);
 };

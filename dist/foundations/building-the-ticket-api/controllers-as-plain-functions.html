@@ -43,8 +43,8 @@ exported functions, grouped in one file per resource</strong> — no class, no
 constructor, no dependency injection container. An imported module is already a
 singleton in Node, which is the idiomatic substitute for what a DI container
 gives you in Laravel.</p>
-<p>Figure 1.7 shows two of the three ticket controller functions (the third,
-<code>createTicket</code>, follows the same shape and is covered on the next slide):</p>
+<p>Figure 1.7 shows two of the three ticket controller functions — the third,
+<code>createTicket</code>, follows the same shape and is shown right after these two:</p>
 <pre><code class="hljs language-js"><span class="hljs-comment">// Figure 1.7: reading tickets (src/controllers/ticket.controller.js, excerpt)</span>
 <span class="hljs-keyword">import</span> * <span class="hljs-keyword">as</span> ticketService <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;../services/ticket.service.js&#x27;</span>;
 <span class="hljs-keyword">import</span> asyncHandler <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;../middleware/asyncHandler.js&#x27;</span>;
@@ -74,9 +74,35 @@ not-found case itself, by hand.</p>
 <p>Also notice <code>req.params.id</code> is wrapped in <code>Number(...)</code>. Express route
 parameters always arrive as <strong>strings</strong>, even for a route like <code>/:id</code> that only
 ever matches digits — so comparing it against a numeric ID without converting
-first would silently never match. <code>asyncHandler</code> wrapping each function is
-covered properly later this lesson; for now, read it as &quot;makes async errors in
-this function reach Express safely.&quot;</p>
+first would silently never match.</p>
+<p>The third function completes the picture, and it's the first place a request
+body actually gets checked before being trusted with it:</p>
+<pre><code class="hljs language-js"><span class="hljs-comment">// Figure 1.8: creating a ticket (src/controllers/ticket.controller.js, excerpt)</span>
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">const</span> createTicket = <span class="hljs-title function_">asyncHandler</span>(<span class="hljs-title function_">async</span> (req, res) =&gt; {
+  <span class="hljs-keyword">const</span> { subject, description } = req.<span class="hljs-property">body</span>;
+
+  <span class="hljs-keyword">if</span> (!subject || !description) {
+    <span class="hljs-keyword">return</span> res
+      .<span class="hljs-title function_">status</span>(<span class="hljs-number">400</span>)
+      .<span class="hljs-title function_">json</span>({ <span class="hljs-attr">error</span>: { <span class="hljs-attr">message</span>: <span class="hljs-string">&#x27;subject and description are required&#x27;</span> } });
+  }
+
+  <span class="hljs-keyword">const</span> ticket = <span class="hljs-keyword">await</span> ticketService.<span class="hljs-title function_">createTicket</span>({ subject, description });
+  res.<span class="hljs-title function_">status</span>(<span class="hljs-number">201</span>).<span class="hljs-title function_">json</span>(ticket);
+});
+</code></pre>
+<p><code>req.body</code> holds whatever JSON the client sent, parsed automatically by the
+<code>express.json()</code> middleware already registered in <code>app.js</code> (Figure 1.3). The
+<code>if</code> here is a deliberately plain, manual guard — no library yet, just &quot;does
+this request actually have what the endpoint needs?&quot; A proper schema-based
+version arrives with Zod in Week 3; this exact check even gets its own
+automated test later in this lesson. And <code>res.status(201)</code>, instead of the
+<code>200</code> the other two functions send, is REST's status-codes-as-contract idea
+(earlier topic) in practice: <code>201 Created</code> specifically means &quot;a new resource
+now exists.&quot;</p>
+<p><code>asyncHandler</code> wrapping each function is covered properly later this lesson;
+for now, read it as &quot;makes async errors in this function reach Express
+safely.&quot;</p>
 </div>
     
   </main>

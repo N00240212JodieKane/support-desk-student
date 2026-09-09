@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Unit Testing the Service Layer — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        <a class="nav-prev" href="/foundations/testing-the-api/jest-the-test-runner.html">← Jest: the Test Runner</a>
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/foundations/testing-the-api/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        <a class="nav-next" href="/foundations/testing-the-api/endpoint-testing-with-supertest.html">Endpoint Testing with Supertest →</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>Unit Testing the Service Layer</h1>
+    <p class="lede">Testing ticket.service.js in isolation — no HTTP, no server, just a function call and a value back.</p>
+
+    
+
+    
+      <div class="slide-body"><p><code>ticket.service.js</code> (Figure 1.9, services-as-a-layer topic) is exactly the kind
+of code a unit test suits best: plain functions, no database, no network — call
+one, get a value back. A test file can <code>import</code> those functions directly, the
+same way <code>ticket.controller.js</code> does, and call them exactly as they are:</p>
+<pre><code class="hljs language-js"><span class="hljs-comment">// Figure 1.14: unit-testing the service layer (tests/unit/ticket.service.test.js, excerpt)</span>
+<span class="hljs-keyword">import</span> { getTicketById, createTicket } <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;../../src/services/ticket.service.js&#x27;</span>;
+
+<span class="hljs-title function_">describe</span>(<span class="hljs-string">&#x27;ticket.service&#x27;</span>, <span class="hljs-function">() =&gt;</span> {
+  <span class="hljs-title function_">it</span>(<span class="hljs-string">&#x27;getTicketById returns undefined for an unknown id&#x27;</span>, <span class="hljs-title function_">async</span> () =&gt; {
+    <span class="hljs-keyword">const</span> ticket = <span class="hljs-keyword">await</span> <span class="hljs-title function_">getTicketById</span>(<span class="hljs-number">999</span>);
+
+    <span class="hljs-title function_">expect</span>(ticket).<span class="hljs-title function_">toBeUndefined</span>();
+  });
+
+  <span class="hljs-title function_">it</span>(<span class="hljs-string">&#x27;createTicket adds a new ticket with status &quot;open&quot;&#x27;</span>, <span class="hljs-title function_">async</span> () =&gt; {
+    <span class="hljs-keyword">const</span> ticket = <span class="hljs-keyword">await</span> <span class="hljs-title function_">createTicket</span>({
+      <span class="hljs-attr">subject</span>: <span class="hljs-string">&#x27;New issue&#x27;</span>,
+      <span class="hljs-attr">description</span>: <span class="hljs-string">&#x27;Details&#x27;</span>,
+    });
+
+    <span class="hljs-title function_">expect</span>(ticket).<span class="hljs-title function_">toMatchObject</span>({
+      <span class="hljs-attr">subject</span>: <span class="hljs-string">&#x27;New issue&#x27;</span>,
+      <span class="hljs-attr">description</span>: <span class="hljs-string">&#x27;Details&#x27;</span>,
+      <span class="hljs-attr">status</span>: <span class="hljs-string">&#x27;open&#x27;</span>,
+    });
+  });
+});
+</code></pre>
+<p>Nothing here is new syntax — <code>await getTicketById(999)</code> is the same
+<code>async</code>/<code>await</code> from earlier in this lesson, just called from a test instead
+of a controller. What's new is the pair of matchers: <code>.toBeUndefined()</code> checks
+for exactly that value (the documented behaviour when no ticket matches),
+and <code>.toMatchObject({...})</code> checks that the result <em>contains</em> the given
+fields, without demanding an exact match on every property (handy here since
+<code>createTicket</code> also assigns an <code>id</code> this test doesn't want to hardcode).</p>
+<p>This is what makes it a <strong>unit</strong> test rather than an <strong>integration</strong> test: no
+<code>app</code>, no route, no HTTP verb anywhere — just the one function, in isolation.
+That's also why it's possible to write today, a full week before Prisma and a
+real database exist. When <code>ticket.service.js</code> does become real MySQL queries
+from Week 2 onward, this test's shape barely changes — it still just calls
+<code>getTicketById</code> and checks what comes back.</p>
+</div>
+    
+  </main>
+</body>
+</html>

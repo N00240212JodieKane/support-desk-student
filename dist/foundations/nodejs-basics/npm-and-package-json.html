@@ -52,12 +52,19 @@ as the download target instead of <code>vendor/</code>.</p>
   <span class="hljs-attr">&quot;scripts&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
     <span class="hljs-attr">&quot;start&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;node src/server.js&quot;</span><span class="hljs-punctuation">,</span>
     <span class="hljs-attr">&quot;dev&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;node --watch src/server.js&quot;</span><span class="hljs-punctuation">,</span>
-    <span class="hljs-attr">&quot;test&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;echo \&quot;no tests yet — added in Week 3\&quot; &amp;&amp; exit 0&quot;</span>
+    <span class="hljs-attr">&quot;test&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;node --experimental-vm-modules node_modules/jest/bin/jest.js&quot;</span>
   <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">&quot;license&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;UNLICENSED&quot;</span><span class="hljs-punctuation">,</span>
   <span class="hljs-attr">&quot;dependencies&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
     <span class="hljs-attr">&quot;dotenv&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;^17.4.2&quot;</span><span class="hljs-punctuation">,</span>
     <span class="hljs-attr">&quot;express&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;^4.19.2&quot;</span>
+  <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;devDependencies&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
+    <span class="hljs-attr">&quot;jest&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;^30.5.1&quot;</span><span class="hljs-punctuation">,</span>
+    <span class="hljs-attr">&quot;supertest&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;^7.2.2&quot;</span>
+  <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;jest&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
+    <span class="hljs-attr">&quot;testEnvironment&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;node&quot;</span>
   <span class="hljs-punctuation">}</span>
 <span class="hljs-punctuation">}</span>
 </code></pre>
@@ -68,14 +75,19 @@ with a version range (<code>^4.19.2</code> means &quot;4.19.2 or a later compati
 Running <code>npm install</code> reads this list and downloads everything into
 <code>node_modules/</code> — never committed to git (see <code>.gitignore</code>), regenerated on any
 machine from <code>package.json</code> alone, exactly like <code>vendor/</code> from <code>composer.json</code>.</li>
+<li><strong><code>&quot;devDependencies&quot;</code></strong> — packages only needed while <em>developing</em> the
+project, never at runtime in production. <code>jest</code> and <code>supertest</code> are the first
+two here, for testing — covered at the end of this lesson.</li>
 <li><strong><code>&quot;scripts&quot;</code></strong> — named shortcuts run via <code>npm run &lt;name&gt;</code> (<code>npm start</code> is a
 special case that doesn't need <code>run</code>). <code>dev</code> uses Node's built-in <code>--watch</code>
 flag to restart the server automatically on file changes — the Node equivalent
 of <code>php artisan serve</code> restarting, without needing an extra package
-(<code>nodemon</code>) to get it.</li>
+(<code>nodemon</code>) to get it. <code>test</code> is also covered at the end of this lesson.</li>
 <li><strong><code>&quot;type&quot;: &quot;module&quot;</code></strong> — tells Node which module system this project's <code>.js</code>
 files use. That's the very next topic.</li>
 </ul>
+<p>(The <code>&quot;jest&quot;</code> block configures the Jest test runner itself — also covered later
+this lesson; nothing to worry about yet.)</p>
 <p>You won't hand-edit <code>node_modules/</code> or usually <code>package.json</code>'s dependency list
 directly — <code>npm install &lt;package&gt;</code> adds a dependency and updates the file for
 you, the same way <code>composer require</code> does.</p>

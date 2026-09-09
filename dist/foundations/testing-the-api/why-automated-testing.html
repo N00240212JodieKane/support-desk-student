@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Why Automated Tests? — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        <a class="nav-prev" href="/foundations/configuration/dotenv-and-validation.html">← dotenv and Fail-Fast Validation</a>
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/foundations/testing-the-api/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        <a class="nav-next" href="/foundations/testing-the-api/jest-the-test-runner.html">Jest: the Test Runner →</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>Why Automated Tests?</h1>
+    <p class="lede">Poking endpoints by hand with Postman doesn&#39;t scale, and it forgets everything the moment you stop.</p>
+
+    
+
+    
+      <div class="slide-body"><p>You've been checking <code>GET</code>/<code>POST /tickets</code> by hand so far — Postman, curl, or
+the browser. That's a perfectly reasonable way to see whether code you just
+wrote works <em>right now</em>. It stops being reasonable the moment the API has more
+than a handful of endpoints: every change means re-clicking through every case
+you care about, by memory, hoping you don't forget one. Nothing records that
+&quot;missing subject returns 400&quot; was ever checked at all.</p>
+<p>An <strong>automated test</strong> is that same check, written down as code instead of a
+manual step: run some code, assert what should be true about the result, and
+let a tool tell you pass/fail. Once written, it costs nothing to re-run —
+before every commit, or automatically, forever — and it never forgets a case
+you already thought to cover.</p>
+<p>Not every automated test checks the same <em>amount</em> of the system, though, and
+the distinction matters enough to name:</p>
+<ul>
+<li>A <strong>unit test</strong> exercises one function, in isolation, with no database, no
+network, no HTTP involved. Fast, and when it fails you know exactly which
+function is wrong.</li>
+<li>An <strong>integration test</strong> (often called an <strong>endpoint test</strong> for a web API)
+exercises several layers together <em>through the real interface</em> — an actual
+HTTP request, routed by Express, handled by a real controller, calling a
+real service — rather than calling a function directly. Slower than a unit
+test, but it catches problems a unit test can't: a route wired up wrong, a
+middleware that never runs, a status code nobody actually checked.</li>
+</ul>
+<p>Both kinds are used in this project, starting today — a properly running habit
+kicks in from Week 3 as services and validators grow, and a fuller endpoint
+suite (auth, full CRUD flows, the SLA job) arrives in Week 6. But the two
+pieces of <code>src/</code> you already have — <code>ticket.service.js</code>, and the whole
+Express <code>app</code> — are already worth testing exactly as they stand, which is
+where the next few slides start.</p>
+</div>
+    
+  </main>
+</body>
+</html>

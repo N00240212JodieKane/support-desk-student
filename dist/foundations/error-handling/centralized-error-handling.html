@@ -56,9 +56,9 @@ slightly differently by hand.</p>
 <p>This project's approach, now that all three pieces are in view, is the opposite:
 <strong>no controller ever handles its own errors.</strong> Instead:</p>
 <ol>
-<li><code>asyncHandler</code> (Figure 1.9) catches a rejected Promise from any controller and
+<li><code>asyncHandler</code> (Figure 1.10) catches a rejected Promise from any controller and
 calls <code>next(err)</code>.</li>
-<li>Express routes that straight to <code>errorHandler</code> (Figure 1.10) — skipping every
+<li>Express routes that straight to <code>errorHandler</code> (Figure 1.11) — skipping every
 ordinary middleware in between — because of its four-argument signature.</li>
 <li><code>errorHandler</code>, registered last in <code>app.js</code> (Figure 1.3, first topic), is the
 <strong>one and only place</strong> an error becomes a JSON response.</li>

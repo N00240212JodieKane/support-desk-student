@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Endpoint Testing with Supertest — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        <a class="nav-prev" href="/foundations/testing-the-api/unit-testing-the-service-layer.html">← Unit Testing the Service Layer</a>
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/foundations/testing-the-api/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>Endpoint Testing with Supertest</h1>
+    <p class="lede">Sending real HTTP-shaped requests into the exported app, without starting a server or binding a port.</p>
+
+    
+
+    
+      <div class="slide-body"><p>A unit test calling <code>getTicketById</code> directly never touches routing, middleware,
+or status codes — it can't tell you whether <code>GET /tickets/:id</code> is actually
+wired up correctly. For that you need a request to genuinely go through
+Express, the way a real client's would. <strong>Supertest</strong> does exactly that: it
+wraps an Express <code>app</code> object and lets a test send it <code>.get()</code>/<code>.post()</code>
+requests, in-process, and inspect the real response — status code, JSON body,
+headers — that comes back.</p>
+<p>The reason this is possible without a running server at all is the
+<code>app.js</code>/<code>server.js</code> split from earlier this lesson: <code>app.js</code> only ever builds
+and <em>exports</em> the app, and <code>server.js</code> is the one file that calls
+<code>app.listen(...)</code>. A test can import the exported <code>app</code> directly and hand it
+straight to Supertest, skipping <code>server.js</code> — and the port — entirely.</p>
+<pre><code class="hljs language-js"><span class="hljs-comment">// Figure 1.15: endpoint-testing the API (tests/integration/tickets.routes.test.js, excerpt)</span>
+<span class="hljs-keyword">import</span> request <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;supertest&#x27;</span>;
+<span class="hljs-keyword">import</span> app <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;../../src/app.js&#x27;</span>;
+
+<span class="hljs-title function_">describe</span>(<span class="hljs-string">&#x27;GET/POST /tickets&#x27;</span>, <span class="hljs-function">() =&gt;</span> {
+  <span class="hljs-title function_">it</span>(<span class="hljs-string">&#x27;GET /tickets returns the seeded list&#x27;</span>, <span class="hljs-title function_">async</span> () =&gt; {
+    <span class="hljs-keyword">const</span> res = <span class="hljs-keyword">await</span> <span class="hljs-title function_">request</span>(app).<span class="hljs-title function_">get</span>(<span class="hljs-string">&#x27;/tickets&#x27;</span>);
+
+    <span class="hljs-title function_">expect</span>(res.<span class="hljs-property">status</span>).<span class="hljs-title function_">toBe</span>(<span class="hljs-number">200</span>);
+    <span class="hljs-title function_">expect</span>(<span class="hljs-title class_">Array</span>.<span class="hljs-title function_">isArray</span>(res.<span class="hljs-property">body</span>)).<span class="hljs-title function_">toBe</span>(<span class="hljs-literal">true</span>);
+  });
+
+  <span class="hljs-title function_">it</span>(<span class="hljs-string">&#x27;POST /tickets without a subject returns 400&#x27;</span>, <span class="hljs-title function_">async</span> () =&gt; {
+    <span class="hljs-keyword">const</span> res = <span class="hljs-keyword">await</span> <span class="hljs-title function_">request</span>(app)
+      .<span class="hljs-title function_">post</span>(<span class="hljs-string">&#x27;/tickets&#x27;</span>)
+      .<span class="hljs-title function_">send</span>({ <span class="hljs-attr">description</span>: <span class="hljs-string">&#x27;Missing subject&#x27;</span> });
+
+    <span class="hljs-title function_">expect</span>(res.<span class="hljs-property">status</span>).<span class="hljs-title function_">toBe</span>(<span class="hljs-number">400</span>);
+  });
+});
+</code></pre>
+<p><code>request(app).get('/tickets')</code> returns a Promise resolving to a response
+object — familiar shape, same <code>async</code>/<code>await</code> as everywhere else in this
+lesson. The second test is the more interesting one: it never calls
+<code>createTicket</code> directly, it POSTs a body that's <em>missing</em> <code>subject</code> and checks
+that the whole pipeline — routing, the controller's manual validation, the
+response it sends — actually produces a <code>400</code>, exactly as REST's use of status
+codes as part of the contract (this lesson's REST topic) promises it should.</p>
+<p>That's the difference from the previous slide's unit test in one sentence:
+this one is checking that all the pieces fit together through the real
+interface, not that one function returns the right value in isolation. Both
+kinds of test already pass against the code you've built this week — a habit
+this project keeps up, and grows, through every week from here on.</p>
+</div>
+    
+  </main>
+</body>
+</html>

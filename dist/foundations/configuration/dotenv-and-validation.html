@@ -24,7 +24,7 @@
         <a class="nav-up" href="/foundations/configuration/index.html">↑ Up</a>
       </div>
       <div class="nav-slot nav-slot-right">
-        
+        <a class="nav-next" href="/foundations/testing-the-api/why-automated-testing.html">Why Automated Tests? →</a>
       </div>
     </div>
   </nav>
@@ -48,8 +48,8 @@ secrets (a database password, an API key) will live from Week 2 onward — each
 developer keeps their own copy locally. <code>.env.example</code> <em>is</em> committed, holding
 the same keys with placeholder/default values, so a new clone of the project
 shows you exactly what config it needs without exposing anyone's real values.</p>
-<p>Figure 1.12 is where this project loads and checks it:</p>
-<pre><code class="hljs language-js"><span class="hljs-comment">// Figure 1.12: loading and validating config (src/config/env.js)</span>
+<p>Figure 1.13 is where this project loads and checks it:</p>
+<pre><code class="hljs language-js"><span class="hljs-comment">// Figure 1.13: loading and validating config (src/config/env.js)</span>
 <span class="hljs-keyword">import</span> <span class="hljs-string">&#x27;dotenv/config&#x27;</span>;
 
 <span class="hljs-keyword">const</span> port = <span class="hljs-title class_">Number</span>(process.<span class="hljs-property">env</span>.<span class="hljs-property">PORT</span>);
