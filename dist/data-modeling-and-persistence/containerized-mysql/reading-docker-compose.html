@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Reading docker-compose.yml — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        <a class="nav-prev" href="/data-modeling-and-persistence/containerized-mysql/why-docker-for-mysql.html">← Why Docker for MySQL?</a>
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/data-modeling-and-persistence/containerized-mysql/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        <a class="nav-next" href="/data-modeling-and-persistence/containerized-mysql/database-url.html">DATABASE_URL →</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>Reading docker-compose.yml</h1>
+    <p class="lede">The mysql service definition: image, credentials, port, and where the data actually lives.</p>
+
+    
+
+    
+      <div class="slide-body"><p>Figure 2.1 is this project's entire <code>docker-compose.yml</code> at this point in the
+build.</p>
+<pre><code class="hljs language-yaml"><span class="hljs-comment"># Figure 2.1: local infrastructure (docker-compose.yml)</span>
+<span class="hljs-attr">services:</span>
+  <span class="hljs-attr">mysql:</span>
+    <span class="hljs-attr">image:</span> <span class="hljs-string">mysql:8.0</span>
+    <span class="hljs-attr">restart:</span> <span class="hljs-string">unless-stopped</span>
+    <span class="hljs-attr">environment:</span>
+      <span class="hljs-attr">MYSQL_ROOT_PASSWORD:</span> <span class="hljs-string">root</span>
+      <span class="hljs-attr">MYSQL_DATABASE:</span> <span class="hljs-string">support_desk</span>
+    <span class="hljs-attr">ports:</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-string">&#x27;3306:3306&#x27;</span>
+    <span class="hljs-attr">volumes:</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-string">mysql-data:/var/lib/mysql</span>
+
+<span class="hljs-attr">volumes:</span>
+  <span class="hljs-attr">mysql-data:</span>
+</code></pre>
+<p>A few parts worth naming:</p>
+<ul>
+<li><strong><code>image: mysql:8.0</code></strong> — pulls the official MySQL image from Docker Hub the
+first time it's needed; no manual MySQL install anywhere.</li>
+<li><strong><code>environment</code></strong> — sets the root password and creates a database named
+<code>support_desk</code> automatically the first time the container starts.</li>
+<li><strong><code>ports: '3306:3306'</code></strong> — maps MySQL's default port out of the container
+and onto your machine, so anything running on the host (this API, a GUI
+client) can connect to <code>localhost:3306</code> as if MySQL were installed locally.</li>
+<li><strong><code>volumes</code></strong> — without this, the container's filesystem — including your
+data — is thrown away every time the container stops. The named volume
+<code>mysql-data</code> persists it on disk instead, so restarting the container
+doesn't wipe your seeded tickets.</li>
+</ul>
+<p><code>docker compose up -d mysql</code> starts just this one service, in the background
+(<code>-d</code>, detached) so it keeps running without tying up your terminal.</p>
+</div>
+    
+  </main>
+</body>
+</html>

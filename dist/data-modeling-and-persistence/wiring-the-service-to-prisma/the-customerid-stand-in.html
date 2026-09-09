@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>The customerId Stand-In — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        <a class="nav-prev" href="/data-modeling-and-persistence/wiring-the-service-to-prisma/rewriting-the-ticket-service.html">← Rewriting the Ticket Service</a>
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/data-modeling-and-persistence/wiring-the-service-to-prisma/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        <a class="nav-next" href="/data-modeling-and-persistence/wiring-the-service-to-prisma/defensive-id-parsing.html">Defensive id Parsing →</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>The customerId Stand-In</h1>
+    <p class="lede">createTicket needs to know who the customer is — and there&#39;s no logged-in user yet to ask.</p>
+
+    
+
+    
+      <div class="slide-body"><p><code>schema.prisma</code>'s <code>Ticket.customerId</code> (one-to-many relations topic) is
+required, not nullable — every ticket belongs to a customer, by design. But
+this project has no authentication yet; that's Week 4. Until then,
+<code>createTicket</code> takes <code>customerId</code> as a perfectly ordinary field in the
+request body, alongside <code>subject</code> and <code>description</code>:</p>
+<pre><code class="hljs language-js"><span class="hljs-comment">// Figure 2.15: a temporary stand-in (src/controllers/ticket.controller.js, excerpt)</span>
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">const</span> createTicket = <span class="hljs-title function_">asyncHandler</span>(<span class="hljs-title function_">async</span> (req, res) =&gt; {
+  <span class="hljs-keyword">const</span> { subject, description, customerId } = req.<span class="hljs-property">body</span>;
+
+  <span class="hljs-keyword">if</span> (!subject || !description || !customerId) {
+    <span class="hljs-keyword">return</span> res
+      .<span class="hljs-title function_">status</span>(<span class="hljs-number">400</span>)
+      .<span class="hljs-title function_">json</span>({ <span class="hljs-attr">error</span>: { <span class="hljs-attr">message</span>: <span class="hljs-string">&#x27;subject, description and customerId are required&#x27;</span> } });
+  }
+
+  <span class="hljs-keyword">const</span> ticket = <span class="hljs-keyword">await</span> ticketService.<span class="hljs-title function_">createTicket</span>({
+    subject,
+    description,
+    <span class="hljs-attr">customerId</span>: <span class="hljs-title class_">Number</span>(customerId),
+  });
+  res.<span class="hljs-title function_">status</span>(<span class="hljs-number">201</span>).<span class="hljs-title function_">json</span>(ticket);
+});
+</code></pre>
+<p>This is deliberately a placeholder, not a real design decision — anyone
+could currently create a ticket &quot;as&quot; any customer id they like, simply by
+naming a different one in the request body, which is obviously not
+acceptable for a real API. It's called out here so you're not left wondering
+whether it was missed: Week 4 replaces this field entirely with
+<code>req.user.id</code>, read off the authenticated request instead of trusted from
+the body — the same manual-check style already used for <code>subject</code> and
+<code>description</code> in Lesson 1, just extended by one more required field for now.
+<code>Number(customerId)</code> is the same string-to-number conversion <code>req.params.id</code>
+already needed in the previous lesson — JSON bodies preserve number types,
+but it costs nothing to be defensive here too.</p>
+</div>
+    
+  </main>
+</body>
+</html>

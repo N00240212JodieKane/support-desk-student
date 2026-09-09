@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Fields and Constraints — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        <a class="nav-prev" href="/data-modeling-and-persistence/modeling-the-schema-in-prisma/anatomy-of-schema-prisma.html">← Anatomy of schema.prisma</a>
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/data-modeling-and-persistence/modeling-the-schema-in-prisma/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        <a class="nav-next" href="/data-modeling-and-persistence/modeling-the-schema-in-prisma/one-to-many-relations.html">One-to-Many Relations →</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>Fields and Constraints</h1>
+    <p class="lede">The User model: scalar fields, an enum, and the declarative attributes that replace Eloquent&#39;s $fillable and validation rules.</p>
+
+    
+
+    
+      <div class="slide-body"><p>Figure 2.5 is the <code>User</code> model's own fields — its relationships to <code>Ticket</code>,
+<code>Comment</code>, and the rest are trimmed for now and covered over the next couple
+of slides.</p>
+<pre><code class="hljs language-prisma"><span class="hljs-comment">// Figure 2.5: a plain model (prisma/schema.prisma, excerpt)</span>
+<span class="hljs-class"><span class="hljs-keyword">enum</span> <span class="hljs-title">Role</span> </span>{
+  customer
+  agent
+  admin
+}
+
+<span class="hljs-class"><span class="hljs-keyword">model</span> <span class="hljs-title">User</span> </span>{
+  id        <span class="hljs-type">Int</span>      <span class="hljs-attribute">@id</span> <span class="hljs-attribute">@default</span>(<span class="hljs-built_in">autoincrement</span>())
+  name      <span class="hljs-type">String</span>
+  email     <span class="hljs-type">String</span>   <span class="hljs-attribute">@unique</span>
+  password  <span class="hljs-type">String</span>
+  role      Role     <span class="hljs-attribute">@default</span>(customer)
+  createdAt <span class="hljs-type">DateTime</span> <span class="hljs-attribute">@default</span>(<span class="hljs-built_in">now</span>())
+}
+</code></pre>
+<p>Each line is <code>fieldName Type</code>, plus optional <strong>attributes</strong> (the <code>@</code>-prefixed
+parts) constraining that field:</p>
+<ul>
+<li><strong><code>enum Role</code></strong> — a fixed set of allowed string values, declared once and
+reused as a field's type. MySQL itself supports this directly (an <code>ENUM</code>
+column); Prisma just gives it a name you can reuse.</li>
+<li><strong><code>@id</code></strong> — the primary key. <strong><code>@default(autoincrement())</code></strong> — MySQL
+assigns the next integer automatically, same idea as Eloquent's default
+auto-incrementing <code>id</code>.</li>
+<li><strong><code>@unique</code></strong> — a uniqueness constraint enforced by the database itself
+(a unique index), not just application code checking before insert.</li>
+<li><strong><code>@default(customer)</code></strong> / <strong><code>@default(now())</code></strong> — a column default,
+applied by the database if no value is given on insert.</li>
+</ul>
+<p>This is more declarative than Eloquent, where a model class mostly describes
+<em>behaviour</em> (relationships, accessors, scopes) and leaves column-level
+constraints to the migration file, written separately. Here, the constraint
+lives right next to the field it constrains, in the one file that's also
+about to generate both the migration and the client.</p>
+</div>
+    
+  </main>
+</body>
+</html>

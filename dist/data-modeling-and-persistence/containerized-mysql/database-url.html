@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>DATABASE_URL — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        <a class="nav-prev" href="/data-modeling-and-persistence/containerized-mysql/reading-docker-compose.html">← Reading docker-compose.yml</a>
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/data-modeling-and-persistence/containerized-mysql/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        <a class="nav-next" href="/data-modeling-and-persistence/modeling-the-schema-in-prisma/what-is-prisma.html">What Is Prisma? →</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>DATABASE_URL</h1>
+    <p class="lede">One connection string, encoding everything Prisma needs to find and log into the database.</p>
+
+    
+
+    
+      <div class="slide-body"><p>Everything Prisma needs to know to reach MySQL — who to log in as, what
+password, which host and port, which database — gets encoded into a single
+<strong>connection string</strong>, read from <code>.env</code> the same way <code>PORT</code> was in Week 1.</p>
+<pre><code class="hljs"># Figure 2.2: the new setting (.env.example, excerpt)
+DATABASE_URL=&quot;mysql://root:root@localhost:3306/support_desk&quot;
+</code></pre>
+<p>Reading it left to right: <code>mysql://</code> (which database engine to speak),
+<code>root:root</code> (username:password), <code>@localhost:3306</code> (host:port), and
+<code>/support_desk</code> (the database name) — matching the root password, port, and
+database name set in <code>docker-compose.yml</code> on the previous slide exactly.
+Point this at a differently-configured MySQL (a different port, a real
+password, a managed cloud instance later on) and only this one line changes —
+nothing in <code>schema.prisma</code> or the application code ever hardcodes a host or
+password.</p>
+<p>As with <code>PORT</code>, <code>.env</code> itself is never committed (it's where the <em>real</em> value
+lives for your machine); <code>.env.example</code> documents the shape every developer's
+<code>.env</code> needs, with placeholder credentials that happen to match this
+project's own <code>docker-compose.yml</code> for convenience.</p>
+</div>
+    
+  </main>
+</body>
+</html>

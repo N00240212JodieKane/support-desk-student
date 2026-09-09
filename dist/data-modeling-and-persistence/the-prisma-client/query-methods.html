@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Query Methods — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        <a class="nav-prev" href="/data-modeling-and-persistence/the-prisma-client/the-client-as-a-singleton.html">← The Client as a Singleton</a>
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/data-modeling-and-persistence/the-prisma-client/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        <a class="nav-next" href="/data-modeling-and-persistence/running-and-evolving-locally/first-time-setup.html">First-Time Setup →</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>Query Methods</h1>
+    <p class="lede">findMany, findUnique, create — one object per model, named after it, with methods that return Promises.</p>
+
+    
+
+    
+      <div class="slide-body"><p>The generated client exposes one property per model from <code>schema.prisma</code>,
+lower-cased — <code>prisma.user</code>, <code>prisma.ticket</code>, <code>prisma.tag</code>, and so on — each
+with the same family of query methods. A few used throughout this project,
+shown here generically rather than pulled from <code>ticket.service.js</code> directly
+(that's the very next topic):</p>
+<pre><code class="hljs language-js"><span class="hljs-comment">// illustrative — not from this project&#x27;s code</span>
+<span class="hljs-keyword">await</span> prisma.<span class="hljs-property">user</span>.<span class="hljs-title function_">findMany</span>();                     <span class="hljs-comment">// every row</span>
+<span class="hljs-keyword">await</span> prisma.<span class="hljs-property">user</span>.<span class="hljs-title function_">findUnique</span>({ <span class="hljs-attr">where</span>: { <span class="hljs-attr">id</span>: <span class="hljs-number">1</span> } }); <span class="hljs-comment">// one row, by a unique field</span>
+<span class="hljs-keyword">await</span> prisma.<span class="hljs-property">user</span>.<span class="hljs-title function_">create</span>({ <span class="hljs-attr">data</span>: { <span class="hljs-attr">name</span>: <span class="hljs-string">&#x27;Ada&#x27;</span>, <span class="hljs-attr">email</span>: <span class="hljs-string">&#x27;ada@example.com&#x27;</span> } });
+</code></pre>
+<p>Every one of these returns a <strong>Promise</strong> — the same <code>async</code>/<code>await</code> from
+Lesson 1, not new syntax, just a new thing on the other end of it: an actual
+round trip to MySQL instead of a plain array lookup. <code>findUnique</code> specifically
+requires its <code>where</code> to target a field marked <code>@id</code> or <code>@unique</code> in the
+schema (<code>id</code>, or <code>email</code> on <code>User</code>) — Prisma can guarantee at most one
+matching row for those, which is what makes <code>findUnique</code> return a single
+object (or <code>null</code>) rather than an array.</p>
+<p>One more shape worth knowing before the next topic: <code>include</code> and <code>select</code>,
+passed alongside <code>where</code>, control <em>what comes back</em> — <code>include</code> pulls in a
+related model (a ticket's <code>customer</code>, from the relations topics), and
+<code>select</code> narrows which fields of a model actually get returned, rather than
+every column. Both matter in <code>ticket.service.js</code>, coming up next.</p>
+</div>
+    
+  </main>
+</body>
+</html>

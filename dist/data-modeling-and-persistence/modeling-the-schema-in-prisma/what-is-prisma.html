@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>What Is Prisma? — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        <a class="nav-prev" href="/data-modeling-and-persistence/containerized-mysql/database-url.html">← DATABASE_URL</a>
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/data-modeling-and-persistence/modeling-the-schema-in-prisma/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        <a class="nav-next" href="/data-modeling-and-persistence/modeling-the-schema-in-prisma/installing-prisma.html">Installing Prisma →</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>What Is Prisma?</h1>
+    <p class="lede">An ORM for Node — where it resembles Eloquent, and where it deliberately doesn&#39;t.</p>
+
+    
+
+    
+      <div class="slide-body"><p>Laravel's <strong>Eloquent</strong> gave you models with query-building methods, migrations
+that describe schema changes as PHP, and a CLI (<code>artisan</code>) that ties it all
+together. <strong>Prisma</strong> plays the same three roles for Node — an ORM (Object-
+Relational Mapper: your code calls methods, Prisma turns them into SQL),
+migrations, and a CLI (<code>npx prisma ...</code>) — but arrives at them differently
+enough to be worth pausing on before writing any of it.</p>
+<p>The biggest difference: Eloquent models are PHP classes you write by hand,
+each describing one table's shape and relationships in code
+(<code>protected $fillable</code>, <code>hasMany()</code>, <code>belongsTo()</code>). Prisma flips that
+around — you describe every model in <strong>one plain-text schema file</strong>,
+<code>schema.prisma</code>, using its own small declarative language, not JavaScript.
+From that one file, Prisma <em>generates</em> two things for you: the SQL migration
+that creates/changes real tables (next topic), and a fully-typed JavaScript
+client your code actually calls at runtime (two topics from now). You never
+hand-write either — both are always derived from the schema, which is why
+the schema file is the single source of truth for your data model, in a way
+Eloquent's scattered model classes aren't quite.</p>
+</div>
+    
+  </main>
+</body>
+</html>

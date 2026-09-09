@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Lecture Notes — Support Desk API</title>
+  <title>Containerized MySQL for Local Dev — Support Desk API</title>
   <link rel="stylesheet" href="/assets/hljs-theme.css">
   <link rel="stylesheet" href="/assets/style.css">
 </head>
@@ -21,7 +21,7 @@
         
       </div>
       <div class="nav-slot nav-slot-center">
-        
+        <a class="nav-up" href="/data-modeling-and-persistence/index.html">↑ Up</a>
       </div>
       <div class="nav-slot nav-slot-right">
         
@@ -30,20 +30,25 @@
   </nav>
 
   <main class="content">
-    <h1>Lecture Notes</h1>
-    
+    <h1>Containerized MySQL for Local Dev</h1>
+    <p class="lede">Running MySQL locally via Docker Compose, and the connection string Prisma needs to reach it.</p>
 
     
       <ul class="listing">
         
           <li>
-            <a href="/foundations/index.html">Foundations &amp; REST Basics</a>
-            <p>The Node.js runtime, Express fundamentals, and building GET/POST /tickets against an in-memory store.</p>
+            <a href="/data-modeling-and-persistence/containerized-mysql/why-docker-for-mysql.html">Why Docker for MySQL?</a>
+            <p>Real persistence means a real database server running somewhere — Docker is the fastest way to get one.</p>
           </li>
         
           <li>
-            <a href="/data-modeling-and-persistence/index.html">Data Modeling &amp; Persistence</a>
-            <p>Relational modeling in Prisma, migrations and seeding against MySQL, and swapping the in-memory ticket store for real Prisma queries.</p>
+            <a href="/data-modeling-and-persistence/containerized-mysql/reading-docker-compose.html">Reading docker-compose.yml</a>
+            <p>The mysql service definition: image, credentials, port, and where the data actually lives.</p>
+          </li>
+        
+          <li>
+            <a href="/data-modeling-and-persistence/containerized-mysql/database-url.html">DATABASE_URL</a>
+            <p>One connection string, encoding everything Prisma needs to find and log into the database.</p>
           </li>
         
       </ul>

@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mocking the Integration Test — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        <a class="nav-prev" href="/data-modeling-and-persistence/testing-a-prisma-backed-service/mocking-esm-modules.html">← Mocking ESM Modules</a>
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/data-modeling-and-persistence/testing-a-prisma-backed-service/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>Mocking the Integration Test</h1>
+    <p class="lede">The same technique, one layer higher: a real Express app, still with no real database underneath it.</p>
+
+    
+
+    
+      <div class="slide-body"><p>Lesson 1's endpoint test (Figure 1.15) sent real HTTP-shaped requests into
+the exported <code>app</code> via Supertest — genuinely exercising routing and
+middleware, not calling a function directly. That's still true here; only
+what's underneath has changed:</p>
+<pre><code class="hljs language-js"><span class="hljs-comment">// Figure 2.20: mocking one layer higher (tests/integration/tickets.routes.test.js, excerpt)</span>
+jest.<span class="hljs-title function_">unstable_mockModule</span>(<span class="hljs-string">&#x27;../../src/config/db.js&#x27;</span>, <span class="hljs-function">() =&gt;</span> ({
+  <span class="hljs-attr">default</span>: mockPrisma,
+}));
+
+<span class="hljs-keyword">const</span> { <span class="hljs-attr">default</span>: app } = <span class="hljs-keyword">await</span> <span class="hljs-keyword">import</span>(<span class="hljs-string">&#x27;../../src/app.js&#x27;</span>);
+
+<span class="hljs-title function_">it</span>(<span class="hljs-string">&#x27;POST /tickets without a customerId returns 400&#x27;</span>, <span class="hljs-title function_">async</span> () =&gt; {
+  <span class="hljs-keyword">const</span> res = <span class="hljs-keyword">await</span> <span class="hljs-title function_">request</span>(app)
+    .<span class="hljs-title function_">post</span>(<span class="hljs-string">&#x27;/tickets&#x27;</span>)
+    .<span class="hljs-title function_">send</span>({ <span class="hljs-attr">subject</span>: <span class="hljs-string">&#x27;Cannot reset password&#x27;</span>, <span class="hljs-attr">description</span>: <span class="hljs-string">&#x27;Link expired&#x27;</span> });
+
+  <span class="hljs-title function_">expect</span>(res.<span class="hljs-property">status</span>).<span class="hljs-title function_">toBe</span>(<span class="hljs-number">400</span>);
+  <span class="hljs-title function_">expect</span>(mockPrisma.<span class="hljs-property">ticket</span>.<span class="hljs-property">create</span>).<span class="hljs-property">not</span>.<span class="hljs-title function_">toHaveBeenCalled</span>();
+});
+</code></pre>
+<p>Exactly the same <code>jest.unstable_mockModule()</code> + dynamic <code>import()</code> pattern as
+the unit test — just importing <code>app.js</code> afterward instead of
+<code>ticket.service.js</code> directly. <code>app.js</code> imports routes, which import
+controllers, which import <code>ticket.service.js</code>, which imports <code>db.js</code>
+(Figure 2.14's whole chain) — mocking <code>db.js</code> before any of that chain loads
+means the <em>entire</em> request — real Express routing, the real controller's
+validation, the real service's Prisma calls — runs for real, right up until
+the one point it would have actually touched a database.</p>
+<p>The last assertion is worth noticing on its own:
+<code>expect(mockPrisma.ticket.create).not.toHaveBeenCalled()</code> confirms the
+request was rejected by the controller's <code>customerId</code> check (the previous
+topic) <em>before</em> it ever reached Prisma — proof the validation actually
+short-circuits the database call, not just that a <code>400</code> came back.</p>
+</div>
+    
+  </main>
+</body>
+</html>

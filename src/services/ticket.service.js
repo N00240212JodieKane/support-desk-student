@@ -1,30 +1,36 @@
-// Week 1: an in-memory array stands in for the database, so the API shape
-// (routes, controllers, request/response flow) can be built before Prisma +
-// MySQL are introduced in Week 2. Functions are already `async` even though
-// nothing here awaits anything yet — that's deliberate, so the controller
-// layer above doesn't have to change shape once these become real DB calls.
-let tickets = [
-  {
-    id: 1,
-    subject: 'Cannot log in',
-    description: 'Password reset email never arrives',
-    status: 'open',
-  },
-  {
-    id: 2,
-    subject: 'Invoice discrepancy',
-    description: 'Charged twice for March',
-    status: 'open',
-  },
-];
-let nextId = tickets.length + 1;
+// Week 2: swaps the in-memory array from Week 1 for Prisma-backed MySQL
+// queries. Function signatures are unchanged from Week 1, so the controller
+// layer above didn't need to change shape — only what's inside these
+// functions changed, which was the point of keeping them `async` from the
+// start (see CLAUDE.md).
+import prisma from '../config/db.js';
 
-export const getAllTickets = async () => tickets;
+// A minimal, password-free shape for the user relations below — nothing
+// controller-facing should ever see the password column.
+const userSummary = { select: { id: true, name: true, email: true } };
 
-export const getTicketById = async (id) => tickets.find((ticket) => ticket.id === id);
+export const getAllTickets = async () =>
+  prisma.ticket.findMany({
+    orderBy: { id: 'asc' },
+    include: {
+      customer: userSummary,
+      assignedAgent: userSummary,
+    },
+  });
 
-export const createTicket = async ({ subject, description }) => {
-  const ticket = { id: nextId++, subject, description, status: 'open' };
-  tickets.push(ticket);
-  return ticket;
-};
+export const getTicketById = async (id) =>
+  prisma.ticket.findUnique({
+    where: { id },
+    include: {
+      customer: userSummary,
+      assignedAgent: userSummary,
+    },
+  });
+
+export const createTicket = async ({ subject, description, customerId }) =>
+  prisma.ticket.create({
+    data: { subject, description, customerId },
+    include: {
+      customer: userSummary,
+    },
+  });

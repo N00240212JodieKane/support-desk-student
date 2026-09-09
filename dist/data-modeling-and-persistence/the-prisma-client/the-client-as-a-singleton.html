@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>The Client as a Singleton — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        <a class="nav-prev" href="/data-modeling-and-persistence/the-prisma-client/generating-the-client.html">← Generating the Client</a>
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/data-modeling-and-persistence/the-prisma-client/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        <a class="nav-next" href="/data-modeling-and-persistence/the-prisma-client/query-methods.html">Query Methods →</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>The Client as a Singleton</h1>
+    <p class="lede">One shared PrismaClient instance for the whole app, for exactly the same reason Lesson 1&#39;s controllers needed no DI container.</p>
+
+    
+
+    
+      <div class="slide-body"><p><code>PrismaClient</code> is a class — <code>new PrismaClient()</code> creates an instance that
+manages its own connection pool to MySQL. Creating more than one of these in
+a running app is wasteful at best (each opens its own pool) and a real bug at
+worst, so every part of the app needs to share <strong>one</strong> instance. Figure 2.13
+is the whole of this project's answer to that.</p>
+<pre><code class="hljs language-js"><span class="hljs-comment">// Figure 2.13: the shared Prisma client (src/config/db.js)</span>
+<span class="hljs-keyword">import</span> { <span class="hljs-title class_">PrismaClient</span> } <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;@prisma/client&#x27;</span>;
+
+<span class="hljs-keyword">const</span> prisma = <span class="hljs-keyword">new</span> <span class="hljs-title class_">PrismaClient</span>();
+
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">default</span> prisma;
+</code></pre>
+<p>This is the exact same &quot;import = singleton&quot; idea from Lesson 1's
+controllers-as-plain-functions topic, applied to a real object instead of a
+group of functions: Node's module loader runs a file's top-level code
+<strong>once</strong>, the first time it's imported, and caches the result — every other
+<code>import prisma from '../config/db.js'</code>, anywhere in the app, gets back that
+same already-constructed instance, not a fresh <code>new PrismaClient()</code> each
+time. No DI container, no manual setup in <code>app.js</code> to wire a single instance
+through every layer by hand — just one small file that constructs it, and
+every service importing that file instead of <code>@prisma/client</code> directly.</p>
+</div>
+    
+  </main>
+</body>
+</html>

@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>One-to-Many Relations — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        <a class="nav-prev" href="/data-modeling-and-persistence/modeling-the-schema-in-prisma/fields-and-constraints.html">← Fields and Constraints</a>
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/data-modeling-and-persistence/modeling-the-schema-in-prisma/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        <a class="nav-next" href="/data-modeling-and-persistence/modeling-the-schema-in-prisma/two-relations-one-table.html">Two Relations, One Table →</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>One-to-Many Relations</h1>
+    <p class="lede">A customer&#39;s tickets: a foreign key column, plus the relation field Prisma uses to load it.</p>
+
+    
+
+    
+      <div class="slide-body"><p>A customer submits many tickets — the same 1:M shape you already built in
+Laravel with <code>belongsTo</code>/<code>hasMany</code>. Figure 2.6 shows the <code>Ticket</code> side of it.</p>
+<pre><code class="hljs language-prisma"><span class="hljs-comment">// Figure 2.6: a foreign key relation (prisma/schema.prisma, excerpt)</span>
+<span class="hljs-class"><span class="hljs-keyword">model</span> <span class="hljs-title">Ticket</span> </span>{
+  id         <span class="hljs-type">Int</span>    <span class="hljs-attribute">@id</span> <span class="hljs-attribute">@default</span>(<span class="hljs-built_in">autoincrement</span>())
+  subject    <span class="hljs-type">String</span>
+  customerId <span class="hljs-type">Int</span>
+
+  customer User <span class="hljs-attribute">@relation</span>(fields: [customerId], references: [id])
+}
+</code></pre>
+<p><code>customerId Int</code> is the actual foreign key column MySQL stores — no different
+in principle from a Laravel migration's <code>$table-&gt;foreignId('customer_id')</code>.
+The <code>customer</code> field underneath it is new: it's not a column at all, but a
+<strong>relation field</strong> — Prisma's equivalent of Eloquent's <code>belongsTo()</code> method.
+It tells the generated client &quot;a <code>Ticket</code>'s <code>customer</code> is the <code>User</code> whose
+<code>id</code> matches this row's <code>customerId</code>&quot;, which is what makes
+<code>prisma.ticket.findMany({ include: { customer: true } })</code> possible later —
+fetching a ticket <em>and</em> its customer in one call, without writing the join
+yourself.</p>
+<p>On the <code>User</code> side, the reverse relation is a field like
+<code>tickets Ticket[]</code> — an array, since one customer has many tickets. The real
+<code>User</code> model actually needs <em>two</em> separate fields like this, which is exactly
+what the next slide is about.</p>
+</div>
+    
+  </main>
+</body>
+</html>

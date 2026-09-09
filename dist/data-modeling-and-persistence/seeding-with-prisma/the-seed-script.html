@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>The Seed Script — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        <a class="nav-prev" href="/data-modeling-and-persistence/migrations-with-prisma/reading-a-migration.html">← Reading a Migration</a>
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/data-modeling-and-persistence/seeding-with-prisma/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        <a class="nav-next" href="/data-modeling-and-persistence/seeding-with-prisma/idempotent-seeding.html">Idempotent Seeding →</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>The Seed Script</h1>
+    <p class="lede">A plain Node script, run through Prisma&#39;s CLI, that fills a fresh database with realistic dev data.</p>
+
+    
+
+    
+      <div class="slide-body"><p>Laravel's seeders are classes run through Artisan; Prisma's equivalent is
+refreshingly plain — just a Node script that imports the Prisma Client
+(next-but-one topic) and calls it like any other code would. Figure 2.11 is
+an excerpt of it.</p>
+<pre><code class="hljs language-js"><span class="hljs-comment">// Figure 2.11: seeding users (prisma/seed.js, excerpt)</span>
+<span class="hljs-keyword">import</span> prisma <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;../src/config/db.js&#x27;</span>;
+
+<span class="hljs-keyword">async</span> <span class="hljs-keyword">function</span> <span class="hljs-title function_">main</span>(<span class="hljs-params"></span>) {
+  <span class="hljs-keyword">const</span> customer1 = <span class="hljs-keyword">await</span> prisma.<span class="hljs-property">user</span>.<span class="hljs-title function_">create</span>({
+    <span class="hljs-attr">data</span>: {
+      <span class="hljs-attr">name</span>: <span class="hljs-string">&#x27;Casey Customer&#x27;</span>,
+      <span class="hljs-attr">email</span>: <span class="hljs-string">&#x27;casey@example.com&#x27;</span>,
+      <span class="hljs-attr">password</span>: <span class="hljs-string">&#x27;placeholder-not-hashed&#x27;</span>,
+      <span class="hljs-attr">role</span>: <span class="hljs-string">&#x27;customer&#x27;</span>,
+    },
+  });
+
+  <span class="hljs-comment">// ...tags, tickets, comments, watchers, a notification — each referencing</span>
+  <span class="hljs-comment">// the ids created above.</span>
+}
+
+<span class="hljs-title function_">main</span>().<span class="hljs-title function_">finally</span>(<span class="hljs-function">() =&gt;</span> prisma.$disconnect());
+</code></pre>
+<p>Nothing here is Prisma-specific syntax to memorise — it's <code>async</code>/<code>await</code>
+calling ordinary functions, the same shape as every service function in this
+project. The <code>password</code> value is a plain placeholder string, not a real
+hash — Week 4 introduces <code>bcrypt</code> and hashes passwords for real; seed data
+doesn't need to pretend otherwise yet.</p>
+<p>Running it goes through Prisma's own CLI rather than plain <code>node</code>:</p>
+<pre><code class="hljs">npx prisma db seed
+</code></pre>
+<p>which is possible only because of the <code>&quot;prisma&quot;: { &quot;seed&quot;: &quot;node prisma/seed.js&quot; }</code>
+line back in Figure 2.3 — that's the config <code>db seed</code> actually reads to know
+which file to run.</p>
+</div>
+    
+  </main>
+</body>
+</html>

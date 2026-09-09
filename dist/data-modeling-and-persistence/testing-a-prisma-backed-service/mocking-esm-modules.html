@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mocking ESM Modules — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        <a class="nav-prev" href="/data-modeling-and-persistence/testing-a-prisma-backed-service/creating-mocks-with-jest.html">← Creating Mocks with Jest</a>
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/data-modeling-and-persistence/testing-a-prisma-backed-service/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        <a class="nav-next" href="/data-modeling-and-persistence/testing-a-prisma-backed-service/mocking-the-integration-test.html">Mocking the Integration Test →</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>Mocking ESM Modules</h1>
+    <p class="lede">This project&#39;s native-ESM Jest setup can&#39;t use the familiar jest.mock() — unstable_mockModule plus a dynamic import stand in for it.</p>
+
+    
+
+    
+      <div class="slide-body"><p>Having a fake <code>mockPrisma</code> object (previous slide) only helps if
+<code>ticket.service.js</code> actually receives it instead of the real
+<code>src/config/db.js</code> singleton. In most Jest tutorials, that's <code>jest.mock()</code>,
+called with a static <code>import</code> at the top of the file — but that technique
+relies on Babel rewriting your code first, and this project's Jest setup
+deliberately runs Node's real ES modules directly instead (<code>--experimental- vm-modules</code>, the <code>test</code> script from Lesson 1's Jest topic) — no Babel step
+exists to make <code>jest.mock()</code>'s usual trick work.</p>
+<p>The native-ESM equivalent is <code>jest.unstable_mockModule()</code>, paired with a
+<strong>dynamic</strong> <code>import()</code> instead of a static one:</p>
+<pre><code class="hljs language-js"><span class="hljs-comment">// Figure 2.19: swapping db.js for a fake (tests/unit/ticket.service.test.js, excerpt)</span>
+jest.<span class="hljs-title function_">unstable_mockModule</span>(<span class="hljs-string">&#x27;../../src/config/db.js&#x27;</span>, <span class="hljs-function">() =&gt;</span> ({
+  <span class="hljs-attr">default</span>: mockPrisma,
+}));
+
+<span class="hljs-keyword">const</span> { getAllTickets, getTicketById, createTicket } = <span class="hljs-keyword">await</span> <span class="hljs-keyword">import</span>(
+  <span class="hljs-string">&#x27;../../src/services/ticket.service.js&#x27;</span>
+);
+</code></pre>
+<p>Order matters here in a way it doesn't with ordinary imports: <code>import</code>
+statements at the top of a file are hoisted and resolved before anything
+else runs, so a static import of <code>ticket.service.js</code> would already have
+pulled in the <em>real</em> <code>db.js</code> before <code>jest.mock()</code> ever got a chance to
+intervene. Calling <code>jest.unstable_mockModule()</code> first, then using <code>await import(...)</code> — a plain expression, not hoisted — guarantees the mock is
+registered <em>before</em> <code>ticket.service.js</code> is loaded at all, so when it does its
+own <code>import prisma from '../config/db.js'</code> (Figure 2.14), it receives
+<code>mockPrisma</code> instead of ever constructing a real <code>PrismaClient</code>.</p>
+<p>The <code>default: mockPrisma</code> shape matters too: <code>db.js</code> uses <code>export default prisma</code> (the client-as-a-singleton topic), so the fake module needs the same
+<code>default</code> export to stand in for it convincingly.</p>
+</div>
+    
+  </main>
+</body>
+</html>

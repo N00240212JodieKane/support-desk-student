@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>prisma migrate dev — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        <a class="nav-prev" href="/data-modeling-and-persistence/modeling-the-schema-in-prisma/two-kinds-of-many-to-many.html">← Two Kinds of Many-to-Many</a>
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/data-modeling-and-persistence/migrations-with-prisma/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        <a class="nav-next" href="/data-modeling-and-persistence/migrations-with-prisma/reading-a-migration.html">Reading a Migration →</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>prisma migrate dev</h1>
+    <p class="lede">One command: diff the schema, generate SQL, apply it, and keep a record of what changed.</p>
+
+    
+
+    
+      <div class="slide-body"><p>An Artisan migration is something <em>you</em> write — PHP describing a schema
+change, run with <code>php artisan migrate</code>. Prisma migrations work the other way
+around: you edit <code>schema.prisma</code> to describe the shape you <em>want</em>, and
+<code>prisma migrate dev</code> figures out — and writes — the SQL needed to get the
+real database there, by comparing the schema against what's already been
+applied.</p>
+<pre><code class="hljs">npx prisma migrate dev --name init
+</code></pre>
+<p><code>--name init</code> just labels this migration for the (human-readable) folder name
+it creates — the next slide looks at what that folder actually contains.
+Running it against this project's finished schema produces something close
+to:</p>
+<pre><code class="hljs">Applying migration `20260909122353_init`
+
+The following migration(s) have been created and applied from new schema
+changes:
+
+prisma/migrations/
+  └─ 20260909122353_init/
+    └─ migration.sql
+
+Your database is now in sync with your schema.
+</code></pre>
+<p>Two things happened in one command: a new <code>.sql</code> file was generated <em>and</em>
+immediately run against the MySQL container from the Docker topic. <code>migrate dev</code> is explicitly the <strong>development</strong> command — safe to run repeatedly as
+your schema changes while you're building. (A separate <code>migrate deploy</code>
+exists for production, which only ever applies migrations already generated
+this way — never generates new ones on the fly there.)</p>
+</div>
+    
+  </main>
+</body>
+</html>

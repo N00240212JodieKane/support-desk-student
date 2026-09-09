@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Two Relations, One Table — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        <a class="nav-prev" href="/data-modeling-and-persistence/modeling-the-schema-in-prisma/one-to-many-relations.html">← One-to-Many Relations</a>
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/data-modeling-and-persistence/modeling-the-schema-in-prisma/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        <a class="nav-next" href="/data-modeling-and-persistence/modeling-the-schema-in-prisma/two-kinds-of-many-to-many.html">Two Kinds of Many-to-Many →</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>Two Relations, One Table</h1>
+    <p class="lede">A ticket&#39;s customer and its assigned agent are both a User — Prisma needs a name to tell the two relations apart.</p>
+
+    
+
+    
+      <div class="slide-body"><p>A ticket also has an <strong>assigned agent</strong> — nullable, since a ticket can sit
+unassigned — and an agent is a <code>User</code> too, exactly like the customer. That's
+two separate 1:M relationships from <code>Ticket</code> landing on the <em>same</em> <code>User</code>
+table, which is where the previous slide's plain <code>@relation</code> stops being
+enough: given two of them, Prisma has no way to tell which <code>User</code> field
+pairs with which. Figure 2.7 shows how the real schema resolves it.</p>
+<pre><code class="hljs language-prisma"><span class="hljs-comment">// Figure 2.7: two named relations on one table (prisma/schema.prisma, excerpt)</span>
+<span class="hljs-class"><span class="hljs-keyword">model</span> <span class="hljs-title">Ticket</span> </span>{
+  customerId      <span class="hljs-type">Int</span>
+  assignedAgentId <span class="hljs-type">Int</span><span class="hljs-symbol">?</span>
+
+  customer      User  <span class="hljs-attribute">@relation</span>(<span class="hljs-string">&quot;CustomerTickets&quot;</span>, fields: [customerId], references: [id])
+  assignedAgent User<span class="hljs-symbol">?</span> <span class="hljs-attribute">@relation</span>(<span class="hljs-string">&quot;AssignedTickets&quot;</span>, fields: [assignedAgentId], references: [id])
+}
+
+<span class="hljs-class"><span class="hljs-keyword">model</span> <span class="hljs-title">User</span> </span>{
+  ticketsAsCustomer Ticket<span class="hljs-symbol">[]</span> <span class="hljs-attribute">@relation</span>(<span class="hljs-string">&quot;CustomerTickets&quot;</span>)
+  ticketsAsAgent    Ticket<span class="hljs-symbol">[]</span> <span class="hljs-attribute">@relation</span>(<span class="hljs-string">&quot;AssignedTickets&quot;</span>)
+}
+</code></pre>
+<p>The string — <code>&quot;CustomerTickets&quot;</code>, <code>&quot;AssignedTickets&quot;</code> — is a <strong>relation
+name</strong>, existing purely to pair up the two ends of each relation explicitly;
+it's never stored anywhere or seen again outside the schema file. Every
+<code>@relation</code> needs one the moment there's more than one path between the same
+two models — here, <code>Ticket.customer</code> pairs with <code>User.ticketsAsCustomer</code>, and
+<code>Ticket.assignedAgent</code> pairs with <code>User.ticketsAsAgent</code>, each by matching
+name. <code>assignedAgentId Int?</code> and <code>assignedAgent User?</code> — the trailing <code>?</code> —
+mark both as nullable, Prisma's way of saying &quot;this relation might not exist
+for a given row,&quot; which lines up with a ticket genuinely having no agent yet.</p>
+</div>
+    
+  </main>
+</body>
+</html>

@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>First-Time Setup — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        <a class="nav-prev" href="/data-modeling-and-persistence/the-prisma-client/query-methods.html">← Query Methods</a>
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/data-modeling-and-persistence/running-and-evolving-locally/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        <a class="nav-next" href="/data-modeling-and-persistence/running-and-evolving-locally/day-to-day-startup.html">Day-to-Day Startup →</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>First-Time Setup</h1>
+    <p class="lede">The exact order of commands to go from a fresh clone to a running API backed by a real, seeded database.</p>
+
+    
+
+    
+      <div class="slide-body"><p>Every piece needed to run this project locally has now been introduced
+separately — this topic is just the checklist that ties them together, in
+the order they actually need to run. Starting from a fresh clone (or after
+deleting your local database entirely):</p>
+<pre><code class="hljs">docker compose up -d mysql
+npx prisma migrate dev --name init
+npx prisma db seed
+npm run dev
+</code></pre>
+<ol>
+<li><strong>Start MySQL</strong> (containerized MySQL topic) — <code>-d</code> runs it in the
+background. Give it a few seconds to finish starting before the next
+step; <code>prisma migrate dev</code> will simply fail to connect and tell you to
+retry if you're too quick.</li>
+<li><strong>Apply migrations</strong> (migrations topic) — creates every table from
+<code>schema.prisma</code> in the now-empty database. Only the very first migration
+needs an explicit <code>--name</code>; <code>npm run db:migrate</code> (Figure 2.3) is the
+equivalent shortcut for ones after this.</li>
+<li><strong>Seed it</strong> (seeding topic) — populates realistic dev data across every
+table. <code>npm run db:seed</code> is the shortcut for the same command.</li>
+<li><strong>Start the app</strong> — exactly the <code>npm run dev</code> from Lesson 1; nothing about
+<em>running</em> the app changed, only what <code>ticket.service.js</code> does once a
+request reaches it (coming up two topics from now).</li>
+</ol>
+<p>Skipping straight to step 4 without the first three still starts the server
+fine — Express doesn't know or care whether a database exists yet — but the
+first request that actually queries MySQL fails, since there's nothing there
+to query.</p>
+</div>
+    
+  </main>
+</body>
+</html>

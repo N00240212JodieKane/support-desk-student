@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Installing Prisma — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        <a class="nav-prev" href="/data-modeling-and-persistence/modeling-the-schema-in-prisma/what-is-prisma.html">← What Is Prisma?</a>
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/data-modeling-and-persistence/modeling-the-schema-in-prisma/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        <a class="nav-next" href="/data-modeling-and-persistence/modeling-the-schema-in-prisma/anatomy-of-schema-prisma.html">Anatomy of schema.prisma →</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>Installing Prisma</h1>
+    <p class="lede">Two packages, three new npm scripts, and a config block — the footprint Prisma leaves on package.json.</p>
+
+    
+
+    
+      <div class="slide-body"><p>Prisma arrives as two separate npm packages, playing two different roles:
+<strong><code>prisma</code></strong> is the CLI (a <code>devDependency</code> — only needed while developing,
+never at runtime) and <strong><code>@prisma/client</code></strong> is the generated client your
+running application actually imports (a real <code>dependency</code>). Figure 2.3 is
+every change this made to <code>package.json</code>.</p>
+<pre><code class="hljs language-json"><span class="hljs-comment">// Figure 2.3: adopting Prisma (package.json, excerpt)</span>
+<span class="hljs-attr">&quot;scripts&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">&quot;postinstall&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;prisma generate&quot;</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;db:migrate&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;prisma migrate dev&quot;</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;db:seed&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;prisma db seed&quot;</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;db:studio&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;prisma studio&quot;</span>
+<span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
+<span class="hljs-attr">&quot;prisma&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">&quot;seed&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;node prisma/seed.js&quot;</span>
+<span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
+<span class="hljs-attr">&quot;dependencies&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">&quot;@prisma/client&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;^6.19.3&quot;</span>
+<span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
+<span class="hljs-attr">&quot;devDependencies&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">&quot;prisma&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;^6.19.3&quot;</span>
+<span class="hljs-punctuation">}</span>
+</code></pre>
+<p><code>&quot;postinstall&quot;</code> is an npm lifecycle script name — this project didn't call it
+anywhere, npm runs it automatically after every <code>npm install</code>, guaranteeing
+the generated client (next-but-one topic) always matches whoever's copy of
+<code>schema.prisma</code> is currently checked out. The <code>&quot;prisma&quot;</code> block is Prisma's own
+config: it's how <code>npx prisma db seed</code> knows what script to actually run (the
+seeding topic shortly). <code>db:migrate</code>/<code>db:seed</code>/<code>db:studio</code> are just this
+project's own convenience shortcuts for commands otherwise typed as
+<code>npx prisma ...</code> — covered as they come up.</p>
+<p>Note the versions are pinned to <code>6.19.3</code> specifically, not left open-ended —
+Prisma 7 changed how a project's database connection is configured badly
+enough to be its own, more advanced topic, so this course deliberately stays
+on the last 6.x release.</p>
+</div>
+    
+  </main>
+</body>
+</html>

@@ -1,0 +1,18 @@
+# Week 2: local infrastructure only (MySQL). Redis joins in Week 6, and the
+# app itself (`api`/`worker` services) isn't containerized until Week 6 either
+# — see "API containerization" in PLAN.md's Key decisions and "Hosting" in
+# TUTORIAL.md. Until then the app runs on the host via `npm run dev`.
+services:
+  mysql:
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: support_desk
+    ports:
+      - '3306:3306'
+    volumes:
+      - mysql-data:/var/lib/mysql
+
+volumes:
+  mysql-data:

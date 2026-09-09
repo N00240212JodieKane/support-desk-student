@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Generating the Client — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        <a class="nav-prev" href="/data-modeling-and-persistence/seeding-with-prisma/idempotent-seeding.html">← Idempotent Seeding</a>
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/data-modeling-and-persistence/the-prisma-client/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        <a class="nav-next" href="/data-modeling-and-persistence/the-prisma-client/the-client-as-a-singleton.html">The Client as a Singleton →</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>Generating the Client</h1>
+    <p class="lede">The Prisma Client is generated code, not a hand-written library — regenerated from schema.prisma every time it changes.</p>
+
+    
+
+    
+      <div class="slide-body"><p><code>@prisma/client</code>, installed back in Figure 2.3, is unusual as npm packages
+go: what it actually exports is regenerated on your machine from
+<code>schema.prisma</code>, not fixed code the package ships with. <code>npx prisma generate</code>
+reads the schema and writes a client matching <em>exactly</em> the models and
+relations you defined — every model in <code>schema.prisma</code> gets its own
+query methods on the generated client, named after it.</p>
+<p>You'll rarely type <code>npx prisma generate</code> yourself, because two things already
+trigger it automatically: the <code>&quot;postinstall&quot;: &quot;prisma generate&quot;</code> script from
+Figure 2.3 runs it after every <code>npm install</code>, and <code>prisma migrate dev</code>
+(migrations topic) regenerates it too, every time it applies a migration —
+which is why the migration output a couple of topics ago briefly showed a
+&quot;Running generate...&quot; line without further explanation at the time. Either
+way, the practical rule is simple: change <code>schema.prisma</code>, and the client
+gets regenerated to match before you'd ever get a chance to call a method
+that no longer exists.</p>
+</div>
+    
+  </main>
+</body>
+</html>

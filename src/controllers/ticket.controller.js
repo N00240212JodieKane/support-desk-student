@@ -11,6 +11,11 @@ export const getAllTickets = asyncHandler(async (req, res) => {
 
 export const getTicketById = asyncHandler(async (req, res) => {
   const id = Number(req.params.id);
+
+  if (Number.isNaN(id)) {
+    return res.status(400).json({ error: { message: 'id must be a number' } });
+  }
+
   const ticket = await ticketService.getTicketById(id);
 
   if (!ticket) {
@@ -21,14 +26,20 @@ export const getTicketById = asyncHandler(async (req, res) => {
 });
 
 export const createTicket = asyncHandler(async (req, res) => {
-  const { subject, description } = req.body;
+  const { subject, description, customerId } = req.body;
 
-  if (!subject || !description) {
+  // customerId is a plain body field for now, stood in for the authenticated
+  // customer until Week 4's auth replaces it with req.user.id.
+  if (!subject || !description || !customerId) {
     return res
       .status(400)
-      .json({ error: { message: 'subject and description are required' } });
+      .json({ error: { message: 'subject, description and customerId are required' } });
   }
 
-  const ticket = await ticketService.createTicket({ subject, description });
+  const ticket = await ticketService.createTicket({
+    subject,
+    description,
+    customerId: Number(customerId),
+  });
   res.status(201).json(ticket);
 });

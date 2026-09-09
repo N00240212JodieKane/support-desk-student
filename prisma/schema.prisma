@@ -1,0 +1,122 @@
+// Week 2: the relational model behind the support ticketing domain (see
+// CLAUDE.md's "Domain" section and PLAN.md's "Data model" table). Two 1:M
+// chains (customer -> tickets, ticket -> comments), a second 1:M via two
+// named relations on the same User table (agent assignment), and two M:N
+// relationships that differ on purpose: TicketTag is a plain join table,
+// TicketWatcher carries its own data (notifyOnComment) — both are modelled
+// explicitly as their own models rather than Prisma's shorthand implicit
+// many-to-many, so that difference is visible in the schema itself.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  customer
+  agent
+  admin
+}
+
+enum TicketStatus {
+  open
+  in_progress
+  resolved
+  closed
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  // Week 4 hashes this with bcrypt on write; until then it's a plain
+  // placeholder column (see prisma/seed.js) — not real auth yet.
+  password  String
+  role      Role     @default(customer)
+  createdAt DateTime @default(now())
+
+  // Two logical relations on the same table, per CLAUDE.md: a customer's
+  // submitted tickets, and an agent's assigned tickets.
+  ticketsAsCustomer Ticket[]        @relation("CustomerTickets")
+  ticketsAsAgent    Ticket[]        @relation("AssignedTickets")
+  comments          Comment[]
+  watchedTickets    TicketWatcher[]
+  notifications     Notification[]
+}
+
+model Ticket {
+  id              Int          @id @default(autoincrement())
+  subject         String
+  description     String       @db.Text
+  status          TicketStatus @default(open)
+  customerId      Int
+  assignedAgentId Int?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  customer      User            @relation("CustomerTickets", fields: [customerId], references: [id])
+  assignedAgent User?           @relation("AssignedTickets", fields: [assignedAgentId], references: [id])
+  comments      Comment[]
+  tags          TicketTag[]
+  watchers      TicketWatcher[]
+}
+
+model Comment {
+  id        Int      @id @default(autoincrement())
+  body      String   @db.Text
+  ticketId  Int
+  authorId  Int
+  createdAt DateTime @default(now())
+
+  ticket Ticket @relation(fields: [ticketId], references: [id])
+  author User   @relation(fields: [authorId], references: [id])
+}
+
+model Tag {
+  id      Int         @id @default(autoincrement())
+  name    String      @unique
+  tickets TicketTag[]
+}
+
+// Plain join table: no data of its own beyond the link.
+model TicketTag {
+  ticketId Int
+  tagId    Int
+
+  ticket Ticket @relation(fields: [ticketId], references: [id])
+  tag    Tag    @relation(fields: [tagId], references: [id])
+
+  @@id([ticketId, tagId])
+}
+
+// Attribute-carrying join table: the M:N link itself has data
+// (notifyOnComment), which is why this can't just be an implicit
+// many-to-many like TicketTag above.
+model TicketWatcher {
+  ticketId        Int
+  userId          Int
+  notifyOnComment Boolean @default(true)
+
+  ticket Ticket @relation(fields: [ticketId], references: [id])
+  user   User   @relation(fields: [userId], references: [id])
+
+  @@id([ticketId, userId])
+}
+
+// Populated by event listeners from Week 5 onward (ticket.created,
+// ticket.assigned, etc. — see CLAUDE.md's "Domain events"). The column
+// shape is settled now, alongside the rest of the schema.
+model Notification {
+  id        Int       @id @default(autoincrement())
+  userId    Int
+  type      String
+  message   String
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+}

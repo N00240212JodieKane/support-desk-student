@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Reading a Migration — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        <a class="nav-prev" href="/data-modeling-and-persistence/migrations-with-prisma/prisma-migrate-dev.html">← prisma migrate dev</a>
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/data-modeling-and-persistence/migrations-with-prisma/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        <a class="nav-next" href="/data-modeling-and-persistence/seeding-with-prisma/the-seed-script.html">The Seed Script →</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>Reading a Migration</h1>
+    <p class="lede">Plain SQL, generated for you — worth reading once, never worth hand-editing.</p>
+
+    
+
+    
+      <div class="slide-body"><p>The file Prisma generated is ordinary SQL — nothing Prisma-specific about it
+at all. Figure 2.10 is an excerpt of it.</p>
+<pre><code class="hljs language-sql"><span class="hljs-comment">-- Figure 2.10: a generated migration (prisma/migrations/20260909122353_init/migration.sql, excerpt)</span>
+<span class="hljs-keyword">CREATE TABLE</span> `<span class="hljs-keyword">User</span>` (
+    `id` <span class="hljs-type">INTEGER</span> <span class="hljs-keyword">NOT NULL</span> AUTO_INCREMENT,
+    `email` <span class="hljs-type">VARCHAR</span>(<span class="hljs-number">191</span>) <span class="hljs-keyword">NOT NULL</span>,
+    `role` ENUM(<span class="hljs-string">&#x27;customer&#x27;</span>, <span class="hljs-string">&#x27;agent&#x27;</span>, <span class="hljs-string">&#x27;admin&#x27;</span>) <span class="hljs-keyword">NOT NULL</span> <span class="hljs-keyword">DEFAULT</span> <span class="hljs-string">&#x27;customer&#x27;</span>,
+
+    <span class="hljs-keyword">UNIQUE</span> INDEX `User_email_key`(`email`),
+    <span class="hljs-keyword">PRIMARY KEY</span> (`id`)
+);
+
+<span class="hljs-comment">-- AddForeignKey</span>
+<span class="hljs-keyword">ALTER TABLE</span> `Ticket` <span class="hljs-keyword">ADD CONSTRAINT</span> `Ticket_customerId_fkey`
+  <span class="hljs-keyword">FOREIGN KEY</span> (`customerId`) <span class="hljs-keyword">REFERENCES</span> `<span class="hljs-keyword">User</span>`(`id`)
+  <span class="hljs-keyword">ON</span> <span class="hljs-keyword">DELETE</span> RESTRICT <span class="hljs-keyword">ON</span> <span class="hljs-keyword">UPDATE</span> CASCADE;
+</code></pre>
+<p>Every piece traces straight back to <code>schema.prisma</code>: <code>@id</code> became
+<code>PRIMARY KEY</code>, <code>@unique</code> became a <code>UNIQUE INDEX</code>, the <code>Role</code> enum became
+MySQL's own <code>ENUM</code> type, and the <code>customer</code> relation from the one-to-many
+topic became an actual <code>ALTER TABLE ... ADD CONSTRAINT</code> foreign key — this is
+the point where a relation field you wrote in the schema turns into a real
+constraint the database itself will enforce.</p>
+<p>The full file has one <code>CREATE TABLE</code> per model and one <code>ALTER TABLE</code> per
+relation, in the order Prisma needs to run them (tables before the foreign
+keys that reference them). You'll read files like this often, to see exactly
+what a schema change actually did to the database — but you never hand-edit
+one. Once a migration's been applied, it's a historical record; the way to
+change the schema further is always to edit <code>schema.prisma</code> again and run
+<code>migrate dev</code> again, which generates the <em>next</em> migration file rather than
+touching this one.</p>
+</div>
+    
+  </main>
+</body>
+</html>

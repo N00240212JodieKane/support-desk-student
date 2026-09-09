@@ -13,15 +13,24 @@
     "tutorial:dev": "npm run dev --prefix tutorial",
     "sync:public": "node scripts/sync-to-public.js",
     "lesson:start": "node scripts/start-lesson.js",
-    "lesson:finish": "node scripts/finish-lesson.js"
+    "lesson:finish": "node scripts/finish-lesson.js",
+    "postinstall": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:seed": "prisma db seed",
+    "db:studio": "prisma studio"
   },
   "license": "UNLICENSED",
+  "prisma": {
+    "seed": "node prisma/seed.js"
+  },
   "dependencies": {
+    "@prisma/client": "^6.19.3",
     "dotenv": "^17.4.2",
     "express": "^4.19.2"
   },
   "devDependencies": {
     "jest": "^30.5.1",
+    "prisma": "^6.19.3",
     "supertest": "^7.2.2"
   },
   "jest": {

@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Creating Mocks with Jest — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        <a class="nav-prev" href="/data-modeling-and-persistence/testing-a-prisma-backed-service/what-is-a-mock.html">← What Is a Mock?</a>
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/data-modeling-and-persistence/testing-a-prisma-backed-service/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        <a class="nav-next" href="/data-modeling-and-persistence/testing-a-prisma-backed-service/mocking-esm-modules.html">Mocking ESM Modules →</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>Creating Mocks with Jest</h1>
+    <p class="lede">jest.fn(), mockResolvedValue, and asserting what a mock was actually called with.</p>
+
+    
+
+    
+      <div class="slide-body"><p>Jest's tool for creating a mock function is <code>jest.fn()</code> — it returns a
+callable function that does nothing on its own, but remembers every call
+made to it and can be told what to return. A fake Prisma client, for the
+methods <code>ticket.service.js</code> actually uses, is just an ordinary object built
+out of these:</p>
+<pre><code class="hljs language-js"><span class="hljs-comment">// Figure 2.17: a fake Prisma client (tests/unit/ticket.service.test.js, excerpt)</span>
+<span class="hljs-keyword">const</span> mockPrisma = {
+  <span class="hljs-attr">ticket</span>: {
+    <span class="hljs-attr">findMany</span>: jest.<span class="hljs-title function_">fn</span>(),
+    <span class="hljs-attr">findUnique</span>: jest.<span class="hljs-title function_">fn</span>(),
+    <span class="hljs-attr">create</span>: jest.<span class="hljs-title function_">fn</span>(),
+  },
+};
+</code></pre>
+<p>Every real Prisma method is <code>async</code>, so a test needs its fake version to
+return a Promise too, resolved to whatever value that test wants to pretend
+came back from the database — <code>mockResolvedValue</code> does exactly that:</p>
+<pre><code class="hljs language-js"><span class="hljs-comment">// Figure 2.18: controlling and inspecting a mock (tests/unit/ticket.service.test.js, excerpt)</span>
+<span class="hljs-title function_">it</span>(<span class="hljs-string">&#x27;getAllTickets returns whatever Prisma finds&#x27;</span>, <span class="hljs-title function_">async</span> () =&gt; {
+  <span class="hljs-keyword">const</span> seeded = [{ <span class="hljs-attr">id</span>: <span class="hljs-number">1</span>, <span class="hljs-attr">subject</span>: <span class="hljs-string">&#x27;Cannot log in&#x27;</span> }];
+  mockPrisma.<span class="hljs-property">ticket</span>.<span class="hljs-property">findMany</span>.<span class="hljs-title function_">mockResolvedValue</span>(seeded);
+
+  <span class="hljs-keyword">const</span> tickets = <span class="hljs-keyword">await</span> <span class="hljs-title function_">getAllTickets</span>();
+
+  <span class="hljs-title function_">expect</span>(tickets).<span class="hljs-title function_">toBe</span>(seeded);
+  <span class="hljs-title function_">expect</span>(mockPrisma.<span class="hljs-property">ticket</span>.<span class="hljs-property">findMany</span>).<span class="hljs-title function_">toHaveBeenCalledTimes</span>(<span class="hljs-number">1</span>);
+});
+</code></pre>
+<p><code>mockPrisma.ticket.findMany.mockResolvedValue(seeded)</code> is the <strong>control</strong>
+half from the previous slide: whatever calls <code>findMany()</code> next gets back
+<code>seeded</code>, immediately, with no real query. <code>toHaveBeenCalledTimes(1)</code> is the
+<strong>inspection</strong> half: an assertion not about a return value at all, but about
+whether — and how — the mock itself was used. <code>beforeEach(() =&gt; jest.clearAllMocks())</code> resets every mock's call history and configured
+return value between tests, so one test's <code>mockResolvedValue</code> never leaks
+into the next.</p>
+</div>
+    
+  </main>
+</body>
+</html>

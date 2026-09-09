@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Two Kinds of Many-to-Many — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        <a class="nav-prev" href="/data-modeling-and-persistence/modeling-the-schema-in-prisma/two-relations-one-table.html">← Two Relations, One Table</a>
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/data-modeling-and-persistence/modeling-the-schema-in-prisma/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        <a class="nav-next" href="/data-modeling-and-persistence/migrations-with-prisma/prisma-migrate-dev.html">prisma migrate dev →</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>Two Kinds of Many-to-Many</h1>
+    <p class="lede">TicketTag is a plain link between two tables; TicketWatcher is a link that carries its own data — and that difference has to show up in the schema.</p>
+
+    
+
+    
+      <div class="slide-body"><p>Tickets and tags are M:N — you'd model this in Laravel with a plain pivot
+table and <code>belongsToMany()</code>. Prisma actually offers a shorthand for exactly
+that case, but this project deliberately models both of its M:N
+relationships as <strong>explicit join models</strong> instead, because one of the two
+needs to carry data the shorthand has no room for. Figure 2.8 is the plain
+case.</p>
+<pre><code class="hljs language-prisma"><span class="hljs-comment">// Figure 2.8: a plain join table (prisma/schema.prisma, excerpt)</span>
+<span class="hljs-class"><span class="hljs-keyword">model</span> <span class="hljs-title">TicketTag</span> </span>{
+  ticketId <span class="hljs-type">Int</span>
+  tagId    <span class="hljs-type">Int</span>
+
+  ticket Ticket <span class="hljs-attribute">@relation</span>(fields: [ticketId], references: [id])
+  tag    Tag    <span class="hljs-attribute">@relation</span>(fields: [tagId], references: [id])
+
+  <span class="hljs-meta">@@id</span>([ticketId, tagId])
+}
+</code></pre>
+<p><code>@@id([ticketId, tagId])</code> is a <strong>composite primary key</strong> — the <em>pair</em> of
+columns together is unique, not either column alone (the same one ticket can
+have several tags; the same tag can be on several tickets — just never the
+exact same pairing twice). Beyond that, <code>TicketTag</code> carries no information of
+its own — it only ever answers &quot;is this tag on this ticket?&quot;</p>
+<p>Figure 2.9 looks almost identical, but isn't.</p>
+<pre><code class="hljs language-prisma"><span class="hljs-comment">// Figure 2.9: a join table with its own data (prisma/schema.prisma, excerpt)</span>
+<span class="hljs-class"><span class="hljs-keyword">model</span> <span class="hljs-title">TicketWatcher</span> </span>{
+  ticketId        <span class="hljs-type">Int</span>
+  userId          <span class="hljs-type">Int</span>
+  notifyOnComment <span class="hljs-type">Boolean</span> <span class="hljs-attribute">@default</span>(<span class="hljs-literal">true</span>)
+
+  ticket Ticket <span class="hljs-attribute">@relation</span>(fields: [ticketId], references: [id])
+  user   User   <span class="hljs-attribute">@relation</span>(fields: [userId], references: [id])
+
+  <span class="hljs-meta">@@id</span>([ticketId, userId])
+}
+</code></pre>
+<p><code>notifyOnComment</code> is a genuine extra column on the <em>relationship itself</em> —
+whether <strong>this particular</strong> watcher wants comment notifications, not a
+property of the ticket or the user alone. That's precisely why Prisma's
+implicit-M:N shorthand (and Eloquent's plain <code>belongsToMany()</code>) wouldn't fit
+here: both assume a join table with nothing but the two foreign keys. The
+moment the relationship needs its own attribute, it has to become a real
+model you can add fields to — which is exactly what <code>TicketTag</code> and
+<code>TicketWatcher</code> now demonstrate side by side, from the same schema file.</p>
+</div>
+    
+  </main>
+</body>
+</html>

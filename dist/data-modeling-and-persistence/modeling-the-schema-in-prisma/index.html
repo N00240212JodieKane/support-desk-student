@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Modeling the Schema in Prisma — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/data-modeling-and-persistence/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>Modeling the Schema in Prisma</h1>
+    <p class="lede">Prisma&#39;s schema file, and mapping the ticketing domain&#39;s relationships onto it.</p>
+
+    
+      <ul class="listing">
+        
+          <li>
+            <a href="/data-modeling-and-persistence/modeling-the-schema-in-prisma/what-is-prisma.html">What Is Prisma?</a>
+            <p>An ORM for Node — where it resembles Eloquent, and where it deliberately doesn&#39;t.</p>
+          </li>
+        
+          <li>
+            <a href="/data-modeling-and-persistence/modeling-the-schema-in-prisma/installing-prisma.html">Installing Prisma</a>
+            <p>Two packages, three new npm scripts, and a config block — the footprint Prisma leaves on package.json.</p>
+          </li>
+        
+          <li>
+            <a href="/data-modeling-and-persistence/modeling-the-schema-in-prisma/anatomy-of-schema-prisma.html">Anatomy of schema.prisma</a>
+            <p>Two configuration blocks that sit above every model: which client to generate, and which database to talk to.</p>
+          </li>
+        
+          <li>
+            <a href="/data-modeling-and-persistence/modeling-the-schema-in-prisma/fields-and-constraints.html">Fields and Constraints</a>
+            <p>The User model: scalar fields, an enum, and the declarative attributes that replace Eloquent&#39;s $fillable and validation rules.</p>
+          </li>
+        
+          <li>
+            <a href="/data-modeling-and-persistence/modeling-the-schema-in-prisma/one-to-many-relations.html">One-to-Many Relations</a>
+            <p>A customer&#39;s tickets: a foreign key column, plus the relation field Prisma uses to load it.</p>
+          </li>
+        
+          <li>
+            <a href="/data-modeling-and-persistence/modeling-the-schema-in-prisma/two-relations-one-table.html">Two Relations, One Table</a>
+            <p>A ticket&#39;s customer and its assigned agent are both a User — Prisma needs a name to tell the two relations apart.</p>
+          </li>
+        
+          <li>
+            <a href="/data-modeling-and-persistence/modeling-the-schema-in-prisma/two-kinds-of-many-to-many.html">Two Kinds of Many-to-Many</a>
+            <p>TicketTag is a plain link between two tables; TicketWatcher is a link that carries its own data — and that difference has to show up in the schema.</p>
+          </li>
+        
+      </ul>
+    
+
+    
+  </main>
+</body>
+</html>

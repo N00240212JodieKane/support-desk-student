@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Rewriting the Ticket Service — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        <a class="nav-prev" href="/data-modeling-and-persistence/running-and-evolving-locally/when-the-schema-changes.html">← When the Schema Changes</a>
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/data-modeling-and-persistence/wiring-the-service-to-prisma/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        <a class="nav-next" href="/data-modeling-and-persistence/wiring-the-service-to-prisma/the-customerid-stand-in.html">The customerId Stand-In →</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>Rewriting the Ticket Service</h1>
+    <p class="lede">The in-memory array is gone; the exported functions, and everything above them, aren&#39;t.</p>
+
+    
+
+    
+      <div class="slide-body"><p>Figure 2.14 is the whole of <code>ticket.service.js</code> as it stands now — compare it
+against Lesson 1's in-memory version (Figure 1.9) side by side if you still
+have that slide open.</p>
+<pre><code class="hljs language-js"><span class="hljs-comment">// Figure 2.14: Prisma-backed queries (src/services/ticket.service.js)</span>
+<span class="hljs-keyword">import</span> prisma <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;../config/db.js&#x27;</span>;
+
+<span class="hljs-keyword">const</span> userSummary = { <span class="hljs-attr">select</span>: { <span class="hljs-attr">id</span>: <span class="hljs-literal">true</span>, <span class="hljs-attr">name</span>: <span class="hljs-literal">true</span>, <span class="hljs-attr">email</span>: <span class="hljs-literal">true</span> } };
+
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">const</span> <span class="hljs-title function_">getAllTickets</span> = <span class="hljs-keyword">async</span> (<span class="hljs-params"></span>) =&gt;
+  prisma.<span class="hljs-property">ticket</span>.<span class="hljs-title function_">findMany</span>({
+    <span class="hljs-attr">orderBy</span>: { <span class="hljs-attr">id</span>: <span class="hljs-string">&#x27;asc&#x27;</span> },
+    <span class="hljs-attr">include</span>: { <span class="hljs-attr">customer</span>: userSummary, <span class="hljs-attr">assignedAgent</span>: userSummary },
+  });
+
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">const</span> <span class="hljs-title function_">getTicketById</span> = <span class="hljs-keyword">async</span> (<span class="hljs-params">id</span>) =&gt;
+  prisma.<span class="hljs-property">ticket</span>.<span class="hljs-title function_">findUnique</span>({
+    <span class="hljs-attr">where</span>: { id },
+    <span class="hljs-attr">include</span>: { <span class="hljs-attr">customer</span>: userSummary, <span class="hljs-attr">assignedAgent</span>: userSummary },
+  });
+
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">const</span> <span class="hljs-title function_">createTicket</span> = <span class="hljs-keyword">async</span> (<span class="hljs-params">{ subject, description, customerId }</span>) =&gt;
+  prisma.<span class="hljs-property">ticket</span>.<span class="hljs-title function_">create</span>({
+    <span class="hljs-attr">data</span>: { subject, description, customerId },
+    <span class="hljs-attr">include</span>: { <span class="hljs-attr">customer</span>: userSummary },
+  });
+</code></pre>
+<p>Every exported function has the exact same name and the exact same
+parameters it had in Week 1 — that's the payoff of the services-as-a-layer
+topic from Lesson 1 arriving for real: not one line of <code>ticket.controller.js</code>
+needed to change for this rewrite, because it only ever called
+<code>ticketService.getAllTickets()</code> and so on, never touched the old array
+directly.</p>
+<p><code>userSummary</code> is a small object reused across all three queries, holding the
+<code>select</code> from the previous topic's query-methods slide — <code>id</code>, <code>name</code>,
+<code>email</code> only, deliberately never <code>password</code>. Passed into <code>include</code>, it
+shapes what each related <code>customer</code>/<code>assignedAgent</code> object actually contains
+in the response, rather than every column MySQL happens to store for a
+<code>User</code> row. <code>getAllTickets</code> also adds <code>orderBy: { id: 'asc' }</code> — the
+in-memory array was always naturally in insertion order; a real database
+makes no promises about row order unless you ask for one explicitly.</p>
+</div>
+    
+  </main>
+</body>
+</html>

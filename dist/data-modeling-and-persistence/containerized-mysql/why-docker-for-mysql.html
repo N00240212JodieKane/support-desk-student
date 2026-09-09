@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Why Docker for MySQL? — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        <a class="nav-prev" href="/foundations/testing-the-api/endpoint-testing-with-supertest.html">← Endpoint Testing with Supertest</a>
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/data-modeling-and-persistence/containerized-mysql/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        <a class="nav-next" href="/data-modeling-and-persistence/containerized-mysql/reading-docker-compose.html">Reading docker-compose.yml →</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>Why Docker for MySQL?</h1>
+    <p class="lede">Real persistence means a real database server running somewhere — Docker is the fastest way to get one.</p>
+
+    
+
+    
+      <div class="slide-body"><p>Everything so far has run against an in-memory array — no separate process to
+install, configure, or even think about. A real database is different: MySQL
+is a server process of its own, with its own installation, its own
+configuration, its own running instance to manage, entirely independent of
+Node or this project.</p>
+<p>You already know MySQL itself from Laravel — the SQL, the relational model,
+none of that is new. What's new is <em>running</em> it locally without a framework
+like Laravel/Herd/XAMPP setting it up for you behind the scenes. <strong>Docker</strong>
+solves that by packaging MySQL (server, default config, the lot) into a
+container image you can start and stop as a single unit, with nothing
+installed on your machine except Docker itself.</p>
+<p><strong>Docker Compose</strong> goes one step further: instead of typing a long <code>docker run</code> command with every option spelled out, you describe the containers your
+project needs in one YAML file, and <code>docker compose up</code> starts them all. This
+project's <code>docker-compose.yml</code> will hold exactly one service for now —
+<code>mysql</code> — with <code>redis</code> and the API itself joining later in Week 6 (see
+<code>PLAN.md</code>); the app itself keeps running directly on your machine with
+<code>npm run dev</code> throughout, for a fast edit-reload loop that a container would
+only slow down.</p>
+</div>
+    
+  </main>
+</body>
+</html>

@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Idempotent Seeding — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        <a class="nav-prev" href="/data-modeling-and-persistence/seeding-with-prisma/the-seed-script.html">← The Seed Script</a>
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/data-modeling-and-persistence/seeding-with-prisma/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        <a class="nav-next" href="/data-modeling-and-persistence/the-prisma-client/generating-the-client.html">Generating the Client →</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>Idempotent Seeding</h1>
+    <p class="lede">Deleting everything before recreating it, in the right order, so the seed script is safe to run again and again.</p>
+
+    
+
+    
+      <div class="slide-body"><p>A seed script you can only safely run <em>once</em> against a fresh database is
+annoying in practice — you'll want to reset your data constantly while
+building and testing. This project's <code>main()</code> starts by deleting every row,
+before creating anything:</p>
+<pre><code class="hljs language-js"><span class="hljs-comment">// Figure 2.12: reset before reseeding (prisma/seed.js, excerpt)</span>
+<span class="hljs-keyword">await</span> prisma.<span class="hljs-property">notification</span>.<span class="hljs-title function_">deleteMany</span>();
+<span class="hljs-keyword">await</span> prisma.<span class="hljs-property">ticketWatcher</span>.<span class="hljs-title function_">deleteMany</span>();
+<span class="hljs-keyword">await</span> prisma.<span class="hljs-property">ticketTag</span>.<span class="hljs-title function_">deleteMany</span>();
+<span class="hljs-keyword">await</span> prisma.<span class="hljs-property">comment</span>.<span class="hljs-title function_">deleteMany</span>();
+<span class="hljs-keyword">await</span> prisma.<span class="hljs-property">ticket</span>.<span class="hljs-title function_">deleteMany</span>();
+<span class="hljs-keyword">await</span> prisma.<span class="hljs-property">tag</span>.<span class="hljs-title function_">deleteMany</span>();
+<span class="hljs-keyword">await</span> prisma.<span class="hljs-property">user</span>.<span class="hljs-title function_">deleteMany</span>();
+</code></pre>
+<p>A script with this at the top is called <strong>idempotent</strong> — running it five
+times in a row leaves the database in exactly the same state as running it
+once. That property is worth naming because it's not automatic; it comes
+directly from <em>how</em> this deletes.</p>
+<p>The order matters, and it's the opposite of how the tables get created: every
+foreign key from the schema topics — <code>Ticket.customerId</code>, <code>Comment.ticketId</code>,
+<code>TicketTag.tagId</code>, and the rest — means MySQL will refuse to delete a row
+that something else still points to. Deleting <code>notification</code> and the join
+tables first, then <code>comment</code> and <code>ticket</code>, and <code>user</code>/<code>tag</code> last, guarantees
+nothing is ever deleted while something else still references it. Creating
+data afterward runs in the mirror-image order — users and tags first, so
+their <code>id</code>s exist to be referenced when tickets, comments, and the join rows
+are created next.</p>
+</div>
+    
+  </main>
+</body>
+</html>

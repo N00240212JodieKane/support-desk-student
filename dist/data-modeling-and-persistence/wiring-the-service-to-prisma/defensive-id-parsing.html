@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Defensive id Parsing — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        <a class="nav-prev" href="/data-modeling-and-persistence/wiring-the-service-to-prisma/the-customerid-stand-in.html">← The customerId Stand-In</a>
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/data-modeling-and-persistence/wiring-the-service-to-prisma/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        <a class="nav-next" href="/data-modeling-and-persistence/testing-a-prisma-backed-service/what-is-a-mock.html">What Is a Mock? →</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>Defensive id Parsing</h1>
+    <p class="lede">A non-numeric id used to just fail to match; against Prisma it throws — so it needs its own check.</p>
+
+    
+
+    
+      <div class="slide-body"><p>Lesson 1's <code>getTicketById</code> converted <code>req.params.id</code> with <code>Number(...)</code> and
+handed it straight to <code>Array.find()</code> — a non-numeric id like <code>/tickets/abc</code>
+became <code>NaN</code>, <code>find()</code> simply never matched anything, and the existing
+&quot;not found&quot; branch handled it fine by accident. Prisma is less forgiving
+about it: <code>findUnique({ where: { id: NaN } })</code> doesn't return &quot;not found,&quot; it
+throws, because <code>NaN</code> isn't a value the <code>id</code> column can hold at all — and an
+uncaught throw from an <code>async</code> controller becomes a <code>500</code> through
+<code>asyncHandler</code> and the centralized error handler (Lesson 1), not the <code>400</code>
+a malformed request actually deserves.</p>
+<pre><code class="hljs language-js"><span class="hljs-comment">// Figure 2.16: guarding against a bad id (src/controllers/ticket.controller.js, excerpt)</span>
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">const</span> getTicketById = <span class="hljs-title function_">asyncHandler</span>(<span class="hljs-title function_">async</span> (req, res) =&gt; {
+  <span class="hljs-keyword">const</span> id = <span class="hljs-title class_">Number</span>(req.<span class="hljs-property">params</span>.<span class="hljs-property">id</span>);
+
+  <span class="hljs-keyword">if</span> (<span class="hljs-title class_">Number</span>.<span class="hljs-built_in">isNaN</span>(id)) {
+    <span class="hljs-keyword">return</span> res.<span class="hljs-title function_">status</span>(<span class="hljs-number">400</span>).<span class="hljs-title function_">json</span>({ <span class="hljs-attr">error</span>: { <span class="hljs-attr">message</span>: <span class="hljs-string">&#x27;id must be a number&#x27;</span> } });
+  }
+
+  <span class="hljs-keyword">const</span> ticket = <span class="hljs-keyword">await</span> ticketService.<span class="hljs-title function_">getTicketById</span>(id);
+  <span class="hljs-comment">// ...unchanged from Lesson 1 from here</span>
+});
+</code></pre>
+<p><code>Number.isNaN(id)</code> catches exactly that case, before <code>ticketService</code> — and
+therefore Prisma — ever sees it, turning what would otherwise be a confusing
+<code>500</code> into a <code>400</code> that actually names the problem. It's the same &quot;plain
+manual check, fail with a clear message&quot; habit as every other validation in
+this project so far — a schema-based version arrives with Zod in Week 3, but
+the underlying reason to check at all doesn't change: swapping the store
+underneath a service can expose gaps in validation that happened to be
+harmless against the old, more forgiving implementation.</p>
+</div>
+    
+  </main>
+</body>
+</html>

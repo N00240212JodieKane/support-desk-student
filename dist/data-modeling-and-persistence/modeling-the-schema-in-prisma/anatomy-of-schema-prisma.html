@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Anatomy of schema.prisma — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        <a class="nav-prev" href="/data-modeling-and-persistence/modeling-the-schema-in-prisma/installing-prisma.html">← Installing Prisma</a>
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/data-modeling-and-persistence/modeling-the-schema-in-prisma/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        <a class="nav-next" href="/data-modeling-and-persistence/modeling-the-schema-in-prisma/fields-and-constraints.html">Fields and Constraints →</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>Anatomy of schema.prisma</h1>
+    <p class="lede">Two configuration blocks that sit above every model: which client to generate, and which database to talk to.</p>
+
+    
+
+    
+      <div class="slide-body"><p>Every <code>schema.prisma</code> file opens with two configuration blocks, before any
+actual data model appears. Figure 2.4 is the top of this project's file.</p>
+<pre><code class="hljs language-prisma"><span class="hljs-comment">// Figure 2.4: schema configuration (prisma/schema.prisma, excerpt)</span>
+<span class="hljs-keyword">generator</span> <span class="hljs-keyword">client</span> {
+  <span class="hljs-keyword">provider</span> = <span class="hljs-string">&quot;prisma-client-js&quot;</span>
+}
+
+<span class="hljs-keyword">datasource</span> db {
+  <span class="hljs-keyword">provider</span> = <span class="hljs-string">&quot;mysql&quot;</span>
+  url      = env(<span class="hljs-string">&quot;DATABASE_URL&quot;</span>)
+}
+</code></pre>
+<ul>
+<li><strong><code>generator client</code></strong> tells Prisma <em>what to generate</em> from this schema —
+here, a JavaScript client (there are other generators for other languages/
+targets, not used in this project).</li>
+<li><strong><code>datasource db</code></strong> tells Prisma <em>which database engine</em> the schema targets
+(<code>mysql</code> — this affects what column types and SQL get generated) and <em>where
+to find it</em> — <code>env(&quot;DATABASE_URL&quot;)</code> reads the connection string from
+<code>.env</code>, the previous topic, rather than hardcoding it here. This is the only
+place in the whole schema file that mentions environment variables or
+connection details at all; everything below it is just the shape of your
+data.</li>
+</ul>
+<p>Everything from here on in the file is a <code>model</code> block — one per table,
+which is where the actual ticketing domain gets described.</p>
+</div>
+    
+  </main>
+</body>
+</html>

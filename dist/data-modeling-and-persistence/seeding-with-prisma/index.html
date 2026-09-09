@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Lecture Notes — Support Desk API</title>
+  <title>Seeding with Prisma — Support Desk API</title>
   <link rel="stylesheet" href="/assets/hljs-theme.css">
   <link rel="stylesheet" href="/assets/style.css">
 </head>
@@ -21,7 +21,7 @@
         
       </div>
       <div class="nav-slot nav-slot-center">
-        
+        <a class="nav-up" href="/data-modeling-and-persistence/index.html">↑ Up</a>
       </div>
       <div class="nav-slot nav-slot-right">
         
@@ -30,20 +30,20 @@
   </nav>
 
   <main class="content">
-    <h1>Lecture Notes</h1>
-    
+    <h1>Seeding with Prisma</h1>
+    <p class="lede">Populating a fresh database with realistic dev data, safely and repeatably.</p>
 
     
       <ul class="listing">
         
           <li>
-            <a href="/foundations/index.html">Foundations &amp; REST Basics</a>
-            <p>The Node.js runtime, Express fundamentals, and building GET/POST /tickets against an in-memory store.</p>
+            <a href="/data-modeling-and-persistence/seeding-with-prisma/the-seed-script.html">The Seed Script</a>
+            <p>A plain Node script, run through Prisma&#39;s CLI, that fills a fresh database with realistic dev data.</p>
           </li>
         
           <li>
-            <a href="/data-modeling-and-persistence/index.html">Data Modeling &amp; Persistence</a>
-            <p>Relational modeling in Prisma, migrations and seeding against MySQL, and swapping the in-memory ticket store for real Prisma queries.</p>
+            <a href="/data-modeling-and-persistence/seeding-with-prisma/idempotent-seeding.html">Idempotent Seeding</a>
+            <p>Deleting everything before recreating it, in the right order, so the seed script is safe to run again and again.</p>
           </li>
         
       </ul>

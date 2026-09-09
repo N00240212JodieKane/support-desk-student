@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>When the Schema Changes — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        <a class="nav-prev" href="/data-modeling-and-persistence/running-and-evolving-locally/day-to-day-startup.html">← Day-to-Day Startup</a>
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/data-modeling-and-persistence/running-and-evolving-locally/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        <a class="nav-next" href="/data-modeling-and-persistence/wiring-the-service-to-prisma/rewriting-the-ticket-service.html">Rewriting the Ticket Service →</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>When the Schema Changes</h1>
+    <p class="lede">Editing schema.prisma is only the first step — three more bring the running app back in sync with it.</p>
+
+    
+
+    
+      <div class="slide-body"><p>Every topic so far comes together into one checklist for the single most
+common thing you'll do while building the rest of this API: change what the
+data looks like.</p>
+<ol>
+<li><strong>Edit <code>schema.prisma</code></strong> — add a field, a model, a relation.</li>
+<li><strong><code>npx prisma migrate dev --name &lt;what-changed&gt;</code></strong> — diffs your edit
+against the database, generates a new migration file, applies it, <em>and</em>
+regenerates the Prisma Client (the client topic) to match — all in the
+one command.</li>
+<li><strong>Reseed if the data shape changed</strong>: <code>npx prisma db seed</code> — only
+actually needed when the edit affects what the seed script inserts (a
+new required field, a renamed relation); a change that doesn't touch
+seeded data can skip this step.</li>
+<li><strong>Restart <code>npm run dev</code></strong> if it isn't already running with <code>--watch</code>
+picking up the change.</li>
+</ol>
+<p>Two places worth checking when something doesn't look right after a schema
+change: <code>npx prisma studio</code> opens a browser-based GUI against your actual
+database — useful for confirming a change landed the way you expected,
+without writing a query by hand. And the <code>prisma/migrations/</code> folder itself
+is a plain, readable history of every schema change ever applied, in order —
+worth skimming when you're not sure what state a database is actually in.</p>
+</div>
+    
+  </main>
+</body>
+</html>

@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>What Is a Mock? — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        <a class="nav-prev" href="/data-modeling-and-persistence/wiring-the-service-to-prisma/defensive-id-parsing.html">← Defensive id Parsing</a>
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/data-modeling-and-persistence/testing-a-prisma-backed-service/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        <a class="nav-next" href="/data-modeling-and-persistence/testing-a-prisma-backed-service/creating-mocks-with-jest.html">Creating Mocks with Jest →</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>What Is a Mock?</h1>
+    <p class="lede">A fake stand-in for a real dependency, that lets a test control and inspect one collaborator without needing the real thing.</p>
+
+    
+
+    
+      <div class="slide-body"><p>Lesson 1's unit test for <code>ticket.service.js</code> (Figure 1.14) worked by calling
+the real functions directly — there was nothing to fake, because the &quot;database&quot;
+underneath was just a plain array, already isolated and instant. That stops
+being true the moment those same functions talk to Prisma and a real MySQL
+server: calling them for real now means a network round trip, a database that
+has to already contain the right rows, and a test that quietly breaks the
+moment someone else's test changes what's in that database.</p>
+<p>A <strong>mock</strong> solves this by standing in for a real dependency with a fake
+version you control completely. Instead of a real <code>PrismaClient</code> actually
+querying MySQL, a test can hand <code>ticket.service.js</code> an object that merely
+<em>looks</em> like one — same method names, but each one instantly returns
+whatever fixed value the test tells it to, no database involved at all.
+This is what makes it a <strong>unit</strong> test in the sense from Lesson 1's
+why-automated-testing topic: <code>ticket.service.js</code> is still being tested in
+isolation, one layer at a time — it's just that &quot;isolation&quot; now means
+isolating it from Prisma specifically, not from nothing.</p>
+<p>A mock gives you two things a real dependency can't, on demand: <strong>control</strong>
+(you decide exactly what <code>findUnique</code> returns for this one test, without
+needing a real matching row anywhere) and <strong>inspection</strong> (you can ask
+afterward &quot;was <code>create</code> actually called, and with what arguments?&quot; — the
+next slide shows Jest's tools for exactly that).</p>
+</div>
+    
+  </main>
+</body>
+</html>
