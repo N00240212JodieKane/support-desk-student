@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>What Is Node.js? — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/foundations/nodejs-basics/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        <a class="nav-next" href="/foundations/nodejs-basics/npm-and-package-json.html">npm, package.json, and node_modules →</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>What Is Node.js?</h1>
+    <p class="lede">JavaScript running outside the browser, and why that matters for building a server.</p>
+
+    
+
+    
+      <div class="slide-body"><p>Until now, every line of JavaScript you've written has run <strong>inside a browser</strong> —
+triggered by a page load, a click, a form submit. Node.js is the same JavaScript
+language, but running as a <strong>standalone program on a machine</strong>, with no browser
+involved at all. There's no <code>window</code>, no <code>document</code>, no DOM — just JavaScript with
+access to the machine it's running on: the filesystem, the network, environment
+variables.</p>
+<p>That's what makes it possible to write a web <em>server</em> in JavaScript rather than
+only a web <em>page</em>. Where Laravel gave you PHP running inside Apache/nginx via
+PHP-FPM, Node <strong>is</strong> the server process — there's no separate web server handing
+requests to it up front. A Node process you start yourself listens on a port and
+handles requests directly.</p>
+<p>You run a JavaScript file with Node from the command line, the same way you'd run
+a PHP script with <code>php</code>:</p>
+<pre><code class="hljs">node some-file.js
+</code></pre>
+<p>Node executes the file top to bottom and exits — unless the code keeps something
+running, like a server listening for connections. That's exactly what
+<code>src/server.js</code> will do shortly: start a process that <em>doesn't</em> exit, because it's
+sitting there waiting for HTTP requests.</p>
+<p>One more mental shift worth flagging now, because it matters a lot for how this
+API's code will behave: a PHP-FPM worker starts fresh for every request — no
+variable survives from one request to the next unless it's in the database or a
+session. A Node process, by contrast, <strong>keeps running and keeps its memory</strong>
+across every request it handles, until you stop it. We'll come back to exactly
+why that matters once there's code that depends on it.</p>
+</div>
+    
+  </main>
+</body>
+</html>

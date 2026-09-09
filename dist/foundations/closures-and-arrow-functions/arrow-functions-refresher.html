@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Arrow Functions Refresher — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        <a class="nav-prev" href="/foundations/closures-and-arrow-functions/closures.html">← Closures</a>
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/foundations/closures-and-arrow-functions/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        <a class="nav-next" href="/foundations/error-handling/why-express-needs-help.html">Why Express Needs Help with Async Errors →</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>Arrow Functions Refresher</h1>
+    <p class="lede">Implicit returns and chained arrows — the shorthand this project&#39;s middleware leans on.</p>
+
+    
+
+    
+      <div class="slide-body"><p>You've seen arrow functions before, but the code coming up next uses two
+shorthands worth refreshing explicitly rather than assuming they're familiar.</p>
+<p><strong>Implicit return.</strong> A single-expression arrow function can drop both the curly
+braces <em>and</em> the <code>return</code> keyword — the expression's value is returned
+automatically:</p>
+<pre><code class="hljs language-js"><span class="hljs-comment">// These two are equivalent:</span>
+<span class="hljs-keyword">const</span> <span class="hljs-title function_">double</span> = (<span class="hljs-params">x</span>) =&gt; { <span class="hljs-keyword">return</span> x * <span class="hljs-number">2</span>; };
+<span class="hljs-keyword">const</span> <span class="hljs-title function_">double2</span> = (<span class="hljs-params">x</span>) =&gt; x * <span class="hljs-number">2</span>;
+</code></pre>
+<p>You've already seen this in <code>ticket.service.js</code> (Figure 1.8, previous topic):
+<code>export const getAllTickets = async () =&gt; tickets;</code> is an implicit return of
+<code>tickets</code> — no <code>{ }</code>, no <code>return</code>.</p>
+<p><strong>A function that returns another arrow function.</strong> Nothing stops the
+implicitly-returned expression from itself being another arrow function:</p>
+<pre><code class="hljs language-js"><span class="hljs-keyword">const</span> <span class="hljs-title function_">add</span> = (<span class="hljs-params">a</span>) =&gt; <span class="hljs-function">(<span class="hljs-params">b</span>) =&gt;</span> a + b;
+
+<span class="hljs-keyword">const</span> add5 = <span class="hljs-title function_">add</span>(<span class="hljs-number">5</span>); <span class="hljs-comment">// add5 is now a function that remembers a = 5</span>
+<span class="hljs-title function_">add5</span>(<span class="hljs-number">3</span>); <span class="hljs-comment">// 8</span>
+</code></pre>
+<p>Read that as two steps: <code>add(5)</code> runs the outer arrow, which closes over <code>a = 5</code>
+(this is the closure from the previous slide) and returns the <em>inner</em> arrow
+function without running it yet. <code>add5(3)</code> then runs that inner function.</p>
+<p>That <code>(a) =&gt; (b) =&gt; ...</code> shape is precisely what the real <code>asyncHandler</code> code
+looks like — one arrow returning another. With closures and this shorthand both
+fresh, it's a short read rather than a puzzle.</p>
+</div>
+    
+  </main>
+</body>
+</html>

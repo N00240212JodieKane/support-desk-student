@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Controllers as Plain Functions — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        <a class="nav-prev" href="/foundations/asynchronous-javascript/promises-and-async-await.html">← Promises and async/await</a>
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/foundations/building-the-ticket-api/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        <a class="nav-next" href="/foundations/building-the-ticket-api/services-as-a-layer.html">Services as a Layer →</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>Controllers as Plain Functions</h1>
+    <p class="lede">req and res, no route-model binding, and a flat group of exported functions instead of a class.</p>
+
+    
+
+    
+      <div class="slide-body"><p>A Laravel <code>TicketController</code> is a class, and each action (<code>index</code>, <code>show</code>,
+<code>store</code>, ...) is a method on it, with the framework instantiating the class and
+injecting a typed <code>Request</code> for you. This project's controllers are <strong>plain
+exported functions, grouped in one file per resource</strong> — no class, no
+constructor, no dependency injection container. An imported module is already a
+singleton in Node, which is the idiomatic substitute for what a DI container
+gives you in Laravel.</p>
+<p>Figure 1.7 shows two of the three ticket controller functions (the third,
+<code>createTicket</code>, follows the same shape and is covered on the next slide):</p>
+<pre><code class="hljs language-js"><span class="hljs-comment">// Figure 1.7: reading tickets (src/controllers/ticket.controller.js, excerpt)</span>
+<span class="hljs-keyword">import</span> * <span class="hljs-keyword">as</span> ticketService <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;../services/ticket.service.js&#x27;</span>;
+<span class="hljs-keyword">import</span> asyncHandler <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;../middleware/asyncHandler.js&#x27;</span>;
+
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">const</span> getAllTickets = <span class="hljs-title function_">asyncHandler</span>(<span class="hljs-title function_">async</span> (req, res) =&gt; {
+  <span class="hljs-keyword">const</span> tickets = <span class="hljs-keyword">await</span> ticketService.<span class="hljs-title function_">getAllTickets</span>();
+  res.<span class="hljs-title function_">json</span>(tickets);
+});
+
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">const</span> getTicketById = <span class="hljs-title function_">asyncHandler</span>(<span class="hljs-title function_">async</span> (req, res) =&gt; {
+  <span class="hljs-keyword">const</span> id = <span class="hljs-title class_">Number</span>(req.<span class="hljs-property">params</span>.<span class="hljs-property">id</span>);
+  <span class="hljs-keyword">const</span> ticket = <span class="hljs-keyword">await</span> ticketService.<span class="hljs-title function_">getTicketById</span>(id);
+
+  <span class="hljs-keyword">if</span> (!ticket) {
+    <span class="hljs-keyword">return</span> res.<span class="hljs-title function_">status</span>(<span class="hljs-number">404</span>).<span class="hljs-title function_">json</span>({ <span class="hljs-attr">error</span>: { <span class="hljs-attr">message</span>: <span class="hljs-string">`Ticket <span class="hljs-subst">${id}</span> not found`</span> } });
+  }
+
+  res.<span class="hljs-title function_">json</span>(ticket);
+});
+</code></pre>
+<p>Every controller function takes <code>(req, res)</code> — Express's request and response
+objects — and reads whatever it needs directly off <code>req</code>: <code>req.params.id</code> for
+the <code>:id</code> route parameter from <code>ticket.routes.js</code> (previous topic). There's no
+route-model binding like Laravel's <code>function show(Ticket $ticket)</code> automatically
+loading a model for you — <code>getTicketById</code> fetches it itself, and handles the
+not-found case itself, by hand.</p>
+<p>Also notice <code>req.params.id</code> is wrapped in <code>Number(...)</code>. Express route
+parameters always arrive as <strong>strings</strong>, even for a route like <code>/:id</code> that only
+ever matches digits — so comparing it against a numeric ID without converting
+first would silently never match. <code>asyncHandler</code> wrapping each function is
+covered properly later this lesson; for now, read it as &quot;makes async errors in
+this function reach Express safely.&quot;</p>
+</div>
+    
+  </main>
+</body>
+</html>

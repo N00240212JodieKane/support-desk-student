@@ -1,0 +1,21 @@
+{
+  "name": "support-desk-instructor",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Support ticketing REST API — teaching case study for Full Stack Development (Back End weeks).",
+  "type": "module",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "test": "echo \"no tests yet — added in Week 3\" && exit 0",
+    "build": "npm run build --prefix tutorial",
+    "tutorial:dev": "npm run dev --prefix tutorial",
+    "sync:public": "node scripts/sync-to-public.js"
+  },
+  "license": "UNLICENSED",
+  "dependencies": {
+    "dotenv": "^17.4.2",
+    "express": "^4.19.2"
+  }
+}

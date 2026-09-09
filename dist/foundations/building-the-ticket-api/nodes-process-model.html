@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Node&#39;s Process Model vs. PHP&#39;s — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        <a class="nav-prev" href="/foundations/building-the-ticket-api/services-as-a-layer.html">← Services as a Layer</a>
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/foundations/building-the-ticket-api/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        <a class="nav-next" href="/foundations/closures-and-arrow-functions/closures.html">Closures →</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>Node&#39;s Process Model vs. PHP&#39;s</h1>
+    <p class="lede">Why a plain array in ticket.service.js can act as shared storage across every request.</p>
+
+    
+
+    
+      <div class="slide-body"><p>Look again at Figure 1.8 (previous slide): <code>tickets</code> and <code>nextId</code> are declared
+with <code>let</code>, at the top of the file, outside any function. Every request that
+calls <code>createTicket</code> pushes onto that same array, and the <em>next</em> request's call
+to <code>getAllTickets</code> sees it. There's no database yet — so how is that state
+surviving between separate HTTP requests?</p>
+<p>This is the Node process model from the very first topic of this lesson, now
+showing up in real code. Recall: a PHP-FPM worker restarts fresh for every
+request, so a plain PHP variable never survives past the request that created
+it — you'd have needed a database, a file, or a session even to fake this. A
+Node process, by contrast, <strong>starts once (when you run <code>npm run dev</code>) and keeps
+running</strong>, handling every request that arrives on the same live process, with
+the same JavaScript memory intact the whole time.</p>
+<pre><code class="hljs">PHP-FPM:  [request 1: fresh process] → [request 2: fresh process] → ...
+                 ↑ variables die here      ↑ variables die here
+
+Node:     [ one process, started once ] → handles request 1, 2, 3, ... in turn
+                 ↑ module-level variables (tickets, nextId) live here the whole time
+</code></pre>
+<p>That's what lets <code>let tickets = [...]</code> at the top of <code>ticket.service.js</code> act as
+a (very temporary) shared data store across requests, with zero extra plumbing.
+It's also exactly why this is only a <strong>Week 1 stand-in</strong>: that same array is
+shared by every request Express is currently handling, with no isolation and no
+persistence across restarts — restart the process (or deploy a second instance,
+eventually) and it resets to the two seeded tickets. Week 2 replaces it with a
+real database specifically so ticket data survives a restart and isn't just
+sitting in one process's memory.</p>
+</div>
+    
+  </main>
+</body>
+</html>

@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Middleware and the Pipeline — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        <a class="nav-prev" href="/foundations/express-fundamentals/app-vs-server.html">← app.js vs. server.js: One Job Each</a>
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/foundations/express-fundamentals/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        <a class="nav-next" href="/foundations/express-fundamentals/routers-and-restful-routes.html">Routers and RESTful Routes →</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>Middleware and the Pipeline</h1>
+    <p class="lede">app.use(), the order requests flow through, and why that order is never arbitrary.</p>
+
+    
+
+    
+      <div class="slide-body"><p><strong>Middleware</strong> is just a function with the shape <code>(req, res, next)</code> that Express
+calls on its way to handling a request. It can inspect or modify the request,
+send a response itself and stop there, or call <code>next()</code> to hand off to whatever
+was registered after it. <code>app.use(someMiddleware)</code> is how you register one.</p>
+<p>There's no real equivalent of this in Laravel-as-you've-used-it — the closest
+mental model is Laravel's own middleware classes (<code>handle($request, $next)</code>), if
+you've glimpsed those: same idea, but here it's the <em>entire</em> framework's
+extension point, not one feature among many.</p>
+<p>Looking back at Figure 1.3 (earlier this topic), <code>app.js</code> registers four things,
+<strong>in this exact order</strong>:</p>
+<ol>
+<li><code>express.json()</code> — built-in middleware that parses a JSON request body into
+<code>req.body</code>. Laravel does this for you invisibly; Express makes it an explicit
+line you add.</li>
+<li><code>routes</code> — the app's own routes (next slide).</li>
+<li><code>notFound</code> — runs only if nothing above matched the request.</li>
+<li><code>errorHandler</code> — handles any error forwarded via <code>next(err)</code> from anything
+above it.</li>
+</ol>
+<p>Order matters because Express tries each registered function <strong>in registration
+order</strong> until one of them sends a response:</p>
+<pre><code class="hljs">         every request
+              │
+              ▼
+     express.json()          parses the JSON body onto req.body
+              │
+              ▼
+         routes              tries each registered route in turn
+              │
+     ┌────────┴─────────┐
+     │ matched          │ no route matched
+     ▼                  ▼
+  controller           notFound ──► 404 response
+
+     an error thrown/rejected ANYWHERE above jumps
+     straight here, skipping everything in between:
+              │
+              ▼
+        errorHandler ──► error response
+</code></pre>
+<p>Figure 1.4 is <code>notFound</code> — it always sends a 404, so it must come <em>after</em> every
+real route, or it would swallow requests that should have matched one.</p>
+<pre><code class="hljs language-js"><span class="hljs-comment">// Figure 1.4: catch-all for unmatched requests (src/middleware/notFound.js)</span>
+<span class="hljs-keyword">export</span> <span class="hljs-title function_">default</span> (req, res, next) =&gt; {
+  res.<span class="hljs-title function_">status</span>(<span class="hljs-number">404</span>).<span class="hljs-title function_">json</span>({
+    <span class="hljs-attr">error</span>: { <span class="hljs-attr">message</span>: <span class="hljs-string">`Not found: <span class="hljs-subst">${req.method}</span> <span class="hljs-subst">${req.originalUrl}</span>`</span> },
+  });
+};
+</code></pre>
+<p><code>errorHandler</code> is last of all, for a related reason covered properly in the
+error-handling topic later this lesson: it needs to sit downstream of
+everything else so any error, from any middleware or route above it, can reach
+it via <code>next(err)</code>.</p>
+</div>
+    
+  </main>
+</body>
+</html>

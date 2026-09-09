@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Services as a Layer — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        <a class="nav-prev" href="/foundations/building-the-ticket-api/controllers-as-plain-functions.html">← Controllers as Plain Functions</a>
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/foundations/building-the-ticket-api/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        <a class="nav-next" href="/foundations/building-the-ticket-api/nodes-process-model.html">Node&#39;s Process Model vs. PHP&#39;s →</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>Services as a Layer</h1>
+    <p class="lede">Why ticket logic lives in its own file, separate from the controller that calls it.</p>
+
+    
+
+    
+      <div class="slide-body"><p>Laravel got you comfortable with <strong>routes → controllers → models</strong>. This project
+adds a layer Laravel never pushed you toward: <strong>services</strong>, sitting between
+controllers and data. <code>getAllTickets</code> in the controller (previous slide) doesn't
+touch the ticket data itself — it calls <code>ticketService.getAllTickets()</code> and
+returns whatever comes back.</p>
+<pre><code class="hljs language-js"><span class="hljs-comment">// Figure 1.8: the ticket service (src/services/ticket.service.js, excerpt)</span>
+<span class="hljs-keyword">let</span> tickets = [
+  { <span class="hljs-attr">id</span>: <span class="hljs-number">1</span>, <span class="hljs-attr">subject</span>: <span class="hljs-string">&#x27;Cannot log in&#x27;</span>, <span class="hljs-attr">description</span>: <span class="hljs-string">&#x27;Password reset email never arrives&#x27;</span>, <span class="hljs-attr">status</span>: <span class="hljs-string">&#x27;open&#x27;</span> },
+  { <span class="hljs-attr">id</span>: <span class="hljs-number">2</span>, <span class="hljs-attr">subject</span>: <span class="hljs-string">&#x27;Invoice discrepancy&#x27;</span>, <span class="hljs-attr">description</span>: <span class="hljs-string">&#x27;Charged twice for March&#x27;</span>, <span class="hljs-attr">status</span>: <span class="hljs-string">&#x27;open&#x27;</span> },
+];
+<span class="hljs-keyword">let</span> nextId = tickets.<span class="hljs-property">length</span> + <span class="hljs-number">1</span>;
+
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">const</span> <span class="hljs-title function_">getAllTickets</span> = <span class="hljs-keyword">async</span> (<span class="hljs-params"></span>) =&gt; tickets;
+
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">const</span> <span class="hljs-title function_">getTicketById</span> = <span class="hljs-keyword">async</span> (<span class="hljs-params">id</span>) =&gt; tickets.<span class="hljs-title function_">find</span>(<span class="hljs-function">(<span class="hljs-params">ticket</span>) =&gt;</span> ticket.<span class="hljs-property">id</span> === id);
+
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">const</span> <span class="hljs-title function_">createTicket</span> = <span class="hljs-keyword">async</span> (<span class="hljs-params">{ subject, description }</span>) =&gt; {
+  <span class="hljs-keyword">const</span> ticket = { <span class="hljs-attr">id</span>: nextId++, subject, description, <span class="hljs-attr">status</span>: <span class="hljs-string">&#x27;open&#x27;</span> };
+  tickets.<span class="hljs-title function_">push</span>(ticket);
+  <span class="hljs-keyword">return</span> ticket;
+};
+</code></pre>
+<p>Why bother, when the controller could just as easily hold this logic itself?
+Two reasons, and they only get more valuable as the API grows over the coming
+weeks:</p>
+<ul>
+<li><strong>The controller's job stays &quot;translate HTTP ↔ data.&quot;</strong> It reads the request,
+calls a service, shapes a response. It never needs to know <em>how</em> tickets are
+fetched or stored.</li>
+<li><strong>That &quot;how&quot; can change without touching the controller at all.</strong> Right now
+<code>ticket.service.js</code> is an in-memory array. From Week 2 onward it becomes real
+Prisma/MySQL queries — and because the controller only ever called
+<code>ticketService.getAllTickets()</code>, not touched the array directly, not a single
+line in <code>ticket.controller.js</code> needs to change when that happens.</li>
+</ul>
+<p>This is exactly why every function here is already declared <code>async</code>, even though
+none of them currently <code>await</code> anything — a real database call will need to be
+awaited, and making that change later shouldn't require changing every caller's
+shape too. Laravel doesn't force this split because Eloquent models already give
+you a query-building layer separate from the controller; without an ORM (yet),
+Express gives you nothing there for free, so this project adds the layer by hand.</p>
+</div>
+    
+  </main>
+</body>
+</html>

@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>app.js vs. server.js: One Job Each — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        <a class="nav-prev" href="/foundations/express-fundamentals/what-is-express.html">← What Is Express?</a>
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/foundations/express-fundamentals/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        <a class="nav-next" href="/foundations/express-fundamentals/middleware-pipeline.html">Middleware and the Pipeline →</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>app.js vs. server.js: One Job Each</h1>
+    <p class="lede">Why building the app and running it are split into two files, instead of one.</p>
+
+    
+
+    
+      <div class="slide-body"><p>There's no Laravel equivalent to point at here — <code>artisan serve</code> and the
+framework bootstrapping are both hidden from you. This project makes that
+bootstrapping an explicit, deliberate two-file split:</p>
+<ul>
+<li><strong><code>app.js</code></strong> — builds the Express app: creates it, registers every
+<code>app.use(...)</code> (Figure 1.3, previous slide), and <strong>exports the finished app</strong>.
+It never starts listening for real requests.</li>
+<li><strong><code>server.js</code></strong> — imports that app and is the <em>only</em> place that calls
+<code>app.listen(...)</code>, actually opening a port and starting the live process.</li>
+</ul>
+<p>Why bother separating &quot;define what the app does&quot; from &quot;run it&quot;? Because
+<code>app.js</code>'s export is then just a plain, fully-configured Express app object —
+something else can use it <em>without</em> ever binding a real network port. Right now
+nothing else does. But this project introduces automated tests starting Week 3,
+and by Week 6 those tests call routes directly against the exported <code>app</code> (via a
+library called <code>supertest</code>) rather than starting a real server and making real
+HTTP requests over the network — faster, and with no risk of port conflicts
+between test runs. None of that needs to make sense yet; the point for now is
+just that the split exists <em>because</em> <code>app.js</code> on its own is a reusable,
+listen-free thing.</p>
+<p><code>server.js</code>'s own job — reading which port to listen on — is covered properly
+in this lesson's Configuration topic, once <code>process.env</code> has been introduced.</p>
+</div>
+    
+  </main>
+</body>
+</html>

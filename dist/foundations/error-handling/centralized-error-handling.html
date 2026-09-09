@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Centralized Error Handling — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        <a class="nav-prev" href="/foundations/error-handling/error-handling-middleware.html">← Error-Handling Middleware</a>
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/foundations/error-handling/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        <a class="nav-next" href="/foundations/configuration/env-vars-and-process-env.html">Environment Variables and process.env →</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>Centralized Error Handling</h1>
+    <p class="lede">Why every error funnels through one file, instead of a try/catch in every controller.</p>
+
+    
+
+    
+      <div class="slide-body"><p>Without any of this project's pattern, a natural instinct is to handle errors
+right where they can occur:</p>
+<pre><code class="hljs language-js"><span class="hljs-comment">// The alternative this project deliberately avoids:</span>
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">const</span> <span class="hljs-title function_">getTicketById</span> = <span class="hljs-keyword">async</span> (<span class="hljs-params">req, res</span>) =&gt; {
+  <span class="hljs-keyword">try</span> {
+    <span class="hljs-keyword">const</span> ticket = <span class="hljs-keyword">await</span> ticketService.<span class="hljs-title function_">getTicketById</span>(<span class="hljs-title class_">Number</span>(req.<span class="hljs-property">params</span>.<span class="hljs-property">id</span>));
+    <span class="hljs-keyword">if</span> (!ticket) <span class="hljs-keyword">return</span> res.<span class="hljs-title function_">status</span>(<span class="hljs-number">404</span>).<span class="hljs-title function_">json</span>({ <span class="hljs-attr">error</span>: { <span class="hljs-attr">message</span>: <span class="hljs-string">&#x27;Not found&#x27;</span> } });
+    res.<span class="hljs-title function_">json</span>(ticket);
+  } <span class="hljs-keyword">catch</span> (err) {
+    res.<span class="hljs-title function_">status</span>(<span class="hljs-number">500</span>).<span class="hljs-title function_">json</span>({ <span class="hljs-attr">error</span>: { <span class="hljs-attr">message</span>: <span class="hljs-string">&#x27;Internal Server Error&#x27;</span> } });
+  }
+};
+</code></pre>
+<p>That works for one controller — but repeat it across every controller this API
+will ever have, and the response <em>shape</em> for an error (<code>{ error: { message } }</code>)
+is now duplicated everywhere, with every future contributor free to format it
+slightly differently by hand.</p>
+<p>This project's approach, now that all three pieces are in view, is the opposite:
+<strong>no controller ever handles its own errors.</strong> Instead:</p>
+<ol>
+<li><code>asyncHandler</code> (Figure 1.9) catches a rejected Promise from any controller and
+calls <code>next(err)</code>.</li>
+<li>Express routes that straight to <code>errorHandler</code> (Figure 1.10) — skipping every
+ordinary middleware in between — because of its four-argument signature.</li>
+<li><code>errorHandler</code>, registered last in <code>app.js</code> (Figure 1.3, first topic), is the
+<strong>one and only place</strong> an error becomes a JSON response.</li>
+</ol>
+<p>That's also precisely why <code>app.js</code> registers <code>errorHandler</code> dead last: it has to
+sit downstream of every route and every other middleware for <code>next(err)</code> to be
+able to reach it from anywhere in the app. Add a hundred more routes later, and
+none of them need their own try/catch — they just need to be wrapped in
+<code>asyncHandler</code>, and any error they throw ends up here automatically.</p>
+</div>
+    
+  </main>
+</body>
+</html>

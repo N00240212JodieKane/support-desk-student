@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>What Is Express? — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        <a class="nav-prev" href="/foundations/rest-and-restful-apis/http-verbs-and-status-codes.html">← HTTP Verbs and Status Codes as a Contract</a>
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/foundations/express-fundamentals/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        <a class="nav-next" href="/foundations/express-fundamentals/app-vs-server.html">app.js vs. server.js: One Job Each →</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>What Is Express?</h1>
+    <p class="lede">A minimal HTTP framework, and the request/response cycle it&#39;s built around.</p>
+
+    
+
+    
+      <div class="slide-body"><p>Laravel is a <strong>batteries-included</strong> framework: routing, an ORM, validation, auth
+scaffolding, a templating engine, and much more, all ship together and are wired
+up for you. <strong>Express is deliberately not that.</strong> It's a small library that gives
+you exactly two things: a way to define routes, and a way to run functions
+(middleware) in between a request arriving and a response going out. Everything
+else — the ORM (Prisma, from Week 2), validation (Zod, Week 3), auth (Week 4) —
+gets added as separate packages, on purpose, rather than bundled in.</p>
+<p>That trade-off is deliberate on Express's part: you assemble only what you need,
+at the cost of more upfront wiring than Laravel gives you for free. This course
+does that wiring explicitly, week by week, so you see what a framework like
+Laravel is normally doing for you behind the scenes.</p>
+<p>Figure 1.3 is the entire Express setup for this API so far.</p>
+<pre><code class="hljs language-js"><span class="hljs-comment">// Figure 1.3: the whole Express app (src/app.js)</span>
+<span class="hljs-keyword">import</span> express <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;express&#x27;</span>;
+<span class="hljs-keyword">import</span> routes <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;./routes/index.js&#x27;</span>;
+<span class="hljs-keyword">import</span> notFound <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;./middleware/notFound.js&#x27;</span>;
+<span class="hljs-keyword">import</span> errorHandler <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;./middleware/errorHandler.js&#x27;</span>;
+
+<span class="hljs-keyword">const</span> app = <span class="hljs-title function_">express</span>();
+
+app.<span class="hljs-title function_">use</span>(express.<span class="hljs-title function_">json</span>());
+
+app.<span class="hljs-title function_">use</span>(routes);
+
+app.<span class="hljs-title function_">use</span>(notFound);
+app.<span class="hljs-title function_">use</span>(errorHandler);
+
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">default</span> app;
+</code></pre>
+<p><code>express()</code> creates the application object. Every other line either registers
+something to run on incoming requests (<code>app.use(...)</code>) or exports the finished
+app so something else (<code>server.js</code>) can start listening on it. That's the whole
+request/response cycle at this level: a request comes in, it passes through
+whatever's registered via <code>app.use</code>, in order, until something sends a response.</p>
+<p>Notice <code>app.js</code> builds all of that but never actually starts the server —
+there's no <code>app.listen(...)</code> anywhere in it. That split is deliberate enough to
+deserve its own explanation, next.</p>
+</div>
+    
+  </main>
+</body>
+</html>

@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Routers and RESTful Routes — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        <a class="nav-prev" href="/foundations/express-fundamentals/middleware-pipeline.html">← Middleware and the Pipeline</a>
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/foundations/express-fundamentals/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        <a class="nav-next" href="/foundations/asynchronous-javascript/promises-and-async-await.html">Promises and async/await →</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>Routers and RESTful Routes</h1>
+    <p class="lede">express.Router() as routes/web.php&#39;s equivalent, and mapping verbs + paths straight to functions.</p>
+
+    
+
+    
+      <div class="slide-body"><p>In Laravel, every route lives in <code>routes/web.php</code> (or <code>api.php</code>), each line
+binding a verb + path to a controller method: <code>Route::get('/tickets', [TicketController::class, 'index'])</code>.
+Express's <code>express.Router()</code> does the same job — a mini, mountable router — just
+organized <strong>one file per resource</strong> instead of one flat file, which suits a
+growing API better as more resources (comments, tags, users, ...) get added in
+later weeks.</p>
+<p>Figure 1.5 mounts one router per resource onto the main app:</p>
+<pre><code class="hljs language-js"><span class="hljs-comment">// Figure 1.5: aggregating per-resource routers (src/routes/index.js)</span>
+<span class="hljs-keyword">import</span> express <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;express&#x27;</span>;
+<span class="hljs-keyword">import</span> ticketRoutes <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;./ticket.routes.js&#x27;</span>;
+
+<span class="hljs-keyword">const</span> router = express.<span class="hljs-title class_">Router</span>();
+
+router.<span class="hljs-title function_">use</span>(<span class="hljs-string">&#x27;/tickets&#x27;</span>, ticketRoutes);
+
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">default</span> router;
+</code></pre>
+<p><code>router.use('/tickets', ticketRoutes)</code> mounts every route defined inside
+<code>ticketRoutes</code> under the <code>/tickets</code> prefix — so a route defined there as <code>/</code>
+actually answers at <code>/tickets</code>, and <code>/:id</code> at <code>/tickets/:id</code>. This is what
+<code>app.js</code> (Figure 1.3) was importing as <code>routes</code> and registering with
+<code>app.use(routes)</code>.</p>
+<p>Figure 1.6 is that ticket router — the actual verb/path definitions putting the
+REST conventions from earlier this lesson into code: a <code>GET</code>/<code>POST</code> pair on the
+<code>/tickets</code> collection, and a <code>GET</code> on one ticket via the <code>:id</code> route parameter.</p>
+<pre><code class="hljs language-js"><span class="hljs-comment">// Figure 1.6: RESTful routes for tickets (src/routes/ticket.routes.js)</span>
+<span class="hljs-keyword">import</span> express <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;express&#x27;</span>;
+<span class="hljs-keyword">import</span> * <span class="hljs-keyword">as</span> ticketController <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;../controllers/ticket.controller.js&#x27;</span>;
+
+<span class="hljs-keyword">const</span> router = express.<span class="hljs-title class_">Router</span>();
+
+router.<span class="hljs-title function_">get</span>(<span class="hljs-string">&#x27;/&#x27;</span>, ticketController.<span class="hljs-property">getAllTickets</span>);
+router.<span class="hljs-title function_">post</span>(<span class="hljs-string">&#x27;/&#x27;</span>, ticketController.<span class="hljs-property">createTicket</span>);
+router.<span class="hljs-title function_">get</span>(<span class="hljs-string">&#x27;/:id&#x27;</span>, ticketController.<span class="hljs-property">getTicketById</span>);
+
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">default</span> router;
+</code></pre>
+<p>Two things to notice, both different from Laravel's routing:</p>
+<ul>
+<li><strong>No string-based binding.</strong> <code>ticketController.getAllTickets</code> is a direct
+reference to an imported function — not a class name + method name resolved
+by a container, like Laravel's <code>[TicketController::class, 'index']</code>.</li>
+<li><strong><code>:id</code> is a route parameter</strong>, just like Laravel's <code>{id}</code> — Express just
+spells it with a colon. It shows up as <code>req.params.id</code> in the controller,
+covered next.</li>
+</ul>
+</div>
+    
+  </main>
+</body>
+</html>

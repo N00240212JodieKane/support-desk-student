@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>HTTP Verbs and Status Codes as a Contract — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        <a class="nav-prev" href="/foundations/rest-and-restful-apis/what-makes-an-api-restful.html">← What Makes an API RESTful</a>
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/foundations/rest-and-restful-apis/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        <a class="nav-next" href="/foundations/express-fundamentals/what-is-express.html">What Is Express? →</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>HTTP Verbs and Status Codes as a Contract</h1>
+    <p class="lede">The verb-to-action convention, and why a status code carries meaning, not just success/failure.</p>
+
+    
+
+    
+      <div class="slide-body"><p>If the URL names a resource (previous slide), the <strong>HTTP method</strong> names the
+action. A handful of verbs cover practically every case:</p>
+<table>
+<thead>
+<tr>
+<th>Verb</th>
+<th>On <code>/tickets</code> (the collection)</th>
+<th>On <code>/tickets/:id</code> (one resource)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>GET</code></td>
+<td>list all tickets</td>
+<td>fetch one ticket</td>
+</tr>
+<tr>
+<td><code>POST</code></td>
+<td>create a new ticket</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>PUT</code>/<code>PATCH</code></td>
+<td>—</td>
+<td>update a ticket</td>
+</tr>
+<tr>
+<td><code>DELETE</code></td>
+<td>—</td>
+<td>delete a ticket</td>
+</tr>
+</tbody>
+</table>
+<p>This project builds <code>GET</code> and <code>POST</code> on <code>/tickets</code> first (this lesson's actual
+deliverable); <code>PUT</code>/<code>PATCH</code>/<code>DELETE</code> and the equivalents for other resources
+(comments, tags, ...) arrive with full CRUD in Week 3.</p>
+<p>The other half of the contract is the <strong>status code</strong> — not just &quot;200 = worked,
+anything else = broken,&quot; but a specific vocabulary a client can act on
+programmatically:</p>
+<ul>
+<li><strong><code>200 OK</code></strong> — a <code>GET</code> succeeded.</li>
+<li><strong><code>201 Created</code></strong> — a <code>POST</code> succeeded and made a new resource.</li>
+<li><strong><code>400 Bad Request</code></strong> — the request itself was invalid (e.g. a required field
+missing) — the client's fault.</li>
+<li><strong><code>404 Not Found</code></strong> — no resource exists at that URL.</li>
+<li><strong><code>500 Internal Server Error</code></strong> — something broke on the server's side.</li>
+</ul>
+<p>A Laravel web route can get away with being loose about this, because a human
+looking at a rendered page can tell success from failure either way. A JSON API
+can't rely on that — the status code (paired with a JSON error body) <em>is</em> how a
+client program tells what happened, since there's no page to read. Every one of
+these codes already appears somewhere in this project's code — <code>404</code> in
+<code>notFound.js</code>, <code>400</code> and <code>201</code> in the ticket controller, <code>500</code> as the
+<code>errorHandler</code>'s default — and the next topic is where you'll meet them for
+real.</p>
+</div>
+    
+  </main>
+</body>
+</html>

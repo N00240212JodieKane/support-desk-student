@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Environment Variables and process.env — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        <a class="nav-prev" href="/foundations/error-handling/centralized-error-handling.html">← Centralized Error Handling</a>
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/foundations/configuration/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        <a class="nav-next" href="/foundations/configuration/dotenv-and-validation.html">dotenv and Fail-Fast Validation →</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>Environment Variables and process.env</h1>
+    <p class="lede">Config that lives outside the code, and how Node reads it.</p>
+
+    
+
+    
+      <div class="slide-body"><p>Laravel keeps per-environment config (DB credentials, app URL, debug flags) in a
+<code>.env</code> file, read via <code>env('KEY')</code> or <code>config()</code>. The underlying mechanism —
+<strong>environment variables</strong>, a plain key/value store the operating system hands to
+whatever process it starts — isn't a Laravel invention; Node reads the exact
+same kind of values, just via a different object: <code>process.env</code>.</p>
+<p>Figure 1.11 is this project's entry point:</p>
+<pre><code class="hljs language-js"><span class="hljs-comment">// Figure 1.11: starting the server (src/server.js)</span>
+<span class="hljs-keyword">import</span> app <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;./app.js&#x27;</span>;
+<span class="hljs-keyword">import</span> env <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;./config/env.js&#x27;</span>;
+
+app.<span class="hljs-title function_">listen</span>(env.<span class="hljs-property">PORT</span>, <span class="hljs-function">() =&gt;</span> {
+  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">`Support Desk API listening on http://localhost:<span class="hljs-subst">${env.PORT}</span>`</span>);
+});
+</code></pre>
+<p><code>app.listen(port, callback)</code> is what actually opens a port and starts accepting
+connections — the one thing <code>app.js</code> deliberately never does itself (see the
+comment at the top of that file, first topic). The port number comes from
+<code>env.PORT</code>, not a hardcoded <code>3000</code> — so the same code can run on whatever port a
+given machine (a teammate's laptop, a Docker container, a hosting platform)
+needs it to, without editing source code.</p>
+<p><code>env</code> here isn't <code>process.env</code> directly — it's this project's own
+<code>src/config/env.js</code>, which reads <code>process.env</code> and validates it. That's the
+next slide.</p>
+</div>
+    
+  </main>
+</body>
+</html>

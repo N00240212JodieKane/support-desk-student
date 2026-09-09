@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Modules: CommonJS vs. ES Modules — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        <a class="nav-prev" href="/foundations/nodejs-basics/npm-and-package-json.html">← npm, package.json, and node_modules</a>
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/foundations/nodejs-basics/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        <a class="nav-next" href="/foundations/rest-and-restful-apis/what-makes-an-api-restful.html">What Makes an API RESTful →</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>Modules: CommonJS vs. ES Modules</h1>
+    <p class="lede">Two ways Node files share code with each other, and which one this project uses.</p>
+
+    
+
+    
+      <div class="slide-body"><p>A Laravel app never really asks &quot;how does this file get code from that file?&quot; —
+Composer's autoloader and PHP's <code>use</code> statements handle it invisibly. Node makes
+the choice explicit, and there are actually <strong>two competing module systems</strong>:</p>
+<ul>
+<li><strong>CommonJS</strong> — Node's original system: <code>require('./thing')</code> to import,
+<code>module.exports = ...</code> to export. You'll see this in a lot of older Node
+tutorials and StackOverflow answers.</li>
+<li><strong>ES Modules (ESM)</strong> — the module syntax that's part of the JavaScript language
+itself (the same <code>import</code>/<code>export</code> you may have seen used with a bundler like
+Webpack for frontend code): <code>import thing from './thing.js'</code> and
+<code>export default ...</code> / <code>export const ...</code>.</li>
+</ul>
+<pre><code class="hljs language-js"><span class="hljs-comment">// CommonJS (not used in this project)</span>
+<span class="hljs-keyword">const</span> express = <span class="hljs-built_in">require</span>(<span class="hljs-string">&#x27;express&#x27;</span>);
+<span class="hljs-variable language_">module</span>.<span class="hljs-property">exports</span> = someFunction;
+
+<span class="hljs-comment">// ES Modules (what this project uses)</span>
+<span class="hljs-keyword">import</span> express <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;express&#x27;</span>;
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">default</span> someFunction;
+</code></pre>
+<p><code>package.json</code>'s <code>&quot;type&quot;: &quot;module&quot;</code> field (Figure 1.1, previous slide) is what
+tells Node to treat every <code>.js</code> file in this project as an ES Module rather than
+CommonJS — without it, Node assumes CommonJS by default. This project intentionally
+uses ES Modules throughout, since it's the modern, language-standard syntax and
+the same one used on the frontend.</p>
+<p>One ESM rule that trips people up coming from other languages: <strong>relative imports
+must include the file extension</strong>. Figure 1.2 shows this in the file you'll meet
+properly next lesson-topic — note <code>'./routes/index.js'</code>, not <code>'./routes/index'</code>.</p>
+<pre><code class="hljs language-js"><span class="hljs-comment">// Figure 1.2: relative imports include the .js extension (src/app.js, excerpt)</span>
+<span class="hljs-keyword">import</span> express <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;express&#x27;</span>;
+<span class="hljs-keyword">import</span> routes <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;./routes/index.js&#x27;</span>;
+<span class="hljs-keyword">import</span> notFound <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;./middleware/notFound.js&#x27;</span>;
+<span class="hljs-keyword">import</span> errorHandler <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;./middleware/errorHandler.js&#x27;</span>;
+</code></pre>
+<p>Note <code>express</code> itself is imported with no relative path and no extension — that's
+how you import a package installed into <code>node_modules/</code>, versus your own files
+which are always a relative path (<code>./</code> or <code>../</code>) starting from the current file.</p>
+</div>
+    
+  </main>
+</body>
+</html>

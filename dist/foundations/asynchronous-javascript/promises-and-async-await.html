@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Promises and async/await — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        <a class="nav-prev" href="/foundations/express-fundamentals/routers-and-restful-routes.html">← Routers and RESTful Routes</a>
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/foundations/asynchronous-javascript/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        <a class="nav-next" href="/foundations/building-the-ticket-api/controllers-as-plain-functions.html">Controllers as Plain Functions →</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>Promises and async/await</h1>
+    <p class="lede">A value that isn&#39;t ready yet, and the syntax for waiting on it without freezing everything else.</p>
+
+    
+
+    
+      <div class="slide-body"><p>Every controller and service function in the next topic is declared <code>async</code>.
+Whatever exposure you've had to this in plain JavaScript, it's worth a proper
+pass now rather than picking it up mid-code — there's no equivalent concept in
+typical Laravel/PHP work, where a function just runs and returns a value.</p>
+<p>A <strong>Promise</strong> is an object representing a value that doesn't exist <em>yet</em>, but
+will (or will fail to) at some point — the classic example being &quot;the result of
+a network request.&quot; It can be in one of three states: <em>pending</em>, <em>fulfilled</em>
+(succeeded, with a value), or <em>rejected</em> (failed, with an error).</p>
+<pre><code class="hljs language-js"><span class="hljs-title function_">fetchTicket</span>(<span class="hljs-number">5</span>)
+  .<span class="hljs-title function_">then</span>(<span class="hljs-function">(<span class="hljs-params">ticket</span>) =&gt;</span> <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(ticket))   <span class="hljs-comment">// runs if it fulfills</span>
+  .<span class="hljs-title function_">catch</span>(<span class="hljs-function">(<span class="hljs-params">err</span>) =&gt;</span> <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">error</span>(err));     <span class="hljs-comment">// runs if it rejects</span>
+</code></pre>
+<p><code>.then()</code>/<code>.catch()</code> work, but chain awkwardly once you need several
+asynchronous steps in sequence. <strong><code>async</code>/<code>await</code></strong> is syntax for writing the
+same thing so it <em>reads</em> like ordinary, top-to-bottom synchronous code:</p>
+<pre><code class="hljs language-js"><span class="hljs-keyword">async</span> <span class="hljs-keyword">function</span> <span class="hljs-title function_">loadTicket</span>(<span class="hljs-params">id</span>) {
+  <span class="hljs-keyword">const</span> ticket = <span class="hljs-keyword">await</span> <span class="hljs-title function_">fetchTicket</span>(id); <span class="hljs-comment">// pauses here until it settles</span>
+  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(ticket);
+  <span class="hljs-keyword">return</span> ticket;
+}
+</code></pre>
+<p>Two rules that matter for reading the code coming up next:</p>
+<ul>
+<li><strong><code>async function</code> always returns a Promise itself</strong> — even <code>return 42;</code>
+inside one actually returns a Promise that resolves to <code>42</code>, not <code>42</code> directly.</li>
+<li><strong><code>await</code> only works inside an <code>async</code> function</strong>, and only pauses <em>that</em>
+function — the rest of the program keeps running. That's the &quot;a-&quot; in
+asynchronous: waiting on one thing never blocks everything else, unlike a
+synchronous PHP script that stops dead until each line finishes.</li>
+</ul>
+<p>A rejected Promise inside an <code>async</code> function behaves like a thrown exception —
+catchable with an ordinary <code>try</code>/<code>catch</code> wrapped around the <code>await</code>. That
+detail turns out to matter a lot once these functions are called from Express
+rather than from other JavaScript — covered properly in this lesson's
+error-handling topic.</p>
+</div>
+    
+  </main>
+</body>
+</html>

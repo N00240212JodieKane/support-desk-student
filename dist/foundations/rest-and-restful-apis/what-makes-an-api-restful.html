@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>What Makes an API RESTful — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        <a class="nav-prev" href="/foundations/nodejs-basics/modules-commonjs-vs-esm.html">← Modules: CommonJS vs. ES Modules</a>
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/foundations/rest-and-restful-apis/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        <a class="nav-next" href="/foundations/rest-and-restful-apis/http-verbs-and-status-codes.html">HTTP Verbs and Status Codes as a Contract →</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>What Makes an API RESTful</h1>
+    <p class="lede">Resources identified by URLs, no server-rendered views, and no session driving what a request means.</p>
+
+    
+
+    
+      <div class="slide-body"><p>You've built CRUD in Laravel already — routes, controllers, a database — but
+<code>web.php</code> routes and the API this project builds aren't quite the same shape.
+The difference is <strong>REST</strong> (Representational State Transfer): a style for
+designing APIs around a small set of rules, rather than a framework feature. It's
+worth naming explicitly now, since the very next topic will describe this
+project's routes as &quot;RESTful&quot; and lean on the term.</p>
+<p>Three ideas matter most for this API:</p>
+<ul>
+<li><strong>Everything is a resource, identified by a URL.</strong> A ticket is a resource; the
+<em>collection</em> of all tickets lives at <code>/tickets</code>, and <em>one</em> ticket lives at
+<code>/tickets/:id</code>. Compare that to a typical Laravel web route like
+<code>/tickets/5/edit</code>, where <code>edit</code> names an <em>action</em>, not a resource — REST
+avoids verbs in the URL, because the next idea already covers &quot;what to do to a
+resource.&quot;</li>
+<li><strong>The HTTP method says what to do to that resource</strong>, not the URL. <code>GET /tickets/5</code> reads it; the next topic covers the rest of the verbs. This is
+covered in full on the next slide.</li>
+<li><strong>No server-rendered views, and no server-side session driving the request.</strong>
+A Laravel web route typically returns a Blade view, and can rely on session
+state (e.g. &quot;the logged-in user,&quot; flash messages) built up across requests.
+This API instead returns <strong>JSON only</strong>, and — for now, before auth exists in
+Week 4 — every request is handled from scratch, with nothing about it stored
+server-side between requests. That property is called <strong>statelessness</strong>: each
+request carries everything needed to handle it, rather than depending on
+something the server remembers from an earlier one.</li>
+</ul>
+<p>None of this requires Express specifically — it's a design convention any
+framework, or no framework at all, could follow. Express just happens to make it
+easy to build APIs this way, which the next topic starts putting into practice.</p>
+</div>
+    
+  </main>
+</body>
+</html>

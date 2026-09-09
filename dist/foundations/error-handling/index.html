@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Robust Error Handling — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/foundations/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>Robust Error Handling</h1>
+    <p class="lede">Async/await, the asyncHandler wrapper, and one centralized place errors are turned into responses.</p>
+
+    
+      <ul class="listing">
+        
+          <li>
+            <a href="/foundations/error-handling/why-express-needs-help.html">Why Express Needs Help with Async Errors</a>
+            <p>The one consequence of async/await that the next slide&#39;s wrapper exists entirely to work around.</p>
+          </li>
+        
+          <li>
+            <a href="/foundations/error-handling/the-asynchandler-wrapper.html">The asyncHandler Wrapper</a>
+            <p>A closure that catches a rejected Promise from your controller and hands it to Express properly.</p>
+          </li>
+        
+          <li>
+            <a href="/foundations/error-handling/error-handling-middleware.html">Error-Handling Middleware</a>
+            <p>The four-argument function signature Express treats as a special case.</p>
+          </li>
+        
+          <li>
+            <a href="/foundations/error-handling/centralized-error-handling.html">Centralized Error Handling</a>
+            <p>Why every error funnels through one file, instead of a try/catch in every controller.</p>
+          </li>
+        
+      </ul>
+    
+
+    
+  </main>
+</body>
+</html>

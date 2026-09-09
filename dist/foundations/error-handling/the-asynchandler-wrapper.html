@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>The asyncHandler Wrapper — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        <a class="nav-prev" href="/foundations/error-handling/why-express-needs-help.html">← Why Express Needs Help with Async Errors</a>
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/foundations/error-handling/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        <a class="nav-next" href="/foundations/error-handling/error-handling-middleware.html">Error-Handling Middleware →</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>The asyncHandler Wrapper</h1>
+    <p class="lede">A closure that catches a rejected Promise from your controller and hands it to Express properly.</p>
+
+    
+
+    
+      <div class="slide-body"><p>Figure 1.9 is the entire <code>asyncHandler</code> — small, but worth reading slowly with
+the closures topic from earlier in this lesson, and the previous slide's
+Express-specific async gap, both fresh:</p>
+<pre><code class="hljs language-js"><span class="hljs-comment">// Figure 1.9: catching async errors (src/middleware/asyncHandler.js)</span>
+<span class="hljs-keyword">export</span> <span class="hljs-title function_">default</span> (fn) =&gt; <span class="hljs-function">(<span class="hljs-params">req, res, next</span>) =&gt;</span> {
+  <span class="hljs-title class_">Promise</span>.<span class="hljs-title function_">resolve</span>(<span class="hljs-title function_">fn</span>(req, res, next)).<span class="hljs-title function_">catch</span>(next);
+};
+</code></pre>
+<p>This is precisely the <code>(a) =&gt; (b) =&gt; ...</code> shape from the arrow-functions
+refresher. <code>asyncHandler</code> is called <em>once per controller</em> with the real
+controller function as <code>fn</code> — look back at Figure 1.7:
+<code>asyncHandler(async (req, res) =&gt; { ... })</code>. That call returns a <strong>new</strong>
+function, closing over <code>fn</code>, and <em>that</em> new function is what Express actually
+calls as the route handler.</p>
+<p>Inside it: <code>fn(req, res, next)</code> runs your controller and gets back a Promise
+(every <code>async</code> function returns one, previous slide). <code>Promise.resolve(...)</code>
+is a safety net — it works even if <code>fn</code> weren't <code>async</code> and returned a plain
+value. <code>.catch(next)</code> is the whole point: if that Promise rejects, <code>next</code> (the
+real Express <code>next</code> function, passed through) gets called <em>with the error</em>.</p>
+<p>Calling <code>next(someError)</code> is Express's own signal to skip every remaining normal
+middleware and jump straight to error-handling middleware — the next slide. So
+the fix for &quot;Express never awaits your handler&quot; isn't awaiting it after all;
+it's routing the rejection to <code>next()</code> by hand, which Express <em>does</em> know how to
+act on.</p>
+</div>
+    
+  </main>
+</body>
+</html>

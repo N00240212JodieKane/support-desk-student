@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Error-Handling Middleware — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        <a class="nav-prev" href="/foundations/error-handling/the-asynchandler-wrapper.html">← The asyncHandler Wrapper</a>
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/foundations/error-handling/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        <a class="nav-next" href="/foundations/error-handling/centralized-error-handling.html">Centralized Error Handling →</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>Error-Handling Middleware</h1>
+    <p class="lede">The four-argument function signature Express treats as a special case.</p>
+
+    
+
+    
+      <div class="slide-body"><p>Ordinary middleware takes <code>(req, res, next)</code> — three arguments. <strong>Error-handling
+middleware takes four</strong>: <code>(err, req, res, next)</code>. That extra leading argument
+isn't just a convention; Express literally counts a middleware function's
+argument count to decide whether it's a normal handler or an error handler.
+Four arguments, and Express only ever calls it when something upstream called
+<code>next(err)</code> — exactly what <code>asyncHandler</code> does (previous slide).</p>
+<p>Figure 1.10 is this project's one error handler:</p>
+<pre><code class="hljs language-js"><span class="hljs-comment">// Figure 1.10: turning an error into a response (src/middleware/errorHandler.js)</span>
+<span class="hljs-keyword">export</span> <span class="hljs-title function_">default</span> (err, req, res, next) =&gt; {
+  <span class="hljs-keyword">const</span> status = err.<span class="hljs-property">status</span> || <span class="hljs-number">500</span>;
+
+  res.<span class="hljs-title function_">status</span>(status).<span class="hljs-title function_">json</span>({
+    <span class="hljs-attr">error</span>: { <span class="hljs-attr">message</span>: err.<span class="hljs-property">message</span> || <span class="hljs-string">&#x27;Internal Server Error&#x27;</span> },
+  });
+};
+</code></pre>
+<p><code>err.status || 500</code> reads a <code>status</code> property off the error if one was set
+(none of this project's code sets one yet — that arrives with more deliberate
+error objects in Week 3), defaulting to <code>500</code> (Internal Server Error) otherwise.
+Same idea for the message, defaulting to a generic one so nothing ever ships an
+<code>undefined</code> message to a client.</p>
+<p>Notice this function never calls <code>next()</code> itself — it's the end of the line. It
+doesn't need to, because sending a response (<code>res.status(...).json(...)</code>) is
+itself how a middleware chain ends; <code>next()</code> is only for <em>continuing</em> the chain.</p>
+</div>
+    
+  </main>
+</body>
+</html>
