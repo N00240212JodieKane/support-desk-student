@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Role-Scoped Queries — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/auth-and-authorization/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>Role-Scoped Queries</h1>
+    <p class="lede">authorize() gates whole actions; this is the finer-grained question of which specific rows a role is even allowed to see.</p>
+
+    
+      <ul class="listing">
+        
+          <li>
+            <a href="/auth-and-authorization/role-scoped-queries/whose-tickets-are-these.html">Whose Tickets Are These?</a>
+            <p>One function computing three different where clauses, reused everywhere a ticket query needs to be scoped.</p>
+          </li>
+        
+          <li>
+            <a href="/auth-and-authorization/role-scoped-queries/reusing-scope-for-a-single-ticket.html">Reusing Scope for a Single Ticket</a>
+            <p>The exact same scopeForViewer fragment guards both the list and one ticket by id — so they can never quietly disagree.</p>
+          </li>
+        
+          <li>
+            <a href="/auth-and-authorization/role-scoped-queries/scope-doubles-as-write-permission.html">Scope Doubles as Write Permission</a>
+            <p>Lesson 3&#39;s &quot;read before write&quot; 404 pattern turns out to already be exactly the check an update/delete route needs.</p>
+          </li>
+        
+      </ul>
+    
+
+    
+  </main>
+</body>
+</html>

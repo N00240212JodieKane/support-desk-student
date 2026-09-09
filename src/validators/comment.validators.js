@@ -13,10 +13,10 @@ export const commentIdParamsSchema = z.object({
   id: z.coerce.number().int().positive(),
 });
 
+// authorId isn't a field here for the same reason Ticket's createTicketSchema
+// dropped customerId — it comes from req.user.id, not the request body.
 export const createCommentSchema = z.object({
   body: z.string().trim().min(1, 'body is required'),
-  // Same stand-in as Ticket's customerId until Week 4's auth (see CLAUDE.md).
-  authorId: z.coerce.number().int().positive(),
 });
 
 export const updateCommentSchema = z.object({

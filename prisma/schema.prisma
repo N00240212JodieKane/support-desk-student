@@ -33,8 +33,10 @@ model User {
   id        Int      @id @default(autoincrement())
   name      String
   email     String   @unique
-  // Week 4 hashes this with bcrypt on write; until then it's a plain
-  // placeholder column (see prisma/seed.js) — not real auth yet.
+  // A bcrypt hash, never a plain password — written by
+  // utils/password.js's hashPassword() on register (and in prisma/seed.js),
+  // checked with verifyPassword() on login. Never selected back to a
+  // controller (see user.service.js's PUBLIC_FIELDS).
   password  String
   role      Role     @default(customer)
   createdAt DateTime @default(now())

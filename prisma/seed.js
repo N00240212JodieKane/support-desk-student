@@ -1,14 +1,21 @@
 // Dev seed data covering every relationship in the schema — not just tickets
 // — so the relational shape (1:M, plain join table, attribute-carrying join
 // table) is actually visible when you look at the seeded DB, even though
-// only the Ticket endpoints are wired up to Prisma this week (see PLAN.md
-// Week 2). Passwords are plain placeholders here; Week 4 introduces bcrypt
-// hashing on write.
+// only the Ticket endpoints were wired up to Prisma in Week 2. Week 4 swaps
+// the plain-placeholder passwords for real bcrypt hashes, via the exact
+// same hashPassword() the register endpoint itself uses — so every seeded
+// user is a real account you can log in as (see the login topic for the
+// shared dev password).
 //
 // Deletes everything (children first, to satisfy FK constraints) and
 // reinserts, so this script is safe to re-run as often as you like during
 // development: `npx prisma db seed`.
 import prisma from '../src/config/db.js';
+import { hashPassword } from '../src/utils/password.js';
+
+// Every seeded user shares this password — fine for a dev/demo database
+// nobody else can reach, never something to do against a real one.
+const DEV_PASSWORD = 'password123';
 
 async function main() {
   await prisma.notification.deleteMany();
@@ -19,12 +26,14 @@ async function main() {
   await prisma.tag.deleteMany();
   await prisma.user.deleteMany();
 
+  const hashedPassword = await hashPassword(DEV_PASSWORD);
+
   const [customer1, customer2, agent1, admin] = await Promise.all([
     prisma.user.create({
       data: {
         name: 'Casey Customer',
         email: 'casey@example.com',
-        password: 'placeholder-not-hashed',
+        password: hashedPassword,
         role: 'customer',
       },
     }),
@@ -32,7 +41,7 @@ async function main() {
       data: {
         name: 'Priya Patel',
         email: 'priya@example.com',
-        password: 'placeholder-not-hashed',
+        password: hashedPassword,
         role: 'customer',
       },
     }),
@@ -40,7 +49,7 @@ async function main() {
       data: {
         name: 'Alex Agent',
         email: 'alex@example.com',
-        password: 'placeholder-not-hashed',
+        password: hashedPassword,
         role: 'agent',
       },
     }),
@@ -48,7 +57,7 @@ async function main() {
       data: {
         name: 'Admin Ada',
         email: 'ada@example.com',
-        password: 'placeholder-not-hashed',
+        password: hashedPassword,
         role: 'admin',
       },
     }),
@@ -109,6 +118,7 @@ async function main() {
   });
 
   console.log('Seed complete.');
+  console.log(`Every seeded user's password is "${DEV_PASSWORD}" — e.g. POST /auth/login with casey@example.com.`);
 }
 
 main()

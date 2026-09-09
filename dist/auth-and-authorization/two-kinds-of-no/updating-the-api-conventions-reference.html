@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Updating the API Conventions Reference — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        <a class="nav-prev" href="/auth-and-authorization/two-kinds-of-no/comment-ownership-visible-but-forbidden.html">← Comment Ownership: Visible but Forbidden</a>
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/auth-and-authorization/two-kinds-of-no/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        <a class="nav-next" href="/auth-and-authorization/testing-auth/testing-real-crypto-not-mocks.html">Testing Real Crypto, Not Mocks →</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>Updating the API Conventions Reference</h1>
+    <p class="lede">Two new rows for the status-code table Lesson 3 started — the written convention doc keeps growing alongside the code.</p>
+
+    
+
+    
+      <div class="slide-body"><p>Lesson 3's API Conventions Reference slide promised that &quot;any new endpoint
+added later in this build is expected to fit into this same table rather
+than inventing its own response shape&quot; — this lesson is the first test of
+that promise, and it holds up cleanly: nothing about the response envelope
+(<code>{ data }</code>/<code>{ data, meta }</code>/<code>{ error }</code>) or how errors reach the client
+changed at all. What's new is two rows the status-code table didn't need
+until routes could be protected at all:</p>
+<table>
+<thead>
+<tr>
+<th>Situation</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>No valid proof of who's making the request (<code>authenticate</code>)</td>
+<td><code>401 Unauthorized</code></td>
+</tr>
+<tr>
+<td>Authenticated, but this role can never perform this action (<code>authorize</code>)</td>
+<td><code>403 Forbidden</code></td>
+</tr>
+</tbody>
+</table>
+<p>Both still go through the exact same <code>{ error: { message } }</code> shape as
+every other error in this project (Lesson 3) — <code>ApiError(401, ...)</code> and
+<code>ApiError(403, ...)</code>, thrown from <code>authenticate.js</code>/<code>authorize.js</code> and
+caught by the same centralized <code>errorHandler.js</code> as everything else. The
+one thing worth being precise about, alongside the table: this lesson's
+scoped <code>404</code>s (previous two slides) aren't a third new status — <code>404</code> was
+already in Lesson 3's table for &quot;the URL names something that doesn't
+exist.&quot; What changed is only <em>what counts as</em> not existing, now that
+&quot;doesn't exist&quot; and &quot;exists, but isn't visible to you&quot; resolve to the exact
+same response.</p>
+</div>
+    
+  </main>
+</body>
+</html>

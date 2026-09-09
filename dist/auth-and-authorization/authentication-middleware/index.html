@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Authentication Middleware — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/auth-and-authorization/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>Authentication Middleware</h1>
+    <p class="lede">Turning a Bearer token into req.user, once, so every protected controller can just trust it&#39;s already there.</p>
+
+    
+      <ul class="listing">
+        
+          <li>
+            <a href="/auth-and-authorization/authentication-middleware/reading-the-authorization-header.html">Reading the Authorization Header</a>
+            <p>How a token issued by /auth/login gets back to the server on every later request.</p>
+          </li>
+        
+          <li>
+            <a href="/auth-and-authorization/authentication-middleware/protecting-every-route-in-a-resource.html">Protecting Every Route in a Resource</a>
+            <p>One router.use(authenticate) call, ahead of every route on that router — nested comment routes inherit it for free.</p>
+          </li>
+        
+      </ul>
+    
+
+    
+  </main>
+</body>
+</html>

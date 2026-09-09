@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>What Is a JWT? — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        <a class="nav-prev" href="/auth-and-authorization/password-hashing-with-bcrypt/hashing-the-seed-data-too.html">← Hashing the Seed Data Too</a>
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/auth-and-authorization/registering-and-logging-in/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        <a class="nav-next" href="/auth-and-authorization/registering-and-logging-in/signing-and-verifying-tokens.html">Signing and Verifying Tokens →</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>What Is a JWT?</h1>
+    <p class="lede">A signed, self-contained ticket a client carries with every request — instead of a session Laravel keeps on the server.</p>
+
+    
+
+    
+      <div class="slide-body"><p>Laravel's default session-based login keeps almost everything on the
+<em>server</em>: log in, and Laravel stores &quot;this session belongs to user 7&quot; in its
+own session store, handing the browser only a small opaque cookie that
+means nothing on its own — every later request looks that cookie up against
+the server's session store to find out who's making it. That's a natural
+fit for a framework serving full HTML pages back to a browser that already
+holds a cookie jar.</p>
+<p>A JSON API being called from anywhere — a script, a mobile app, eventually
+this project's own React frontend — doesn't have quite the same natural
+fit, and this project reaches for a different shape entirely: a <strong>JWT</strong>
+(JSON Web Token). Log in, and the <em>client</em> gets back a token that already
+contains &quot;this is user 7, role customer&quot; — signed by the server, but not
+stored by the server at all. Every later request carries that same token
+(next topic covers exactly how), and the server just re-checks the
+signature to trust what's inside it, rather than looking anything up.
+Nothing about &quot;who is this&quot; lives in server memory or a database row
+between requests — that's what <strong>stateless</strong> means here, and it's the
+whole reason a JWT needs no server-side session store to work at all.</p>
+<p>A JWT's own shape is three dot-separated, base64-encoded parts —
+<code>header.payload.signature</code> — but only one of those matters for how this
+project uses it: the <strong>payload</strong>, a plain JSON object (here, just
+<code>{ sub: userId, role }</code> — the next topic shows exactly where that comes
+from) that's easy to decode and read, by anyone, without needing the
+signing secret at all. That's worth sitting with: a JWT is <strong>signed, not
+encrypted</strong> — tamper-proof, in that changing the payload invalidates the
+signature, but never secret. Nothing sensitive (a password, anything you
+wouldn't want a curious user peeking at their own token to see) belongs in
+one.</p>
+</div>
+    
+  </main>
+</body>
+</html>

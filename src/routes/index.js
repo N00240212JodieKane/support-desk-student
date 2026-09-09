@@ -3,11 +3,13 @@
 // of one flat file. New resources (comments, tags, users, ...) get mounted
 // here as they're introduced in later weeks.
 import express from 'express';
+import authRoutes from './auth.routes.js';
 import ticketRoutes from './ticket.routes.js';
 import tagRoutes from './tag.routes.js';
 
 const router = express.Router();
 
+router.use('/auth', authRoutes);
 router.use('/tickets', ticketRoutes);
 router.use('/tags', tagRoutes);
 

@@ -13,12 +13,13 @@ export const ticketIdParamSchema = z.object({
   id: z.coerce.number().int().positive(),
 });
 
+// customerId is deliberately not a field here — it comes from req.user.id
+// (Week 4's auth), never from the request body. Accepting it from the body
+// would let any logged-in customer submit a ticket "as" someone else just
+// by naming their id.
 export const createTicketSchema = z.object({
   subject: z.string().trim().min(1, 'subject is required').max(200),
   description: z.string().trim().min(1, 'description is required'),
-  // Still a plain body field, standing in for the authenticated customer
-  // until Week 4's auth replaces it with req.user.id (see CLAUDE.md).
-  customerId: z.coerce.number().int().positive(),
 });
 
 // Every field optional — this is PATCH's "change only what you send", not

@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Scope Doubles as Write Permission — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        <a class="nav-prev" href="/auth-and-authorization/role-scoped-queries/reusing-scope-for-a-single-ticket.html">← Reusing Scope for a Single Ticket</a>
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/auth-and-authorization/role-scoped-queries/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        <a class="nav-next" href="/auth-and-authorization/two-kinds-of-no/hiding-what-you-cant-see.html">Hiding What You Can&#39;t See →</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>Scope Doubles as Write Permission</h1>
+    <p class="lede">Lesson 3&#39;s &quot;read before write&quot; 404 pattern turns out to already be exactly the check an update/delete route needs.</p>
+
+    
+
+    
+      <div class="slide-body"><p>Lesson 3's <code>updateTicket</code>/<code>deleteTicket</code> controllers already called
+<code>getTicketById</code> first, purely to turn a missing ticket into a clean <code>404</code>
+before ever calling Prisma's own <code>update</code>/<code>delete</code> (the &quot;read before write&quot;
+topic). That call didn't need to change shape at all to also become this
+lesson's authorization check — it just needed the <code>viewer</code> argument
+<code>getTicketById</code> already gained two slides ago:</p>
+<pre><code class="hljs language-js"><span class="hljs-comment">// Figure 4.13: one existence check, now also an authorization check (src/controllers/ticket.controller.js, excerpt)</span>
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">const</span> updateTicket = <span class="hljs-title function_">asyncHandler</span>(<span class="hljs-title function_">async</span> (req, res) =&gt; {
+  <span class="hljs-keyword">const</span> existing = <span class="hljs-keyword">await</span> ticketService.<span class="hljs-title function_">getTicketById</span>(req.<span class="hljs-property">params</span>.<span class="hljs-property">id</span>, req.<span class="hljs-property">user</span>);
+
+  <span class="hljs-keyword">if</span> (!existing) {
+    <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">ApiError</span>(<span class="hljs-number">404</span>, <span class="hljs-string">`Ticket <span class="hljs-subst">${req.params.id}</span> not found`</span>);
+  }
+
+  <span class="hljs-keyword">const</span> ticket = <span class="hljs-keyword">await</span> ticketService.<span class="hljs-title function_">updateTicket</span>(req.<span class="hljs-property">params</span>.<span class="hljs-property">id</span>, req.<span class="hljs-property">body</span>);
+  <span class="hljs-title function_">sendResource</span>(res, ticket);
+});
+</code></pre>
+<p><code>authorize('agent', 'admin')</code> (route-level, previous topic) already
+guarantees a customer never reaches this function at all. What it <em>can't</em>
+guarantee is that the agent who did reach it is allowed to touch <em>this
+specific</em> ticket — an agent's <code>scopeForViewer</code> fragment only covers their
+own assigned queue plus the unclaimed pool, not every ticket in the system.
+<code>getTicketById(req.params.id, req.user)</code> already applies exactly that
+scope (previous slide), so an agent PATCHing a ticket that exists, but
+belongs to a different agent's queue, gets back <code>null</code> here — the identical
+<code>404</code> as a ticket that doesn't exist at all. <code>deleteTicket</code> follows the
+same shape.</p>
+<p>Nothing about this pattern is new; it's the same function, called the same
+way, that was already there. The only thing that changed is what
+<code>getTicketById</code> itself now means once it takes a <code>viewer</code> — &quot;exists&quot; and
+&quot;exists <em>and you're allowed to see it</em>&quot; collapsed into the same question,
+so every caller that was already asking the first question got the second
+one for free.</p>
+</div>
+    
+  </main>
+</body>
+</html>

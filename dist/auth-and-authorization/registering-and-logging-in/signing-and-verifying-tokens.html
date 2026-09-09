@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Signing and Verifying Tokens — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        <a class="nav-prev" href="/auth-and-authorization/registering-and-logging-in/what-is-a-jwt.html">← What Is a JWT?</a>
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/auth-and-authorization/registering-and-logging-in/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        <a class="nav-next" href="/auth-and-authorization/registering-and-logging-in/register-always-a-customer.html">Register: Always a Customer →</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>Signing and Verifying Tokens</h1>
+    <p class="lede">utils/jwt.js wraps jsonwebtoken; env.js&#39;s Zod schema grows a new required field to make it possible at all.</p>
+
+    
+
+    
+      <div class="slide-body"><pre><code class="hljs language-js"><span class="hljs-comment">// Figure 4.3: two thin wrappers around jsonwebtoken (src/utils/jwt.js)</span>
+<span class="hljs-keyword">import</span> jwt <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;jsonwebtoken&#x27;</span>;
+<span class="hljs-keyword">import</span> env <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;../config/env.js&#x27;</span>;
+
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">const</span> <span class="hljs-title function_">signToken</span> = (<span class="hljs-params">payload</span>) =&gt;
+  jwt.<span class="hljs-title function_">sign</span>(payload, env.<span class="hljs-property">JWT_SECRET</span>, { <span class="hljs-attr">expiresIn</span>: env.<span class="hljs-property">JWT_EXPIRES_IN</span> });
+
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">const</span> <span class="hljs-title function_">verifyToken</span> = (<span class="hljs-params">token</span>) =&gt; jwt.<span class="hljs-title function_">verify</span>(token, env.<span class="hljs-property">JWT_SECRET</span>);
+</code></pre>
+<p><code>signToken</code> is what turns a plain payload — <code>{ sub: user.id, role: user.role }</code>, used both places this project issues a token (next two
+slides) — into the actual <code>header.payload.signature</code> string (previous
+slide) a client gets back. <code>jwt.sign</code> computes that signature from the
+payload <em>and</em> <code>env.JWT_SECRET</code> together; change either one, and the
+signature no longer matches. <code>verifyToken</code> recomputes that same signature
+from a token it's handed and compares — succeeding (returning the decoded
+payload) only if nothing about the token has changed since this exact
+server signed it. <code>expiresIn</code> bounds how long a token stays valid at all —
+<code>'1d'</code> here — baked into the signature itself, so <code>verifyToken</code> also
+rejects an otherwise-untampered token that's simply too old.</p>
+<p>None of that works without a real secret to sign with, so <code>config/env.js</code>'s
+Zod schema (Lesson 3's config-validation topic) grows a new required field:</p>
+<pre><code class="hljs language-js"><span class="hljs-comment">// Figure 4.4: JWT_SECRET joins the validated env (src/config/env.js, excerpt)</span>
+<span class="hljs-keyword">const</span> envSchema = z.<span class="hljs-title function_">object</span>({
+  <span class="hljs-attr">PORT</span>: z.<span class="hljs-property">coerce</span>.<span class="hljs-title function_">number</span>().<span class="hljs-title function_">int</span>().<span class="hljs-title function_">positive</span>(),
+  <span class="hljs-attr">DATABASE_URL</span>: z.<span class="hljs-title function_">string</span>().<span class="hljs-title function_">min</span>(<span class="hljs-number">1</span>, <span class="hljs-string">&#x27;DATABASE_URL is required&#x27;</span>),
+  <span class="hljs-attr">JWT_SECRET</span>: z.<span class="hljs-title function_">string</span>().<span class="hljs-title function_">min</span>(<span class="hljs-number">16</span>, <span class="hljs-string">&#x27;JWT_SECRET must be at least 16 characters&#x27;</span>),
+  <span class="hljs-attr">JWT_EXPIRES_IN</span>: z.<span class="hljs-title function_">string</span>().<span class="hljs-title function_">min</span>(<span class="hljs-number">1</span>).<span class="hljs-title function_">default</span>(<span class="hljs-string">&#x27;1d&#x27;</span>),
+});
+</code></pre>
+<p><code>.min(16, ...)</code> isn't an arbitrary number — a short secret would make
+<code>jwt.sign</code>'s signature <em>guessable</em>, which defeats the entire &quot;tamper-proof&quot;
+property the previous slide leaned on: anyone who could guess or brute-force
+<code>JWT_SECRET</code> could forge a token claiming to be any user at all, including
+an admin. Failing fast here, at startup (the whole point of validating
+config at all, Lesson 3), catches a weak or missing secret immediately
+rather than letting the app run with authentication that only looks secure.</p>
+</div>
+    
+  </main>
+</body>
+</html>

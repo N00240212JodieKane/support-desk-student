@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Registering &amp; Logging In — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/auth-and-authorization/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>Registering &amp; Logging In</h1>
+    <p class="lede">JWTs, the two public routes that issue them, and two deliberate security decisions hiding inside otherwise-ordinary CRUD-shaped code.</p>
+
+    
+      <ul class="listing">
+        
+          <li>
+            <a href="/auth-and-authorization/registering-and-logging-in/what-is-a-jwt.html">What Is a JWT?</a>
+            <p>A signed, self-contained ticket a client carries with every request — instead of a session Laravel keeps on the server.</p>
+          </li>
+        
+          <li>
+            <a href="/auth-and-authorization/registering-and-logging-in/signing-and-verifying-tokens.html">Signing and Verifying Tokens</a>
+            <p>utils/jwt.js wraps jsonwebtoken; env.js&#39;s Zod schema grows a new required field to make it possible at all.</p>
+          </li>
+        
+          <li>
+            <a href="/auth-and-authorization/registering-and-logging-in/register-always-a-customer.html">Register: Always a Customer</a>
+            <p>The one field this endpoint deliberately never reads from the request body is the role it creates.</p>
+          </li>
+        
+          <li>
+            <a href="/auth-and-authorization/registering-and-logging-in/login-one-message-for-two-failures.html">Login: One Message for Two Failures</a>
+            <p>&quot;No such user&quot; and &quot;wrong password&quot; are different bugs, but the exact same response — on purpose.</p>
+          </li>
+        
+      </ul>
+    
+
+    
+  </main>
+</body>
+</html>

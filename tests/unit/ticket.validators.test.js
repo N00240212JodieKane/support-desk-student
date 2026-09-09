@@ -15,30 +15,31 @@ describe('createTicketSchema', () => {
     const result = createTicketSchema.safeParse({
       subject: 'Cannot log in',
       description: 'Password reset link expired',
-      customerId: '1', // route params/body fields arrive as strings from the wire
     });
 
     expect(result.success).toBe(true);
-    expect(result.data.customerId).toBe(1); // coerced to a number
   });
 
   it('rejects a missing subject', () => {
     const result = createTicketSchema.safeParse({
       description: 'Password reset link expired',
-      customerId: 1,
     });
 
     expect(result.success).toBe(false);
   });
 
-  it('rejects a non-numeric customerId', () => {
+  it('silently drops a customerId in the body rather than trusting it', () => {
+    // Week 4: customerId always comes from req.user.id, never the request
+    // body — a client-supplied one is stripped, not rejected, since it's
+    // simply not part of this schema's shape any more.
     const result = createTicketSchema.safeParse({
       subject: 'Cannot log in',
       description: 'Password reset link expired',
-      customerId: 'not-a-number',
+      customerId: 999,
     });
 
-    expect(result.success).toBe(false);
+    expect(result.success).toBe(true);
+    expect(result.data.customerId).toBeUndefined();
   });
 });
 

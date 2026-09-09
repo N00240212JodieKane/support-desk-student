@@ -11,6 +11,11 @@ import { z } from 'zod';
 const envSchema = z.object({
   PORT: z.coerce.number().int().positive(),
   DATABASE_URL: z.string().min(1, 'DATABASE_URL is required'),
+  // Week 4: signs/verifies this API's JWTs (middleware/authenticate.js) — a
+  // short or missing secret would let tokens be forged, so this fails fast
+  // at startup rather than quietly accepting a weak one.
+  JWT_SECRET: z.string().min(16, 'JWT_SECRET must be at least 16 characters'),
+  JWT_EXPIRES_IN: z.string().min(1).default('1d'),
 });
 
 const result = envSchema.safeParse(process.env);

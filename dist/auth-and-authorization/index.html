@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Auth &amp; Authorization — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>Auth &amp; Authorization</h1>
+    <p class="lede">bcrypt password hashing, JWT login/register, and role-based middleware that scopes what customers, agents, and admins can each see and do.</p>
+
+    
+      <ul class="listing">
+        
+          <li>
+            <a href="/auth-and-authorization/password-hashing-with-bcrypt/index.html">Password Hashing with bcrypt</a>
+            <p>The password column stops being a placeholder — every password this project stores from here on is a bcrypt hash.</p>
+          </li>
+        
+          <li>
+            <a href="/auth-and-authorization/registering-and-logging-in/index.html">Registering &amp; Logging In</a>
+            <p>JWTs, the two public routes that issue them, and two deliberate security decisions hiding inside otherwise-ordinary CRUD-shaped code.</p>
+          </li>
+        
+          <li>
+            <a href="/auth-and-authorization/authentication-middleware/index.html">Authentication Middleware</a>
+            <p>Turning a Bearer token into req.user, once, so every protected controller can just trust it&#39;s already there.</p>
+          </li>
+        
+          <li>
+            <a href="/auth-and-authorization/role-based-authorization/index.html">Role-Based Authorization</a>
+            <p>Being logged in and being allowed to do this are two different questions — authorize.js answers the second one.</p>
+          </li>
+        
+          <li>
+            <a href="/auth-and-authorization/role-scoped-queries/index.html">Role-Scoped Queries</a>
+            <p>authorize() gates whole actions; this is the finer-grained question of which specific rows a role is even allowed to see.</p>
+          </li>
+        
+          <li>
+            <a href="/auth-and-authorization/two-kinds-of-no/index.html">403 vs 404 — Two Kinds of &quot;No&quot;</a>
+            <p>Not being allowed to do something at all, and not being allowed to see this one thing, turn out to deserve different statuses.</p>
+          </li>
+        
+          <li>
+            <a href="/auth-and-authorization/testing-auth/index.html">Testing Auth</a>
+            <p>Real bcrypt and real jsonwebtoken in tests, fakes for req/next, and real signed tokens driving the integration suite.</p>
+          </li>
+        
+      </ul>
+    
+
+    
+  </main>
+</body>
+</html>

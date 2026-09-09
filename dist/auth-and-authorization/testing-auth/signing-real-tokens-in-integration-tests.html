@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Signing Real Tokens in Integration Tests — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        <a class="nav-prev" href="/auth-and-authorization/testing-auth/testing-middleware-directly.html">← Testing Middleware Directly</a>
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/auth-and-authorization/testing-auth/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>Signing Real Tokens in Integration Tests</h1>
+    <p class="lede">The integration suite doesn&#39;t fake authentication out either — every protected request carries a real, valid Bearer token.</p>
+
+    
+
+    
+      <div class="slide-body"><p>Every route this project has protected this lesson now needs a real token
+to reach at all — so the integration suites (mocked Prisma, real Express
+routing, since Lesson 2) sign real ones too, rather than mocking
+<code>authenticate.js</code> out of the picture:</p>
+<pre><code class="hljs language-js"><span class="hljs-comment">// Figure 4.17: real tokens for fake users (tests/integration/tickets.routes.test.js, excerpt)</span>
+<span class="hljs-keyword">const</span> customerToken = <span class="hljs-title function_">signToken</span>({ <span class="hljs-attr">sub</span>: <span class="hljs-number">13</span>, <span class="hljs-attr">role</span>: <span class="hljs-string">&#x27;customer&#x27;</span> });
+<span class="hljs-keyword">const</span> agentToken = <span class="hljs-title function_">signToken</span>({ <span class="hljs-attr">sub</span>: <span class="hljs-number">14</span>, <span class="hljs-attr">role</span>: <span class="hljs-string">&#x27;agent&#x27;</span> });
+<span class="hljs-keyword">const</span> adminToken = <span class="hljs-title function_">signToken</span>({ <span class="hljs-attr">sub</span>: <span class="hljs-number">99</span>, <span class="hljs-attr">role</span>: <span class="hljs-string">&#x27;admin&#x27;</span> });
+
+<span class="hljs-keyword">const</span> <span class="hljs-title function_">asCustomer</span> = (<span class="hljs-params">req</span>) =&gt; req.<span class="hljs-title function_">set</span>(<span class="hljs-string">&#x27;Authorization&#x27;</span>, <span class="hljs-string">`Bearer <span class="hljs-subst">${customerToken}</span>`</span>);
+<span class="hljs-keyword">const</span> <span class="hljs-title function_">asAgent</span> = (<span class="hljs-params">req</span>) =&gt; req.<span class="hljs-title function_">set</span>(<span class="hljs-string">&#x27;Authorization&#x27;</span>, <span class="hljs-string">`Bearer <span class="hljs-subst">${agentToken}</span>`</span>);
+</code></pre>
+<p>Three tokens, signed once at the top of the file, cover every role this
+suite needs to act as — <code>sub: 13</code>/<code>sub: 14</code> deliberately match the
+<code>customerId: 13</code>/<code>assignedAgentId: 14</code> values the mocked Prisma responses
+use elsewhere in the same file, so a test asserting &quot;an agent sees their
+own assigned ticket&quot; is actually exercising <code>scopeForViewer</code> (the role-
+scoped-queries topic) against numbers that genuinely line up, not
+arbitrary ones. <code>asCustomer(request(app).get('/tickets'))</code> reads as &quot;make
+this request as a customer&quot; — a small helper wrapping supertest's own
+<code>.set(...)</code>, used the same way <code>sendResource</code>/<code>sendCollection</code> gave every
+controller a shared vocabulary (Lesson 3).</p>
+<p>Nothing about <code>authenticate.js</code> or <code>authorize.js</code> is mocked here — a real
+token really does need to pass real signature verification (<code>verifyToken</code>,
+this lesson's JWT topic) to reach the mocked-Prisma-backed controller
+underneath it, which is exactly what makes a test like &quot;POST /tickets is
+forbidden for an agent&quot; trustworthy: it's proof the actual <code>authorize</code>
+middleware rejects the request, not an assumption based on what the test
+expected to happen.</p>
+</div>
+    
+  </main>
+</body>
+</html>

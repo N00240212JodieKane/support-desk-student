@@ -1,15 +1,15 @@
-// Week 3: getAllTickets now takes a filter/sort/pagination options object and
-// returns { tickets, total } instead of a bare array, and update/delete are
-// new — everything else about this file (mocking the shared Prisma client
-// via jest.unstable_mockModule + a dynamic import) is unchanged from Week 2
-// (see content/02-data-modeling-and-persistence's testing topic for why
-// that's needed on this project's native-ESM Jest setup).
+// Week 4: getAllTickets and getTicketById both take a second `viewer`
+// argument now, and getTicketById moved from findUnique to findFirst so it
+// can add the same role-based scoping getAllTickets already applies (see
+// scopeForViewer in src/services/ticket.service.js) — everything else
+// about this file (mocking the shared Prisma client via
+// jest.unstable_mockModule + a dynamic import) is unchanged from Week 2/3.
 import { jest } from '@jest/globals';
 
 const mockPrisma = {
   ticket: {
     findMany: jest.fn(),
-    findUnique: jest.fn(),
+    findFirst: jest.fn(),
     create: jest.fn(),
     update: jest.fn(),
     delete: jest.fn(),
@@ -27,6 +27,10 @@ const { getAllTickets, getTicketById, createTicket, updateTicket, deleteTicket }
 
 const listOptions = { sortBy: 'createdAt', order: 'desc', page: 1, pageSize: 10 };
 
+const customer = { id: 13, role: 'customer' };
+const agent = { id: 14, role: 'agent' };
+const admin = { id: 99, role: 'admin' };
+
 describe('ticket.service', () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -37,28 +41,60 @@ describe('ticket.service', () => {
     mockPrisma.ticket.findMany.mockResolvedValue(seeded);
     mockPrisma.ticket.count.mockResolvedValue(1);
 
-    const result = await getAllTickets(listOptions);
+    const result = await getAllTickets(listOptions, admin);
 
     expect(result).toEqual({ tickets: seeded, total: 1 });
   });
 
-  it('getAllTickets filters by status when one is given', async () => {
+  it('getAllTickets scopes a customer to their own tickets only', async () => {
     mockPrisma.ticket.findMany.mockResolvedValue([]);
     mockPrisma.ticket.count.mockResolvedValue(0);
 
-    await getAllTickets({ ...listOptions, status: 'open' });
+    await getAllTickets(listOptions, customer);
 
     expect(mockPrisma.ticket.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({ where: { status: 'open' } }),
+      expect.objectContaining({ where: { customerId: 13 } }),
     );
-    expect(mockPrisma.ticket.count).toHaveBeenCalledWith({ where: { status: 'open' } });
+  });
+
+  it('getAllTickets scopes an agent to their assigned queue plus the unassigned queue', async () => {
+    mockPrisma.ticket.findMany.mockResolvedValue([]);
+    mockPrisma.ticket.count.mockResolvedValue(0);
+
+    await getAllTickets(listOptions, agent);
+
+    expect(mockPrisma.ticket.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { OR: [{ assignedAgentId: 14 }, { assignedAgentId: null }] },
+      }),
+    );
+  });
+
+  it('getAllTickets applies no scope at all for an admin', async () => {
+    mockPrisma.ticket.findMany.mockResolvedValue([]);
+    mockPrisma.ticket.count.mockResolvedValue(0);
+
+    await getAllTickets(listOptions, admin);
+
+    expect(mockPrisma.ticket.findMany).toHaveBeenCalledWith(expect.objectContaining({ where: {} }));
+  });
+
+  it('getAllTickets combines the role scope with a status filter', async () => {
+    mockPrisma.ticket.findMany.mockResolvedValue([]);
+    mockPrisma.ticket.count.mockResolvedValue(0);
+
+    await getAllTickets({ ...listOptions, status: 'open' }, customer);
+
+    expect(mockPrisma.ticket.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { customerId: 13, status: 'open' } }),
+    );
   });
 
   it('getAllTickets sorts and paginates using the given options', async () => {
     mockPrisma.ticket.findMany.mockResolvedValue([]);
     mockPrisma.ticket.count.mockResolvedValue(0);
 
-    await getAllTickets({ sortBy: 'subject', order: 'asc', page: 3, pageSize: 5 });
+    await getAllTickets({ sortBy: 'subject', order: 'asc', page: 3, pageSize: 5 }, admin);
 
     expect(mockPrisma.ticket.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -69,22 +105,22 @@ describe('ticket.service', () => {
     );
   });
 
-  it('getTicketById looks up a ticket by id', async () => {
+  it('getTicketById looks up a ticket by id, scoped to the viewer', async () => {
     const ticket = { id: 1, subject: 'Cannot log in' };
-    mockPrisma.ticket.findUnique.mockResolvedValue(ticket);
+    mockPrisma.ticket.findFirst.mockResolvedValue(ticket);
 
-    const result = await getTicketById(1);
+    const result = await getTicketById(1, customer);
 
     expect(result).toBe(ticket);
-    expect(mockPrisma.ticket.findUnique).toHaveBeenCalledWith(
-      expect.objectContaining({ where: { id: 1 } }),
+    expect(mockPrisma.ticket.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { id: 1, customerId: 13 } }),
     );
   });
 
-  it('getTicketById returns null for an unknown id', async () => {
-    mockPrisma.ticket.findUnique.mockResolvedValue(null);
+  it('getTicketById returns null for a ticket outside the viewer\'s scope', async () => {
+    mockPrisma.ticket.findFirst.mockResolvedValue(null);
 
-    const result = await getTicketById(999);
+    const result = await getTicketById(1, customer);
 
     expect(result).toBeNull();
   });

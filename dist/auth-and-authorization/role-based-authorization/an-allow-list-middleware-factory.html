@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>An Allow-List Middleware Factory — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        <a class="nav-prev" href="/auth-and-authorization/authentication-middleware/protecting-every-route-in-a-resource.html">← Protecting Every Route in a Resource</a>
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/auth-and-authorization/role-based-authorization/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        <a class="nav-next" href="/auth-and-authorization/role-based-authorization/applying-authorize-per-route.html">Applying authorize Per Route →</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>An Allow-List Middleware Factory</h1>
+    <p class="lede">authorize(&#39;agent&#39;, &#39;admin&#39;) — the same &#39;a function that returns middleware&#39; shape as validate.js, applied to roles instead of schemas.</p>
+
+    
+
+    
+      <div class="slide-body"><p><code>authenticate</code> (previous topic) answers &quot;who is this?&quot; — it never asks
+whether that person is <em>allowed</em> to do what they're trying to do. Those are
+genuinely two different questions, easy to blur together after Laravel's
+<code>Auth::attempt()</code>-and-friends handle authentication for you so smoothly
+that authorization (role/ownership checks) barely felt like a separate
+concern. <code>authorize.js</code> is exactly the gap between the two:</p>
+<pre><code class="hljs language-js"><span class="hljs-comment">// Figure 4.9: a role allow-list, as middleware (src/middleware/authorize.js)</span>
+<span class="hljs-keyword">export</span> <span class="hljs-title function_">default</span> (...allowedRoles) =&gt;
+  <span class="hljs-function">(<span class="hljs-params">req, res, next</span>) =&gt;</span> {
+    <span class="hljs-keyword">if</span> (!allowedRoles.<span class="hljs-title function_">includes</span>(req.<span class="hljs-property">user</span>.<span class="hljs-property">role</span>)) {
+      <span class="hljs-keyword">return</span> <span class="hljs-title function_">next</span>(<span class="hljs-keyword">new</span> <span class="hljs-title class_">ApiError</span>(<span class="hljs-number">403</span>, <span class="hljs-string">&#x27;You do not have permission to perform this action&#x27;</span>));
+    }
+
+    <span class="hljs-title function_">next</span>();
+  };
+</code></pre>
+<p>This is the exact same <code>(a) =&gt; (b) =&gt; ...</code> factory shape as <code>validate.js</code>
+(Lesson 3): <code>authorize('agent', 'admin')</code> is called once, at the point a
+route is defined, and returns a <em>new</em> function — closing over
+<code>allowedRoles</code> — that Express actually runs per-request. <code>...allowedRoles</code>
+(rest parameter syntax) is what lets it accept any number of roles:
+<code>authorize('customer')</code> for one, <code>authorize('agent', 'admin')</code> for two,
+with no need for a different function shape depending on how many.</p>
+<p><code>req.user.role</code> is read here with total confidence it already exists —
+<code>authorize</code> never runs without <code>authenticate</code> (previous topic) having run
+first on the same router, so <code>req.user</code> is always already set by the time
+this checks it. A role that isn't in the list gets a <code>403</code>, not a <code>401</code>:
+the caller is authenticated — <code>authenticate</code> already succeeded, or this
+middleware would never have been reached at all — they're just not
+<em>allowed</em> to do this particular thing. That distinction is worth holding
+onto; a later topic this lesson comes back to it directly.</p>
+</div>
+    
+  </main>
+</body>
+</html>
