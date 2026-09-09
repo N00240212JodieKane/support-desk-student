@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>The Polling Problem, and What a WebSocket Is — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        <a class="nav-prev" href="/events-and-notifications/email-with-smtp-and-mailpit/sending-through-the-email-listener.html">← Sending Through the Email Listener</a>
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/events-and-notifications/realtime-with-socketio/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        <a class="nav-next" href="/events-and-notifications/realtime-with-socketio/socketio-a-websocket-library.html">Socket.IO: a WebSocket Library →</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>The Polling Problem, and What a WebSocket Is</h1>
+    <p class="lede">Every HTTP request is the client asking first — a WebSocket is one connection either side can push through, at any moment, with no request to answer.</p>
+
+    
+
+    
+      <div class="slide-body"><p>Every request this project has handled so far, since Week 1, has the same
+shape: the client sends a request, the server sends back one response, and
+the connection's job is done. That shape has no way for the <em>server</em> to
+speak first. If a customer's browser is sitting on a ticket's page and an
+agent comments on it in another tab, nothing about a request/response cycle
+lets the server say &quot;a comment just arrived&quot; — the browser would have to
+keep asking, over and over, &quot;anything new yet? anything new yet?&quot;
+(<strong>polling</strong>) just to find out, most of those requests coming back with
+nothing to report.</p>
+<p>A <strong>WebSocket</strong> is a different kind of connection, not just a different kind
+of request: the client opens one connection to the server, and — unlike
+HTTP — that connection <em>stays open</em>, with both sides able to send a message
+across it at any moment, in either direction, with no request needing to
+come first. The server can push &quot;a comment just arrived&quot; the instant that
+comment is created, because the same open connection is still sitting there
+waiting for it to send <em>anything</em>, whether or not the client asked. That's
+the one property polling can't get without either wasting requests or
+accepting a delay — and it's exactly what this lesson's realtime channel
+needs: <code>ticket.commented</code> fires once, on the server, and a browser watching
+that ticket should find out immediately, not on its next poll.</p>
+</div>
+    
+  </main>
+</body>
+</html>

@@ -54,7 +54,7 @@ export const updateTicket = asyncHandler(async (req, res) => {
     throw new ApiError(404, `Ticket ${req.params.id} not found`);
   }
 
-  const ticket = await ticketService.updateTicket(req.params.id, req.body);
+  const ticket = await ticketService.updateTicket(req.params.id, req.body, existing);
   sendResource(res, ticket);
 });
 

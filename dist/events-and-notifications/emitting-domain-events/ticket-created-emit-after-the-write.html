@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ticket.created: Emit After the Write — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        <a class="nav-prev" href="/events-and-notifications/eventemitter-as-a-bus/a-shared-emitter-and-event-registry.html">← A Shared Emitter and Event Registry</a>
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/events-and-notifications/emitting-domain-events/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        <a class="nav-next" href="/events-and-notifications/emitting-domain-events/diffing-against-the-previous-state.html">Diffing Against the Previous State →</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>ticket.created: Emit After the Write</h1>
+    <p class="lede">createTicket still does exactly one job of its own — insert the row — and adds a single emit() once that&#39;s actually committed.</p>
+
+    
+
+    
+      <div class="slide-body"><pre><code class="hljs language-js"><span class="hljs-comment">// Figure 5.2: creating a ticket now announces it too (src/services/ticket.service.js, excerpt)</span>
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">const</span> <span class="hljs-title function_">createTicket</span> = <span class="hljs-keyword">async</span> (<span class="hljs-params">{ subject, description, customerId }</span>) =&gt; {
+  <span class="hljs-keyword">const</span> ticket = <span class="hljs-keyword">await</span> prisma.<span class="hljs-property">ticket</span>.<span class="hljs-title function_">create</span>({
+    <span class="hljs-attr">data</span>: { subject, description, customerId },
+    <span class="hljs-attr">include</span>: {
+      <span class="hljs-attr">customer</span>: userSummary,
+    },
+  });
+
+  domainEvents.<span class="hljs-title function_">emit</span>(<span class="hljs-variable constant_">EVENTS</span>.<span class="hljs-property">TICKET_CREATED</span>, ticket);
+
+  <span class="hljs-keyword">return</span> ticket;
+};
+</code></pre>
+<p>Two details here matter more than they look. First, <code>emit()</code> runs <em>after</em>
+<code>await prisma.ticket.create(...)</code> has already resolved — the row genuinely
+exists in the database before anything is told about it. Emitting first and
+inserting second would risk a listener reacting to a ticket that then fails
+to actually get created (a Prisma error, a validation edge case) — announcing
+something that never really happened. Second, the payload is the same
+<code>ticket</code> object <code>createTicket</code> already has on hand, <code>customer</code> include and
+all, not just an id. Every listener in this lesson needs the customer's
+email or name for an email/notification message; passing the full object
+once here means no listener has to re-query Prisma for data the service
+already fetched.</p>
+<p><code>domainEvents.emit()</code> itself doesn't return anything meaningful and doesn't
+block on what listeners do with it — <code>createTicket</code> calls it, moves on to
+<code>return ticket</code>, and has no idea whether zero listeners or three reacted, or
+what any of them did. That's deliberate: the previous topic's whole point was
+that this function's job ends at &quot;announce it happened.&quot;</p>
+</div>
+    
+  </main>
+</body>
+</html>

@@ -3,6 +3,7 @@
 // joins `options` as a second parameter on the functions that need it.
 // Everything else about this file's shape is unchanged from Week 3.
 import prisma from '../config/db.js';
+import domainEvents, { EVENTS } from '../events/emitter.js';
 
 // A minimal, password-free shape for the user relations below — nothing
 // controller-facing should ever see the password column.
@@ -61,24 +62,49 @@ export const getTicketById = async (id, viewer) =>
     },
   });
 
-export const createTicket = async ({ subject, description, customerId }) =>
-  prisma.ticket.create({
+export const createTicket = async ({ subject, description, customerId }) => {
+  const ticket = await prisma.ticket.create({
     data: { subject, description, customerId },
     include: {
       customer: userSummary,
     },
   });
 
+  // Fired only once the row is actually committed, carrying the same shape
+  // (ticket + included customer) every listener needs — see events/emitter.js
+  // and events/listeners/*.js for what "ticket.created" fans out to.
+  domainEvents.emit(EVENTS.TICKET_CREATED, ticket);
+
+  return ticket;
+};
+
 // The controller already confirmed the ticket exists *and* is in scope for
 // this viewer (a getTicketById call) before ever reaching this — see the
 // "read before write" note on ticket.controller.js — so this doesn't need
 // to defend against a missing or out-of-scope row the way createTicket
-// doesn't either.
-export const updateTicket = async (id, changes) =>
-  prisma.ticket.update({
+// doesn't either. That same lookup is passed in as `previous` so the two
+// events below can tell what actually *changed* — a new assignment vs.
+// re-saving the same one, a real status transition vs. any other field —
+// without a second query just to diff against.
+export const updateTicket = async (id, changes, previous) => {
+  const ticket = await prisma.ticket.update({
     where: { id },
     data: changes,
     include: { customer: userSummary, assignedAgent: userSummary },
   });
+
+  // Only a genuine new assignment counts: not un-assigning (null) and not
+  // some other field changing on an already-assigned ticket. See
+  // "ticket.assigned" in CLAUDE.md's domain events.
+  if (ticket.assignedAgentId !== null && ticket.assignedAgentId !== previous.assignedAgentId) {
+    domainEvents.emit(EVENTS.TICKET_ASSIGNED, ticket);
+  }
+
+  if (ticket.status !== previous.status) {
+    domainEvents.emit(EVENTS.TICKET_STATUS_CHANGED, ticket, previous.status);
+  }
+
+  return ticket;
+};
 
 export const deleteTicket = async (id) => prisma.ticket.delete({ where: { id } });

@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Diffing Against the Previous State — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        <a class="nav-prev" href="/events-and-notifications/emitting-domain-events/ticket-created-emit-after-the-write.html">← ticket.created: Emit After the Write</a>
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/events-and-notifications/emitting-domain-events/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        <a class="nav-next" href="/events-and-notifications/emitting-domain-events/resolving-comment-recipients.html">ticket.commented: Resolving Recipients Once →</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>Diffing Against the Previous State</h1>
+    <p class="lede">ticket.assigned and ticket.status_changed only fire on a genuine change — which means updateTicket needs to know what the ticket looked like before.</p>
+
+    
+
+    
+      <div class="slide-body"><p><code>ticket.created</code> only ever happens once per ticket, so there's nothing to
+compare against. <code>ticket.assigned</code> and <code>ticket.status_changed</code> are different:
+<code>updateTicket</code> runs on <em>every</em> <code>PATCH</code>, whether or not the field either event
+cares about actually changed. Emitting <code>ticket.assigned</code> just because a
+ticket with an agent already assigned got saved again — same agent, some
+unrelated field edited — would notify that agent for nothing.</p>
+<p>Telling &quot;changed&quot; from &quot;already was this&quot; needs the <em>previous</em> row to
+compare against, so the controller now passes one in:</p>
+<pre><code class="hljs language-js"><span class="hljs-comment">// Figure 5.3: the existence check it already ran gets reused, not repeated (src/controllers/ticket.controller.js, excerpt)</span>
+<span class="hljs-keyword">const</span> ticket = <span class="hljs-keyword">await</span> ticketService.<span class="hljs-title function_">updateTicket</span>(req.<span class="hljs-property">params</span>.<span class="hljs-property">id</span>, req.<span class="hljs-property">body</span>, existing);
+</code></pre>
+<p><code>existing</code> isn't a new query — it's the same lookup <code>updateTicket</code>'s
+controller already had to run first to confirm the ticket exists at all
+(Lesson 4's &quot;read before write&quot; pattern), just no longer thrown away once
+that check passes. The service uses it to diff:</p>
+<pre><code class="hljs language-js"><span class="hljs-comment">// Figure 5.4: two independent diffs against `previous`, each its own event (src/services/ticket.service.js, excerpt)</span>
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">const</span> <span class="hljs-title function_">updateTicket</span> = <span class="hljs-keyword">async</span> (<span class="hljs-params">id, changes, previous</span>) =&gt; {
+  <span class="hljs-keyword">const</span> ticket = <span class="hljs-keyword">await</span> prisma.<span class="hljs-property">ticket</span>.<span class="hljs-title function_">update</span>({
+    <span class="hljs-attr">where</span>: { id },
+    <span class="hljs-attr">data</span>: changes,
+    <span class="hljs-attr">include</span>: { <span class="hljs-attr">customer</span>: userSummary, <span class="hljs-attr">assignedAgent</span>: userSummary },
+  });
+
+  <span class="hljs-keyword">if</span> (ticket.<span class="hljs-property">assignedAgentId</span> !== <span class="hljs-literal">null</span> &amp;&amp; ticket.<span class="hljs-property">assignedAgentId</span> !== previous.<span class="hljs-property">assignedAgentId</span>) {
+    domainEvents.<span class="hljs-title function_">emit</span>(<span class="hljs-variable constant_">EVENTS</span>.<span class="hljs-property">TICKET_ASSIGNED</span>, ticket);
+  }
+
+  <span class="hljs-keyword">if</span> (ticket.<span class="hljs-property">status</span> !== previous.<span class="hljs-property">status</span>) {
+    domainEvents.<span class="hljs-title function_">emit</span>(<span class="hljs-variable constant_">EVENTS</span>.<span class="hljs-property">TICKET_STATUS_CHANGED</span>, ticket, previous.<span class="hljs-property">status</span>);
+  }
+
+  <span class="hljs-keyword">return</span> ticket;
+};
+</code></pre>
+<p>Each <code>if</code> is answering a different, specific question. The first isn't just
+&quot;did <code>assignedAgentId</code> change&quot; — <code>!== null</code> also rules out <em>un</em>-assigning a
+ticket counting as an assignment worth emailing someone about. The second
+compares <code>status</code> the same way, and passes <code>previous.status</code> as a second
+argument alongside the updated <code>ticket</code> — the listeners in the next few
+topics need to say &quot;moved from <code>open</code> to <code>resolved</code>,&quot; which means someone
+has to remember what it moved <em>from</em>, and <code>updateTicket</code> is the last place
+that's cheaply true.</p>
+</div>
+    
+  </main>
+</body>
+</html>

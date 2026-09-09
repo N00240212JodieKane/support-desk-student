@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mocking One More Prisma Call — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        <a class="nav-prev" href="/events-and-notifications/testing-events/spying-on-the-shared-emitter.html">← Spying on the Shared Emitter</a>
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/events-and-notifications/testing-events/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>Mocking One More Prisma Call</h1>
+    <p class="lede">createComment now queries Prisma twice, not once — comment.service.test.js&#39;s mocks grow to match, or the recipient-resolution code has nothing to run against.</p>
+
+    
+
+    
+      <div class="slide-body"><p><code>comment.service.js</code>'s <code>createComment</code> does more work now than it did in
+Week 3 — it looks the parent ticket up a second time to resolve recipients
+(Topic 3) before ever emitting <code>ticket.commented</code>. A test suite mocking
+Prisma has to mock <em>that</em> call too, or the code under test crashes reading
+properties off <code>undefined</code> before it ever reaches the assertion:</p>
+<pre><code class="hljs language-js"><span class="hljs-comment">// Figure 5.17: two more Prisma calls to mock, matching the new recipient lookup (tests/unit/comment.service.test.js, excerpt)</span>
+<span class="hljs-keyword">const</span> mockPrisma = {
+  <span class="hljs-attr">ticket</span>: { <span class="hljs-attr">findUnique</span>: jest.<span class="hljs-title function_">fn</span>() },
+  <span class="hljs-attr">comment</span>: { <span class="hljs-attr">create</span>: jest.<span class="hljs-title function_">fn</span>() <span class="hljs-comment">/* ...other methods unchanged... */</span> },
+  <span class="hljs-attr">user</span>: { <span class="hljs-attr">findMany</span>: jest.<span class="hljs-title function_">fn</span>() },
+};
+
+<span class="hljs-title function_">it</span>(<span class="hljs-string">&#x27;createComment never notifies the comment author, even if they are the customer&#x27;</span>, <span class="hljs-title function_">async</span> () =&gt; {
+  mockPrisma.<span class="hljs-property">comment</span>.<span class="hljs-property">create</span>.<span class="hljs-title function_">mockResolvedValue</span>({ <span class="hljs-attr">id</span>: <span class="hljs-number">2</span>, <span class="hljs-attr">ticketId</span>: <span class="hljs-number">7</span>, <span class="hljs-attr">authorId</span>: <span class="hljs-number">13</span>, <span class="hljs-attr">body</span>: <span class="hljs-string">&#x27;Thanks!&#x27;</span> });
+  mockPrisma.<span class="hljs-property">ticket</span>.<span class="hljs-property">findUnique</span>.<span class="hljs-title function_">mockResolvedValue</span>({ <span class="hljs-attr">id</span>: <span class="hljs-number">7</span>, <span class="hljs-attr">subject</span>: <span class="hljs-string">&#x27;Cannot log in&#x27;</span>, <span class="hljs-attr">customerId</span>: <span class="hljs-number">13</span>, <span class="hljs-attr">watchers</span>: [] });
+
+  <span class="hljs-keyword">await</span> <span class="hljs-title function_">createComment</span>(<span class="hljs-number">7</span>, { <span class="hljs-attr">body</span>: <span class="hljs-string">&#x27;Thanks!&#x27;</span>, <span class="hljs-attr">authorId</span>: <span class="hljs-number">13</span> });
+
+  <span class="hljs-title function_">expect</span>(mockPrisma.<span class="hljs-property">user</span>.<span class="hljs-property">findMany</span>).<span class="hljs-property">not</span>.<span class="hljs-title function_">toHaveBeenCalled</span>();
+  <span class="hljs-title function_">expect</span>(emitSpy).<span class="hljs-title function_">toHaveBeenCalledWith</span>(<span class="hljs-variable constant_">EVENTS</span>.<span class="hljs-property">TICKET_COMMENTED</span>, expect.<span class="hljs-title function_">objectContaining</span>({ <span class="hljs-attr">recipients</span>: [] }));
+});
+</code></pre>
+<p>This test is picking out exactly the edge case Topic 3's <code>Set</code>-based
+exclusion exists for: the comment's author <em>is</em> the ticket's customer here
+(<code>customerId: 13</code>, <code>authorId: 13</code>), so the right outcome is zero recipients
+and no wasted <code>user.findMany</code> call at all — not &quot;notify the customer, then
+filter them out later.&quot; <code>comments.routes.test.js</code>, the integration test
+sitting on top of this same service through a real route, needed the exact
+same two additions — <code>ticket.findUnique</code> and <code>user.findMany</code> mocks — for
+the same reason: any test exercising <code>createComment</code> now runs through
+Topic 3's recipient-resolution path whether or not that test cares about
+notifications at all.</p>
+<p>That's the practical cost of Topic 3's decision to resolve recipients
+<em>inside</em> the service rather than in each listener — the tests around that
+service have to know about one more query. It's a trade this project
+accepts deliberately: three listener files that never touch Prisma for
+this at all, against one service function whose tests need two more mocks.</p>
+</div>
+    
+  </main>
+</body>
+</html>

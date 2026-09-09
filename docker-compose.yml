@@ -1,7 +1,8 @@
-# Week 2: local infrastructure only (MySQL). Redis joins in Week 6, and the
-# app itself (`api`/`worker` services) isn't containerized until Week 6 either
-# — see "API containerization" in PLAN.md's Key decisions and "Hosting" in
-# TUTORIAL.md. Until then the app runs on the host via `npm run dev`.
+# Week 2: local infrastructure only (MySQL). Mailpit (dev email) joins in
+# Week 5, Redis in Week 6, and the app itself (`api`/`worker` services) isn't
+# containerized until Week 6 either — see "API containerization" and "Dev
+# email" in PLAN.md's Key decisions, and "Hosting" in TUTORIAL.md. Until then
+# the app runs on the host via `npm run dev`.
 services:
   mysql:
     image: mysql:8.0
@@ -13,6 +14,16 @@ services:
       - '3306:3306'
     volumes:
       - mysql-data:/var/lib/mysql
+
+  # Dev email: nodemailer sends to the SMTP port below; the web UI lets you
+  # actually read what was "sent" without a real mailbox or external account.
+  # See "Dev email" in PLAN.md's Key decisions.
+  mailpit:
+    image: axllent/mailpit:latest
+    restart: unless-stopped
+    ports:
+      - '1025:1025' # SMTP — nodemailer's transport target
+      - '8025:8025' # web UI — http://localhost:8025
 
 volumes:
   mysql-data:

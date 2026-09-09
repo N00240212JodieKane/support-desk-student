@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>What Is an EventEmitter? — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        <a class="nav-prev" href="/events-and-notifications/why-event-driven/emit-and-let-listeners-react.html">← Emit, and Let Listeners React</a>
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/events-and-notifications/eventemitter-as-a-bus/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        <a class="nav-next" href="/events-and-notifications/eventemitter-as-a-bus/a-shared-emitter-and-event-registry.html">A Shared Emitter and Event Registry →</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>What Is an EventEmitter?</h1>
+    <p class="lede">A built-in Node object that lets any number of listeners subscribe to a named event, with no import beyond node:events.</p>
+
+    
+
+    
+      <div class="slide-body"><p>The diagram on the last slide needs something concrete behind that
+<code>emit('ticket.created', ticket)</code> arrow — some object that a service can call
+<code>.emit()</code> on, and that every listener can independently call <code>.on()</code> against,
+without either side knowing the other exists. Node ships exactly that, built
+in, as <code>EventEmitter</code>:</p>
+<pre><code class="hljs language-js"><span class="hljs-keyword">import</span> { <span class="hljs-title class_">EventEmitter</span> } <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;node:events&#x27;</span>;
+
+<span class="hljs-keyword">const</span> bus = <span class="hljs-keyword">new</span> <span class="hljs-title class_">EventEmitter</span>();
+
+bus.<span class="hljs-title function_">on</span>(<span class="hljs-string">&#x27;greeted&#x27;</span>, <span class="hljs-function">(<span class="hljs-params">name</span>) =&gt;</span> <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">`Listener A: hello <span class="hljs-subst">${name}</span>`</span>));
+bus.<span class="hljs-title function_">on</span>(<span class="hljs-string">&#x27;greeted&#x27;</span>, <span class="hljs-function">(<span class="hljs-params">name</span>) =&gt;</span> <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">`Listener B: hi there, <span class="hljs-subst">${name}</span>`</span>));
+
+bus.<span class="hljs-title function_">emit</span>(<span class="hljs-string">&#x27;greeted&#x27;</span>, <span class="hljs-string">&#x27;Sam&#x27;</span>);
+<span class="hljs-comment">// Listener A: hello Sam</span>
+<span class="hljs-comment">// Listener B: hi there, Sam</span>
+</code></pre>
+<p>Two things matter here. First, <code>.on(eventName, callback)</code> registers a
+listener without running it — nothing happens until someone actually calls
+<code>.emit()</code>. Second, <code>.emit()</code> doesn't care how many listeners are registered
+for that event name: zero, one, or (as above) several all just get called,
+in the order they were registered, each with whatever arguments <code>.emit()</code>
+was given. Nobody calling <code>.emit('greeted', 'Sam')</code> needs to know that two
+listeners exist, or write either of their names anywhere — this is the same
+<strong>publish/subscribe</strong> shape as an event listener in the browser
+(<code>el.addEventListener('click', ...)</code>), just for events <em>this project</em>
+defines and fires, not ones the DOM fires for you.</p>
+<p>That's the entire mechanism. The only design work left is: one shared
+<code>EventEmitter</code> instance that every module in this project imports, and an
+agreed set of event names — both next.</p>
+</div>
+    
+  </main>
+</body>
+</html>

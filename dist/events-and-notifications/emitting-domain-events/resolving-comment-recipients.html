@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ticket.commented: Resolving Recipients Once — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        <a class="nav-prev" href="/events-and-notifications/emitting-domain-events/diffing-against-the-previous-state.html">← Diffing Against the Previous State</a>
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/events-and-notifications/emitting-domain-events/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        <a class="nav-next" href="/events-and-notifications/listeners-as-modules/side-effect-imports-and-registration-order.html">Side-Effect Imports and Registration Order →</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>ticket.commented: Resolving Recipients Once</h1>
+    <p class="lede">Who should hear about a new comment — the customer plus opted-in watchers, minus whoever just wrote it — worked out once, here, not by every listener.</p>
+
+    
+
+    
+      <div class="slide-body"><p><code>ticket.commented</code> needs to answer a question the other three events don't:
+<em>who</em> cares about this comment? CLAUDE.md's data model has an answer —
+the ticket's customer, plus any watcher whose <code>TicketWatcher.notifyOnComment</code>
+is <code>true</code> — but resolving that answer takes two more queries, and doing it
+separately in each of three listeners would mean three copies of the same
+logic, and three times the database load for one comment:</p>
+<pre><code class="hljs language-js"><span class="hljs-comment">// Figure 5.5: resolving recipients before ever emitting (src/services/comment.service.js, excerpt)</span>
+<span class="hljs-keyword">const</span> ticket = <span class="hljs-keyword">await</span> prisma.<span class="hljs-property">ticket</span>.<span class="hljs-title function_">findUnique</span>({
+  <span class="hljs-attr">where</span>: { <span class="hljs-attr">id</span>: ticketId },
+  <span class="hljs-attr">select</span>: {
+    <span class="hljs-attr">id</span>: <span class="hljs-literal">true</span>,
+    <span class="hljs-attr">subject</span>: <span class="hljs-literal">true</span>,
+    <span class="hljs-attr">customerId</span>: <span class="hljs-literal">true</span>,
+    <span class="hljs-attr">watchers</span>: { <span class="hljs-attr">where</span>: { <span class="hljs-attr">notifyOnComment</span>: <span class="hljs-literal">true</span> }, <span class="hljs-attr">select</span>: { <span class="hljs-attr">userId</span>: <span class="hljs-literal">true</span> } },
+  },
+});
+
+<span class="hljs-keyword">const</span> recipientIds = <span class="hljs-keyword">new</span> <span class="hljs-title class_">Set</span>([ticket.<span class="hljs-property">customerId</span>, ...ticket.<span class="hljs-property">watchers</span>.<span class="hljs-title function_">map</span>(<span class="hljs-function">(<span class="hljs-params">w</span>) =&gt;</span> w.<span class="hljs-property">userId</span>)]);
+recipientIds.<span class="hljs-title function_">delete</span>(authorId);
+
+<span class="hljs-keyword">const</span> recipients = recipientIds.<span class="hljs-property">size</span>
+  ? <span class="hljs-keyword">await</span> prisma.<span class="hljs-property">user</span>.<span class="hljs-title function_">findMany</span>({
+      <span class="hljs-attr">where</span>: { <span class="hljs-attr">id</span>: { <span class="hljs-attr">in</span>: [...recipientIds] } },
+      <span class="hljs-attr">select</span>: { <span class="hljs-attr">id</span>: <span class="hljs-literal">true</span>, <span class="hljs-attr">name</span>: <span class="hljs-literal">true</span>, <span class="hljs-attr">email</span>: <span class="hljs-literal">true</span> },
+    })
+  : [];
+
+domainEvents.<span class="hljs-title function_">emit</span>(<span class="hljs-variable constant_">EVENTS</span>.<span class="hljs-property">TICKET_COMMENTED</span>, { comment, <span class="hljs-attr">ticket</span>: { <span class="hljs-attr">id</span>: ticket.<span class="hljs-property">id</span>, <span class="hljs-attr">subject</span>: ticket.<span class="hljs-property">subject</span> }, recipients });
+</code></pre>
+<p>A <code>Set</code> is what makes <code>recipientIds.delete(authorId)</code> a one-line way to
+answer &quot;everyone who should hear about this, except whoever just wrote it&quot; —
+the customer might <em>be</em> the comment's author (replying on their own ticket),
+or a watcher might be, and either way they should be silently excluded, not
+notified about their own comment. <code>watchers: { where: { notifyOnComment: true } }</code>
+filters out opted-out watchers before the <code>Set</code> is even built, so nothing
+downstream has to check that flag again.</p>
+<p>The resolved <code>recipients</code> — full <code>{ id, name, email }</code> rows, not just ids —
+go straight into the event payload alongside <code>comment</code> and a trimmed-down
+<code>ticket</code>. Every listener in the next few topics can loop over <code>recipients</code>
+directly; none of them re-queries Prisma to find out who a name or email
+belongs to. This whole block is also wrapped in its own <code>try</code>/<code>catch</code> in the
+real file — the comment itself is already committed by this point, so a
+failure resolving recipients must never turn an already-successful comment
+into a failed request. The next topic's listeners lean on that same
+reasoning for a different reason.</p>
+</div>
+    
+  </main>
+</body>
+</html>

@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Wiring Listeners into app.js — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        <a class="nav-prev" href="/events-and-notifications/listeners-as-modules/side-effect-imports-and-registration-order.html">← Side-Effect Imports and Registration Order</a>
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/events-and-notifications/listeners-as-modules/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        <a class="nav-next" href="/events-and-notifications/in-app-notifications/a-notification-row-per-event.html">A Notification Row per Event →</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>Wiring Listeners into app.js</h1>
+    <p class="lede">One more side-effect import, in app.js rather than server.js, so listeners register under supertest too.</p>
+
+    
+
+    
+      <div class="slide-body"><p><code>events/index.js</code> only registers listeners once <em>something</em> imports it —
+so something has to. That import goes in <code>app.js</code>, not <code>server.js</code>:</p>
+<pre><code class="hljs language-js"><span class="hljs-comment">// Figure 5.7: registering listeners the moment the app module loads (src/app.js, excerpt)</span>
+<span class="hljs-keyword">import</span> routes <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;./routes/index.js&#x27;</span>;
+<span class="hljs-keyword">import</span> notFound <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;./middleware/notFound.js&#x27;</span>;
+<span class="hljs-keyword">import</span> errorHandler <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;./middleware/errorHandler.js&#x27;</span>;
+<span class="hljs-keyword">import</span> <span class="hljs-string">&#x27;./events/index.js&#x27;</span>;
+</code></pre>
+<p>This leans on the same <code>app.js</code>/<code>server.js</code> split CLAUDE.md's Architecture
+conventions call out: <code>app.js</code> builds the Express app and exports it,
+<code>server.js</code> imports that app and calls <code>.listen()</code>. The integration tests
+introduced in Lesson 3 import <code>app.js</code> directly through <code>supertest</code>, and
+never touch <code>server.js</code> or call <code>.listen()</code> at all — so if this import lived
+in <code>server.js</code> instead, listeners would work when the app runs for real but
+silently never register under test, and a test creating a ticket would have
+no way to notice a broken listener. Importing <code>./events/index.js</code> from
+<code>app.js</code> means every route the app exposes runs with listeners registered,
+whether that app is reached through a real port or through <code>supertest</code>.</p>
+</div>
+    
+  </main>
+</body>
+</html>

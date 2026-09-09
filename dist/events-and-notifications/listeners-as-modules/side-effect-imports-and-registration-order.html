@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Side-Effect Imports and Registration Order — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        <a class="nav-prev" href="/events-and-notifications/emitting-domain-events/resolving-comment-recipients.html">← ticket.commented: Resolving Recipients Once</a>
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/events-and-notifications/listeners-as-modules/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        <a class="nav-next" href="/events-and-notifications/listeners-as-modules/wiring-listeners-into-app-js.html">Wiring Listeners into app.js →</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>Side-Effect Imports and Registration Order</h1>
+    <p class="lede">events/index.js registers three listener files by importing them for what they do at load time, not for anything they export.</p>
+
+    
+
+    
+      <div class="slide-body"><p>Each channel from this lesson's diagram — in-app, email, realtime — lives in
+its own file under <code>src/events/listeners/</code>, and each one calls
+<code>domainEvents.on(...)</code> for every event it cares about, right at the top
+level of the module, the moment that file is first imported. Nothing needs
+to be exported from any of them for that registration to happen — importing
+the file <em>is</em> the registration. One file pulls all three in purely for that
+effect:</p>
+<pre><code class="hljs language-js"><span class="hljs-comment">// Figure 5.6: importing three files for what they do, not what they export (src/events/index.js)</span>
+<span class="hljs-keyword">import</span> <span class="hljs-string">&#x27;./listeners/notifyInApp.listener.js&#x27;</span>;
+<span class="hljs-keyword">import</span> <span class="hljs-string">&#x27;./listeners/notifyEmail.listener.js&#x27;</span>;
+<span class="hljs-keyword">import</span> <span class="hljs-string">&#x27;./listeners/notifyRealtime.listener.js&#x27;</span>;
+</code></pre>
+<p>This is a <strong>side-effect import</strong> — no <code>{ ... }</code>, no default binding, nothing
+assigned to a variable. Node still has to run the whole module to import it
+at all, and running it is exactly what calls <code>.on()</code> three or four times
+inside. Deleting one line here (say, <code>notifyEmail.listener.js</code>) switches
+email notifications off entirely without touching that listener file, the
+emitter, or any service — the clearest possible demonstration of Topic 1's
+whole argument that reacting to an event is decoupled from announcing it.</p>
+<p>The order of these three lines only matters in one narrow way: <code>EventEmitter</code>
+calls listeners for the same event in the order they registered, so if one
+listener threw synchronously, later ones for that same event wouldn't run.
+None of the listeners in this lesson rely on that ordering — each wraps its
+own work in <code>try</code>/<code>catch</code> specifically so one channel's failure can never
+reach, or block, another (next topic covers why).</p>
+</div>
+    
+  </main>
+</body>
+</html>

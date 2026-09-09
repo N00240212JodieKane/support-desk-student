@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Side Effects Piling Up — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        <a class="nav-prev" href="/auth-and-authorization/testing-auth/signing-real-tokens-in-integration-tests.html">← Signing Real Tokens in Integration Tests</a>
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/events-and-notifications/why-event-driven/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        <a class="nav-next" href="/events-and-notifications/why-event-driven/emit-and-let-listeners-react.html">Emit, and Let Listeners React →</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>Side Effects Piling Up</h1>
+    <p class="lede">What createTicket would look like if it did all of a notification&#39;s work itself — and why that&#39;s a service that keeps changing for the wrong reasons.</p>
+
+    
+
+    
+      <div class="slide-body"><p>Creating a ticket, from Week 3, is one Prisma call: <code>prisma.ticket.create(...)</code>.
+But CLAUDE.md's domain events list a lot more that's supposed to happen the
+moment a ticket exists — a confirmation email to the customer, an in-app
+notification for every agent, a live update if one happens to be online. If
+none of that lived anywhere else, it would all have to be written directly
+into <code>createTicket</code> itself:</p>
+<pre><code class="hljs language-js"><span class="hljs-comment">// Not real code — the shape createTicket would have if it did everything</span>
+<span class="hljs-comment">// itself, with nowhere else for any of this to live.</span>
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">const</span> <span class="hljs-title function_">createTicket</span> = <span class="hljs-keyword">async</span> (<span class="hljs-params">{ subject, description, customerId }</span>) =&gt; {
+  <span class="hljs-keyword">const</span> ticket = <span class="hljs-keyword">await</span> prisma.<span class="hljs-property">ticket</span>.<span class="hljs-title function_">create</span>({ <span class="hljs-attr">data</span>: { subject, description, customerId }, <span class="hljs-attr">include</span>: { <span class="hljs-attr">customer</span>: <span class="hljs-literal">true</span> } });
+
+  <span class="hljs-keyword">await</span> mailer.<span class="hljs-title function_">sendMail</span>({ <span class="hljs-attr">to</span>: ticket.<span class="hljs-property">customer</span>.<span class="hljs-property">email</span>, <span class="hljs-attr">subject</span>: <span class="hljs-string">`Ticket #<span class="hljs-subst">${ticket.id}</span> created`</span>, <span class="hljs-attr">text</span>: <span class="hljs-string">&#x27;...&#x27;</span> });
+
+  <span class="hljs-keyword">const</span> agents = <span class="hljs-keyword">await</span> prisma.<span class="hljs-property">user</span>.<span class="hljs-title function_">findMany</span>({ <span class="hljs-attr">where</span>: { <span class="hljs-attr">role</span>: <span class="hljs-string">&#x27;agent&#x27;</span> } });
+  <span class="hljs-keyword">await</span> prisma.<span class="hljs-property">notification</span>.<span class="hljs-title function_">createMany</span>({ <span class="hljs-attr">data</span>: agents.<span class="hljs-title function_">map</span>(<span class="hljs-function">(<span class="hljs-params">a</span>) =&gt;</span> ({ <span class="hljs-attr">userId</span>: a.<span class="hljs-property">id</span>, <span class="hljs-attr">message</span>: <span class="hljs-string">&#x27;...&#x27;</span> })) });
+
+  <span class="hljs-title function_">getIO</span>().<span class="hljs-title function_">to</span>(<span class="hljs-string">&#x27;role:agent&#x27;</span>).<span class="hljs-title function_">emit</span>(<span class="hljs-string">&#x27;ticket.created&#x27;</span>, ticket);
+
+  <span class="hljs-keyword">return</span> ticket;
+};
+</code></pre>
+<p>Nothing about this is wrong, exactly — it would work. But look at what
+<code>createTicket</code> now has to know about: how to send an email, which users
+count as &quot;the agent queue,&quot; the shape of a <code>Notification</code> row, and a
+Socket.IO room naming scheme. A function whose actual job is &quot;insert a
+ticket row&quot; now has four unrelated jobs, and every one of them is a reason
+it might need to change later — a fifth notification channel, a change to
+who counts as an agent, a different email template — none of which have
+anything to do with <em>creating a ticket</em>.</p>
+<p>It gets worse the moment a second place needs the same reaction. <code>ticket.commented</code>
+notifies watchers; <code>ticket.status_changed</code> notifies the customer again — each
+would repeat its own copy of &quot;email, in-app row, socket push,&quot; maybe not quite
+consistently, maybe missing one channel because whoever wrote that path forgot
+it. The problem isn't any one line above — it's that <em>triggering</em> a reaction
+and <em>carrying it out</em> have been welded into the same function, with no way to
+change one without touching the other.</p>
+</div>
+    
+  </main>
+</body>
+</html>

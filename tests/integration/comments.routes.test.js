@@ -10,6 +10,7 @@ import { signToken } from '../../src/utils/jwt.js';
 const mockPrisma = {
   ticket: {
     findFirst: jest.fn(),
+    findUnique: jest.fn(),
   },
   comment: {
     findMany: jest.fn(),
@@ -17,6 +18,9 @@ const mockPrisma = {
     create: jest.fn(),
     update: jest.fn(),
     delete: jest.fn(),
+  },
+  user: {
+    findMany: jest.fn(),
   },
 };
 
@@ -36,6 +40,17 @@ describe('/tickets/:ticketId/comments', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockPrisma.ticket.findFirst.mockResolvedValue({ id: 1, subject: 'Cannot log in' });
+    // createComment looks the ticket up again (by a different shape) to
+    // resolve who to notify — see comment.service.js's createComment.
+    mockPrisma.ticket.findUnique.mockResolvedValue({
+      id: 1,
+      subject: 'Cannot log in',
+      customerId: 13,
+      watchers: [],
+    });
+    mockPrisma.user.findMany.mockResolvedValue([
+      { id: 13, name: 'Customer', email: 'customer@x.test' },
+    ]);
   });
 
   it('rejects a request with no Authorization header', async () => {

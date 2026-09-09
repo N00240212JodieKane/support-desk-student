@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>In-App Notifications — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/events-and-notifications/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>In-App Notifications</h1>
+    <p class="lede">The first of three channels reacting to the same events: a Notification row per event, and why a listener failing here must never affect the request.</p>
+
+    
+      <ul class="listing">
+        
+          <li>
+            <a href="/events-and-notifications/in-app-notifications/a-notification-row-per-event.html">A Notification Row per Event</a>
+            <p>notifyInApp.listener.js: one domainEvents.on() block per event, each writing whichever Notification rows that event implies.</p>
+          </li>
+        
+          <li>
+            <a href="/events-and-notifications/in-app-notifications/why-every-listener-try-catches.html">Why Every Listener try/catches</a>
+            <p>A throw inside an async listener never reaches emit()&#39;s caller — it becomes an unhandled rejection instead, which is worse, not better.</p>
+          </li>
+        
+      </ul>
+    
+
+    
+  </main>
+</body>
+</html>

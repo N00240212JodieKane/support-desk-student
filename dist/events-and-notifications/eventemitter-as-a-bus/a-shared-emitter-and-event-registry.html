@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>A Shared Emitter and Event Registry — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        <a class="nav-prev" href="/events-and-notifications/eventemitter-as-a-bus/what-is-an-eventemitter.html">← What Is an EventEmitter?</a>
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/events-and-notifications/eventemitter-as-a-bus/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        <a class="nav-next" href="/events-and-notifications/emitting-domain-events/ticket-created-emit-after-the-write.html">ticket.created: Emit After the Write →</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>A Shared Emitter and Event Registry</h1>
+    <p class="lede">events/emitter.js: one EventEmitter every service and listener imports, plus a single source of truth for event-name strings.</p>
+
+    
+
+    
+      <div class="slide-body"><pre><code class="hljs language-js"><span class="hljs-comment">// Figure 5.1: the shared bus and its event-name registry (src/events/emitter.js)</span>
+<span class="hljs-keyword">import</span> { <span class="hljs-title class_">EventEmitter</span> } <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;node:events&#x27;</span>;
+
+<span class="hljs-keyword">const</span> domainEvents = <span class="hljs-keyword">new</span> <span class="hljs-title class_">EventEmitter</span>();
+
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">default</span> domainEvents;
+
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">const</span> <span class="hljs-variable constant_">EVENTS</span> = {
+  <span class="hljs-attr">TICKET_CREATED</span>: <span class="hljs-string">&#x27;ticket.created&#x27;</span>,
+  <span class="hljs-attr">TICKET_ASSIGNED</span>: <span class="hljs-string">&#x27;ticket.assigned&#x27;</span>,
+  <span class="hljs-attr">TICKET_COMMENTED</span>: <span class="hljs-string">&#x27;ticket.commented&#x27;</span>,
+  <span class="hljs-attr">TICKET_STATUS_CHANGED</span>: <span class="hljs-string">&#x27;ticket.status_changed&#x27;</span>,
+};
+</code></pre>
+<p><code>domainEvents</code> is created exactly once, here, and exported as a default
+export. Every other file that wants to emit or listen for a domain event
+imports this same instance — <code>import domainEvents from '../events/emitter.js'</code>
+— rather than constructing its own <code>new EventEmitter()</code>. That's the same
+<strong>import-as-singleton</strong> idiom <code>config/db.js</code>'s <code>PrismaClient</code> already relies
+on: a module in Node only ever runs once no matter how many files import it,
+so the object it exports is automatically shared by everyone who imports it —
+no separate dependency-injection container needed to guarantee that.</p>
+<p><code>EVENTS</code> solves a smaller but easy-to-get-wrong problem: <code>.on()</code> and
+<code>.emit()</code> both take the event name as a plain string, and <code>EventEmitter</code>
+has no way to check that a string used in one file matches a string used in
+another — <code>'ticket.created'</code> and <code>'ticket_created'</code> would silently just be
+two different events, one with no listeners. Writing <code>EVENTS.TICKET_CREATED</code>
+everywhere instead turns that class of typo into an <code>undefined</code>-is-not-a-valid-
+event-name bug or an import error, not a listener that quietly never fires.</p>
+</div>
+    
+  </main>
+</body>
+</html>

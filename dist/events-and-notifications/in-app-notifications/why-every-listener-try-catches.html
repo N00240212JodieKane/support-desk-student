@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Why Every Listener try/catches — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        <a class="nav-prev" href="/events-and-notifications/in-app-notifications/a-notification-row-per-event.html">← A Notification Row per Event</a>
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/events-and-notifications/in-app-notifications/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        <a class="nav-next" href="/events-and-notifications/email-with-smtp-and-mailpit/what-smtp-actually-does.html">What SMTP Actually Does →</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>Why Every Listener try/catches</h1>
+    <p class="lede">A throw inside an async listener never reaches emit()&#39;s caller — it becomes an unhandled rejection instead, which is worse, not better.</p>
+
+    
+
+    
+      <div class="slide-body"><p><code>createTicket</code> calls <code>domainEvents.emit(...)</code> and moves straight on to
+<code>return ticket</code> — it never <code>await</code>s anything a listener does, and has no
+<code>try</code>/<code>catch</code> around the <code>emit()</code> call. That's fine as long as a listener
+succeeds, but raises a real question: what happens if <code>prisma.notification .createMany(...)</code> above throws — a database hiccup, a constraint violation?</p>
+<p>The answer is <em>not</em> &quot;the request fails,&quot; even though that might be the
+instinctive guess. <code>emit()</code> calls each listener but doesn't <code>await</code> an
+<code>async</code> listener's returned promise — it fires it and returns immediately.
+A <code>throw</code> inside that <code>async</code> function turns into a <em>rejected promise</em> that
+nothing is waiting on, which Node reports as an <strong>unhandled promise
+rejection</strong> — a background failure with no connection at all back to the
+request that triggered it, <code>createTicket</code>'s <code>return ticket</code> already having
+happened. The customer's ticket is created either way; the only question is
+whether that background failure is silently swallowed or actually logged
+somewhere:</p>
+<pre><code class="hljs language-js"><span class="hljs-comment">// Figure 5.9: catching inside the listener, not relying on the caller to (src/events/listeners/notifyInApp.listener.js, excerpt)</span>
+domainEvents.<span class="hljs-title function_">on</span>(<span class="hljs-variable constant_">EVENTS</span>.<span class="hljs-property">TICKET_ASSIGNED</span>, <span class="hljs-title function_">async</span> (ticket) =&gt; {
+  <span class="hljs-keyword">try</span> {
+    <span class="hljs-keyword">await</span> prisma.<span class="hljs-property">notification</span>.<span class="hljs-title function_">create</span>({ <span class="hljs-comment">/* ... */</span> });
+  } <span class="hljs-keyword">catch</span> (err) {
+    <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">error</span>(<span class="hljs-string">&#x27;notifyInApp listener failed for ticket.assigned:&#x27;</span>, err);
+  }
+});
+</code></pre>
+<p>Every listener in all three channel files wraps its body in exactly this
+shape. It isn't only about turning a silent unhandled rejection into a
+logged one — with three independent listeners on the same event, a
+<code>notifyInApp</code> failure that somehow <em>did</em> propagate would still have nowhere
+useful to propagate <em>to</em>, and (depending on registration order) could stop
+<code>notifyEmail</code> or <code>notifyRealtime</code> from running for that same event at all.
+Catching locally, in every listener, is what actually guarantees one
+channel failing can never take another down with it — the property this
+whole lesson has been building toward.</p>
+</div>
+    
+  </main>
+</body>
+</html>

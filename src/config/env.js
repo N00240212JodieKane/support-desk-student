@@ -16,6 +16,13 @@ const envSchema = z.object({
   // at startup rather than quietly accepting a weak one.
   JWT_SECRET: z.string().min(16, 'JWT_SECRET must be at least 16 characters'),
   JWT_EXPIRES_IN: z.string().min(1).default('1d'),
+  // Week 5: nodemailer's SMTP target. Defaults match the `mailpit` service in
+  // docker-compose.yml — a local dev mail catcher, not a real mail server
+  // (see "Dev email" in PLAN.md's Key decisions). Read what was "sent" at
+  // http://localhost:8025 instead of any real inbox.
+  MAIL_HOST: z.string().min(1).default('localhost'),
+  MAIL_PORT: z.coerce.number().int().positive().default(1025),
+  MAIL_FROM: z.string().min(1).default('Support Desk <support@example.test>'),
 });
 
 const result = envSchema.safeParse(process.env);

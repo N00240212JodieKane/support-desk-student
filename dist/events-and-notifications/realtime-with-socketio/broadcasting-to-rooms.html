@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Broadcasting to Rooms — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        <a class="nav-prev" href="/events-and-notifications/realtime-with-socketio/authenticating-a-socket-with-the-existing-jwt.html">← Authenticating a Socket with the Existing JWT</a>
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/events-and-notifications/realtime-with-socketio/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        <a class="nav-next" href="/events-and-notifications/testing-events/spying-on-the-shared-emitter.html">Spying on the Shared Emitter →</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>Broadcasting to Rooms</h1>
+    <p class="lede">notifyRealtime.listener.js sends the same four domain events to whichever room each one is relevant to, wired up from server.js.</p>
+
+    
+
+    
+      <div class="slide-body"><pre><code class="hljs language-js"><span class="hljs-comment">// Figure 5.14: the realtime channel&#x27;s take on ticket.created (src/events/listeners/notifyRealtime.listener.js, excerpt)</span>
+domainEvents.<span class="hljs-title function_">on</span>(<span class="hljs-variable constant_">EVENTS</span>.<span class="hljs-property">TICKET_CREATED</span>, <span class="hljs-function">(<span class="hljs-params">ticket</span>) =&gt;</span> {
+  <span class="hljs-keyword">try</span> {
+    <span class="hljs-keyword">const</span> io = <span class="hljs-title function_">getIO</span>();
+    <span class="hljs-keyword">if</span> (!io) <span class="hljs-keyword">return</span>;
+
+    io.<span class="hljs-title function_">to</span>(<span class="hljs-string">`user:<span class="hljs-subst">${ticket.customerId}</span>`</span>).<span class="hljs-title function_">emit</span>(<span class="hljs-variable constant_">EVENTS</span>.<span class="hljs-property">TICKET_CREATED</span>, ticket);
+    io.<span class="hljs-title function_">to</span>(<span class="hljs-string">&#x27;role:agent&#x27;</span>).<span class="hljs-title function_">emit</span>(<span class="hljs-variable constant_">EVENTS</span>.<span class="hljs-property">TICKET_CREATED</span>, ticket);
+  } <span class="hljs-keyword">catch</span> (err) {
+    <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">error</span>(<span class="hljs-string">&#x27;notifyRealtime listener failed for ticket.created:&#x27;</span>, err);
+  }
+});
+</code></pre>
+<p>Same <code>domainEvents.on(...)</code> shape as the previous two channels, reacting to
+the same event, in a third file that knows nothing about either of them.
+<code>io.to(room).emit(...)</code> is the broadcast half of the previous slide's rooms:
+<code>ticket.created</code> reaches the customer's own room <em>and</em> the shared agent
+room in two lines, with no loop over individual connections. <code>getIO()</code>
+returning <code>undefined</code> — true whenever nothing has called <code>initSocket()</code>,
+notably every test that imports <code>app.js</code> directly through <code>supertest</code>
+without ever starting a real server — makes this listener return quietly
+rather than throw, so tests exercising <code>createTicket</code> don't need a real
+Socket.IO server running at all.</p>
+<p>That <code>getIO()</code> only ever returns something because <code>server.js</code>, not
+<code>app.js</code>, creates the real HTTP server Socket.IO needs and initializes it:</p>
+<pre><code class="hljs language-js"><span class="hljs-comment">// Figure 5.15: a real http.Server, so Socket.IO has something to attach to (src/server.js, excerpt)</span>
+<span class="hljs-keyword">const</span> httpServer = http.<span class="hljs-title function_">createServer</span>(app);
+<span class="hljs-title function_">initSocket</span>(httpServer);
+
+httpServer.<span class="hljs-title function_">listen</span>(env.<span class="hljs-property">PORT</span>, <span class="hljs-function">() =&gt;</span> {
+  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">`Support Desk API listening on http://localhost:<span class="hljs-subst">${env.PORT}</span>`</span>);
+});
+</code></pre>
+<p><code>app.listen(...)</code> — what every earlier lesson used — actually creates an
+<code>http.Server</code> internally and hides it; Socket.IO needs to attach to that
+server object directly, so it's created explicitly here instead, wrapping
+the same Express <code>app</code>. This is the same reasoning as <code>app.js</code>/<code>server.js</code>
+being split in the first place: <code>app.js</code> stays a plain Express app with no
+opinion about sockets or ports, and only <code>server.js</code> — never touched by
+<code>supertest</code> — knows a real server, and a real Socket.IO instance, exist at
+all.</p>
+</div>
+    
+  </main>
+</body>
+</html>

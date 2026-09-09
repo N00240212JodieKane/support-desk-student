@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Emit, and Let Listeners React — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        <a class="nav-prev" href="/events-and-notifications/why-event-driven/side-effects-piling-up.html">← Side Effects Piling Up</a>
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/events-and-notifications/why-event-driven/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        <a class="nav-next" href="/events-and-notifications/eventemitter-as-a-bus/what-is-an-eventemitter.html">What Is an EventEmitter? →</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>Emit, and Let Listeners React</h1>
+    <p class="lede">Splitting &#39;a ticket was created&#39; from &#39;here&#39;s everything that should happen next&#39; — the service only has to announce the first.</p>
+
+    
+
+    
+      <div class="slide-body"><p>The fix is to pull those two jobs apart. <code>createTicket</code> keeps exactly the one
+job it started with — insert the row — and adds a single new one: announce,
+once, that a ticket was created. It doesn't say who should react, how many
+things should happen, or what any of them involve. Something else entirely —
+three completely separate modules, one per channel — is listening for that
+announcement and reacts independently:</p>
+<pre><code class="hljs">createTicket()
+     │
+     │ emit(&#x27;ticket.created&#x27;, ticket)
+     ▼
+ domain event
+     │
+     ├──▶ write a Notification row
+     ├──▶ send a confirmation email
+     └──▶ push a Socket.IO update
+</code></pre>
+<p>Each arrow on the right is a listener that exists in its own file, knows
+nothing about the other two, and can be added, removed, or rewritten without
+<code>createTicket</code> — or either of the other listeners — changing at all. This is
+the same shape CLAUDE.md's Architecture conventions describe: &quot;listeners
+(email, in-app notifications, real-time push) are decoupled from the
+controllers that trigger them.&quot; The rest of this lesson builds exactly that —
+a shared way to announce an event (next topic), the four places this project
+announces one, and the three listener modules reacting to them.</p>
+</div>
+    
+  </main>
+</body>
+</html>

@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Testing Events — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/events-and-notifications/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>Testing Events</h1>
+    <p class="lede">Spying on the shared emitter instead of mocking it, and the extra Prisma calls comment.service.js&#39;s tests now need to mock.</p>
+
+    
+      <ul class="listing">
+        
+          <li>
+            <a href="/events-and-notifications/testing-events/spying-on-the-shared-emitter.html">Spying on the Shared Emitter</a>
+            <p>jest.spyOn keeps the real EventEmitter working while recording every emit() call — assert on what fired, not on what listeners then did.</p>
+          </li>
+        
+          <li>
+            <a href="/events-and-notifications/testing-events/mocking-one-more-prisma-call.html">Mocking One More Prisma Call</a>
+            <p>createComment now queries Prisma twice, not once — comment.service.test.js&#39;s mocks grow to match, or the recipient-resolution code has nothing to run against.</p>
+          </li>
+        
+      </ul>
+    
+
+    
+  </main>
+</body>
+</html>

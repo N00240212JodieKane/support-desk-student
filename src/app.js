@@ -5,6 +5,10 @@ import express from 'express';
 import routes from './routes/index.js';
 import notFound from './middleware/notFound.js';
 import errorHandler from './middleware/errorHandler.js';
+// Side-effect import: wires up every domain-event listener (see
+// events/index.js) as soon as the app module loads, so they're registered
+// under `npm run dev` and under supertest alike.
+import './events/index.js';
 
 const app = express();
 

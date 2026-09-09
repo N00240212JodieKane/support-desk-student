@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Authenticating a Socket with the Existing JWT — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        <a class="nav-prev" href="/events-and-notifications/realtime-with-socketio/socketio-a-websocket-library.html">← Socket.IO: a WebSocket Library</a>
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/events-and-notifications/realtime-with-socketio/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        <a class="nav-next" href="/events-and-notifications/realtime-with-socketio/broadcasting-to-rooms.html">Broadcasting to Rooms →</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>Authenticating a Socket with the Existing JWT</h1>
+    <p class="lede">A connection isn&#39;t &#39;anyone&#39; until it hands over the same JWT it already carries for HTTP requests — then it joins a room or two.</p>
+
+    
+
+    
+      <div class="slide-body"><p>Opening a WebSocket connection, on its own, proves nothing about who's on
+the other end — there's no <code>Authorization</code> header the way an HTTP request
+has one. Rather than invent a second, socket-specific way to log in, a
+connected client just sends the <em>same</em> JWT it already got from Week 4's
+login endpoint, once, over the socket itself:</p>
+<pre><code class="hljs language-js"><span class="hljs-comment">// Figure 5.13: a JWT proves who&#x27;s connected, then joins a room or two (src/config/socket.js, excerpt)</span>
+io.<span class="hljs-title function_">on</span>(<span class="hljs-string">&#x27;connection&#x27;</span>, <span class="hljs-function">(<span class="hljs-params">socket</span>) =&gt;</span> {
+  socket.<span class="hljs-title function_">on</span>(<span class="hljs-string">&#x27;authenticate&#x27;</span>, <span class="hljs-function">(<span class="hljs-params">token</span>) =&gt;</span> {
+    <span class="hljs-keyword">try</span> {
+      <span class="hljs-keyword">const</span> { sub, role } = <span class="hljs-title function_">verifyToken</span>(token);
+      socket.<span class="hljs-title function_">join</span>(<span class="hljs-string">`user:<span class="hljs-subst">${sub}</span>`</span>);
+      <span class="hljs-keyword">if</span> (role === <span class="hljs-string">&#x27;agent&#x27;</span> || role === <span class="hljs-string">&#x27;admin&#x27;</span>) {
+        socket.<span class="hljs-title function_">join</span>(<span class="hljs-string">`role:<span class="hljs-subst">${role}</span>`</span>);
+      }
+    } <span class="hljs-keyword">catch</span> {
+      socket.<span class="hljs-title function_">disconnect</span>();
+    }
+  });
+});
+</code></pre>
+<p><code>verifyToken</code> is the exact same function <code>middleware/authenticate.js</code> calls
+on every HTTP request (Lesson 4) — this project doesn't gain a second
+authentication scheme, it reuses the one it already has, just handed over
+once per socket connection instead of once per request. A verified token
+puts the socket into a <strong>room</strong> named after that user's id
+(<code>user:&lt;id&gt;</code>) — Socket.IO's mechanism for &quot;broadcast to this group,&quot; which
+<code>io.to('user:5').emit(...)</code> (next slide) can later target without knowing
+which specific connection belongs to user 5. Agents and admins also join a
+shared <code>role:agent</code>/<code>role:admin</code> room, since some events (like
+<code>ticket.created</code>) are meant for the <em>whole</em> queue, not one specific person.
+An invalid or expired token disconnects the socket outright, rather than
+leaving it connected but silently in no room at all — the same &quot;fail
+loudly rather than quietly do nothing&quot; instinct as <code>authenticate.js</code>.</p>
+</div>
+    
+  </main>
+</body>
+</html>

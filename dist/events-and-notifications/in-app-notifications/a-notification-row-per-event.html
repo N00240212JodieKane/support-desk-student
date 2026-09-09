@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>A Notification Row per Event — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        <a class="nav-prev" href="/events-and-notifications/listeners-as-modules/wiring-listeners-into-app-js.html">← Wiring Listeners into app.js</a>
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/events-and-notifications/in-app-notifications/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        <a class="nav-next" href="/events-and-notifications/in-app-notifications/why-every-listener-try-catches.html">Why Every Listener try/catches →</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>A Notification Row per Event</h1>
+    <p class="lede">notifyInApp.listener.js: one domainEvents.on() block per event, each writing whichever Notification rows that event implies.</p>
+
+    
+
+    
+      <div class="slide-body"><pre><code class="hljs language-js"><span class="hljs-comment">// Figure 5.8: two Notification rows from one ticket.created event (src/events/listeners/notifyInApp.listener.js, excerpt)</span>
+domainEvents.<span class="hljs-title function_">on</span>(<span class="hljs-variable constant_">EVENTS</span>.<span class="hljs-property">TICKET_CREATED</span>, <span class="hljs-title function_">async</span> (ticket) =&gt; {
+  <span class="hljs-keyword">const</span> agents = <span class="hljs-keyword">await</span> prisma.<span class="hljs-property">user</span>.<span class="hljs-title function_">findMany</span>({
+    <span class="hljs-attr">where</span>: { <span class="hljs-attr">role</span>: <span class="hljs-string">&#x27;agent&#x27;</span> },
+    <span class="hljs-attr">select</span>: { <span class="hljs-attr">id</span>: <span class="hljs-literal">true</span> },
+  });
+
+  <span class="hljs-keyword">await</span> prisma.<span class="hljs-property">notification</span>.<span class="hljs-title function_">createMany</span>({
+    <span class="hljs-attr">data</span>: [
+      { <span class="hljs-attr">userId</span>: ticket.<span class="hljs-property">customerId</span>, <span class="hljs-attr">type</span>: <span class="hljs-variable constant_">EVENTS</span>.<span class="hljs-property">TICKET_CREATED</span>, <span class="hljs-attr">message</span>: <span class="hljs-string">`Your ticket &quot;<span class="hljs-subst">${ticket.subject}</span>&quot; was created.`</span> },
+      ...agents.<span class="hljs-title function_">map</span>(<span class="hljs-function">(<span class="hljs-params">agent</span>) =&gt;</span> ({ <span class="hljs-attr">userId</span>: agent.<span class="hljs-property">id</span>, <span class="hljs-attr">type</span>: <span class="hljs-variable constant_">EVENTS</span>.<span class="hljs-property">TICKET_CREATED</span>, <span class="hljs-attr">message</span>: <span class="hljs-string">`New ticket in the queue: &quot;<span class="hljs-subst">${ticket.subject}</span>&quot;.`</span> })),
+    ],
+  });
+});
+</code></pre>
+<p>This is exactly the shape the last two topics were building toward:
+<code>domainEvents.on(EVENTS.TICKET_CREATED, ...)</code> runs whenever <em>anything</em>
+emits that event — this listener has no idea it's <code>ticket.service.js</code>
+calling <code>createTicket</code>, and doesn't need to. <code>ticket.created</code> fans out to
+<em>two</em> recipients here — a confirmation row for the customer, plus one per
+agent so the queue notification reaches everyone who might pick it up — all
+in a single <code>createMany</code> rather than one <code>create</code> call per row.</p>
+<p>The file has one more <code>domainEvents.on(...)</code> block per remaining event —
+<code>ticket.assigned</code> writes one row for the newly assigned agent,
+<code>ticket.commented</code> loops over the <code>recipients</code> the previous topic already
+resolved, and <code>ticket.status_changed</code> writes one row for the customer using
+the <code>previousStatus</code> argument <code>updateTicket</code> passed alongside the ticket.
+Same pattern, four times, each block reacting to exactly one event.</p>
+</div>
+    
+  </main>
+</body>
+</html>

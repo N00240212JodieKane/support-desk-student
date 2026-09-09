@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>A nodemailer Transport, and Mailpit — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        <a class="nav-prev" href="/events-and-notifications/email-with-smtp-and-mailpit/what-smtp-actually-does.html">← What SMTP Actually Does</a>
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/events-and-notifications/email-with-smtp-and-mailpit/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        <a class="nav-next" href="/events-and-notifications/email-with-smtp-and-mailpit/sending-through-the-email-listener.html">Sending Through the Email Listener →</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>A nodemailer Transport, and Mailpit</h1>
+    <p class="lede">config/mailer.js: one shared SMTP transport, pointed at a local Mailpit container instead of a real mail server or an external dev-inbox provider.</p>
+
+    
+
+    
+      <div class="slide-body"><p><code>nodemailer</code> needs to know one thing to send a message at all: which SMTP
+server to hand it to. That's a <strong>transport</strong>, configured once and shared —
+the same import-as-singleton idiom <code>config/db.js</code> and this lesson's
+<code>events/emitter.js</code> already used:</p>
+<pre><code class="hljs language-js"><span class="hljs-comment">// Figure 5.10: one shared SMTP transport (src/config/mailer.js)</span>
+<span class="hljs-keyword">import</span> nodemailer <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;nodemailer&#x27;</span>;
+<span class="hljs-keyword">import</span> env <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;./env.js&#x27;</span>;
+
+<span class="hljs-keyword">const</span> transport = nodemailer.<span class="hljs-title function_">createTransport</span>({
+  <span class="hljs-attr">host</span>: env.<span class="hljs-property">MAIL_HOST</span>,
+  <span class="hljs-attr">port</span>: env.<span class="hljs-property">MAIL_PORT</span>,
+  <span class="hljs-attr">secure</span>: <span class="hljs-literal">false</span>,
+});
+
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">default</span> transport;
+</code></pre>
+<p><code>host</code>/<code>port</code> point at <strong>Mailpit</strong>, a small SMTP server that runs locally in
+Docker for exactly this purpose: it accepts a real SMTP conversation on port
+<code>1025</code> — so <code>nodemailer</code> genuinely believes it's talking to a mail server —
+but instead of relaying anything onward, it just keeps every message and
+shows it in a web UI at <code>localhost:8025</code>. Nothing sent through it ever
+reaches a real inbox or leaves the machine, which is exactly what local
+development wants: real enough to catch a broken email (wrong recipient,
+malformed template) without any risk of accidentally spamming a real
+address while testing.</p>
+<pre><code class="hljs language-yaml"><span class="hljs-comment"># Figure 5.11: Mailpit as a docker-compose service (docker-compose.yml, excerpt)</span>
+<span class="hljs-attr">mailpit:</span>
+  <span class="hljs-attr">image:</span> <span class="hljs-string">axllent/mailpit:latest</span>
+  <span class="hljs-attr">restart:</span> <span class="hljs-string">unless-stopped</span>
+  <span class="hljs-attr">ports:</span>
+    <span class="hljs-bullet">-</span> <span class="hljs-string">&#x27;1025:1025&#x27;</span> <span class="hljs-comment"># SMTP — nodemailer&#x27;s transport target</span>
+    <span class="hljs-bullet">-</span> <span class="hljs-string">&#x27;8025:8025&#x27;</span> <span class="hljs-comment"># web UI — http://localhost:8025</span>
+</code></pre>
+<p><code>MAIL_HOST</code>/<code>MAIL_PORT</code> join <code>config/env.js</code>'s Zod schema alongside
+<code>MAIL_FROM</code>, all three defaulted to match this compose service, so
+<code>npm run dev</code> works against a freshly started <code>mailpit</code> container with no
+<code>.env</code> changes required. Swapping to a real provider later — for an actual
+deployment — is purely a matter of pointing these same three env vars at
+it; nothing in <code>mailer.js</code> or any listener would need to change.</p>
+</div>
+    
+  </main>
+</body>
+</html>

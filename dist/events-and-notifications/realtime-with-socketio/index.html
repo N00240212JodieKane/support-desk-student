@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Real-Time Push with Socket.IO — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/events-and-notifications/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>Real-Time Push with Socket.IO</h1>
+    <p class="lede">What a WebSocket is, how a connected client proves who it is, and how the same domain events reach it the instant they happen.</p>
+
+    
+      <ul class="listing">
+        
+          <li>
+            <a href="/events-and-notifications/realtime-with-socketio/the-polling-problem-and-websockets.html">The Polling Problem, and What a WebSocket Is</a>
+            <p>Every HTTP request is the client asking first — a WebSocket is one connection either side can push through, at any moment, with no request to answer.</p>
+          </li>
+        
+          <li>
+            <a href="/events-and-notifications/realtime-with-socketio/socketio-a-websocket-library.html">Socket.IO: a WebSocket Library</a>
+            <p>Why reach for a library at all instead of the raw WebSocket API — fallbacks, reconnection, and rooms, all needed here anyway.</p>
+          </li>
+        
+          <li>
+            <a href="/events-and-notifications/realtime-with-socketio/authenticating-a-socket-with-the-existing-jwt.html">Authenticating a Socket with the Existing JWT</a>
+            <p>A connection isn&#39;t &#39;anyone&#39; until it hands over the same JWT it already carries for HTTP requests — then it joins a room or two.</p>
+          </li>
+        
+          <li>
+            <a href="/events-and-notifications/realtime-with-socketio/broadcasting-to-rooms.html">Broadcasting to Rooms</a>
+            <p>notifyRealtime.listener.js sends the same four domain events to whichever room each one is relevant to, wired up from server.js.</p>
+          </li>
+        
+      </ul>
+    
+
+    
+  </main>
+</body>
+</html>

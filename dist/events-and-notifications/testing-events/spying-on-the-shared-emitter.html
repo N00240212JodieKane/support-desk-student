@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Spying on the Shared Emitter — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        <a class="nav-prev" href="/events-and-notifications/realtime-with-socketio/broadcasting-to-rooms.html">← Broadcasting to Rooms</a>
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/events-and-notifications/testing-events/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        <a class="nav-next" href="/events-and-notifications/testing-events/mocking-one-more-prisma-call.html">Mocking One More Prisma Call →</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>Spying on the Shared Emitter</h1>
+    <p class="lede">jest.spyOn keeps the real EventEmitter working while recording every emit() call — assert on what fired, not on what listeners then did.</p>
+
+    
+
+    
+      <div class="slide-body"><p><code>ticket.service.test.js</code>'s existing tests mock <code>config/db.js</code> entirely
+(Week 2/3) — Prisma never really runs under test. The real
+<code>domainEvents</code> emitter, though, doesn't need mocking the same way: it's
+cheap, synchronous to call, and this project's own code (Topic 2), not an
+external dependency. <code>jest.spyOn</code> wraps it instead of replacing it —
+<code>.emit()</code> still genuinely runs (so any real listener would still fire), but
+every call is now also recorded for <code>expect(...)</code> to inspect:</p>
+<pre><code class="hljs language-js"><span class="hljs-comment">// Figure 5.16: real emitter, spied on rather than replaced (tests/unit/ticket.service.test.js, excerpt)</span>
+<span class="hljs-keyword">import</span> domainEvents, { <span class="hljs-variable constant_">EVENTS</span> } <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;../../src/events/emitter.js&#x27;</span>;
+
+<span class="hljs-keyword">let</span> emitSpy;
+
+<span class="hljs-title function_">beforeEach</span>(<span class="hljs-function">() =&gt;</span> {
+  jest.<span class="hljs-title function_">clearAllMocks</span>();
+  emitSpy = jest.<span class="hljs-title function_">spyOn</span>(domainEvents, <span class="hljs-string">&#x27;emit&#x27;</span>);
+});
+
+<span class="hljs-title function_">it</span>(<span class="hljs-string">&#x27;updateTicket emits ticket.assigned when a new agent is assigned&#x27;</span>, <span class="hljs-title function_">async</span> () =&gt; {
+  <span class="hljs-keyword">const</span> previous = { <span class="hljs-attr">id</span>: <span class="hljs-number">1</span>, <span class="hljs-attr">status</span>: <span class="hljs-string">&#x27;open&#x27;</span>, <span class="hljs-attr">assignedAgentId</span>: <span class="hljs-literal">null</span> };
+  <span class="hljs-keyword">const</span> updated = { <span class="hljs-attr">id</span>: <span class="hljs-number">1</span>, <span class="hljs-attr">status</span>: <span class="hljs-string">&#x27;open&#x27;</span>, <span class="hljs-attr">assignedAgentId</span>: <span class="hljs-number">14</span> };
+  mockPrisma.<span class="hljs-property">ticket</span>.<span class="hljs-property">update</span>.<span class="hljs-title function_">mockResolvedValue</span>(updated);
+
+  <span class="hljs-keyword">await</span> <span class="hljs-title function_">updateTicket</span>(<span class="hljs-number">1</span>, { <span class="hljs-attr">assignedAgentId</span>: <span class="hljs-number">14</span> }, previous);
+
+  <span class="hljs-title function_">expect</span>(emitSpy).<span class="hljs-title function_">toHaveBeenCalledWith</span>(<span class="hljs-variable constant_">EVENTS</span>.<span class="hljs-property">TICKET_ASSIGNED</span>, updated);
+});
+</code></pre>
+<p>This test is deliberately narrow: it asserts that <code>updateTicket</code> <em>announced</em>
+<code>ticket.assigned</code>, with the right payload, not that a <code>Notification</code> row got
+written or an email got sent — those are <code>notifyInApp.listener.js</code> and
+<code>notifyEmail.listener.js</code>'s own concerns, each already decoupled enough to
+test separately if this project's suite grew that far. Testing &quot;did the
+right event fire&quot; here, and nothing about what any listener does with it,
+is Topic 1's decoupling argument showing up directly in how the tests are
+even structured. The suite pairs this with three negative cases — re-saving
+the same agent, un-assigning, and an unrelated field changing — each
+asserting <code>emitSpy</code> was <em>not</em> called with that event, covering Topic 3's
+<code>previous</code>-diffing logic from both directions.</p>
+</div>
+    
+  </main>
+</body>
+</html>

@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sending Through the Email Listener — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        <a class="nav-prev" href="/events-and-notifications/email-with-smtp-and-mailpit/a-nodemailer-transport-and-mailpit.html">← A nodemailer Transport, and Mailpit</a>
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/events-and-notifications/email-with-smtp-and-mailpit/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        <a class="nav-next" href="/events-and-notifications/realtime-with-socketio/the-polling-problem-and-websockets.html">The Polling Problem, and What a WebSocket Is →</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>Sending Through the Email Listener</h1>
+    <p class="lede">notifyEmail.listener.js: the same domainEvents.on() shape as the in-app channel, calling transport.sendMail() instead of prisma.notification.create().</p>
+
+    
+
+    
+      <div class="slide-body"><pre><code class="hljs language-js"><span class="hljs-comment">// Figure 5.12: the email channel&#x27;s take on ticket.created (src/events/listeners/notifyEmail.listener.js, excerpt)</span>
+domainEvents.<span class="hljs-title function_">on</span>(<span class="hljs-variable constant_">EVENTS</span>.<span class="hljs-property">TICKET_CREATED</span>, <span class="hljs-title function_">async</span> (ticket) =&gt; {
+  <span class="hljs-keyword">try</span> {
+    <span class="hljs-keyword">await</span> mailer.<span class="hljs-title function_">sendMail</span>({
+      <span class="hljs-attr">from</span>: env.<span class="hljs-property">MAIL_FROM</span>,
+      <span class="hljs-attr">to</span>: ticket.<span class="hljs-property">customer</span>.<span class="hljs-property">email</span>,
+      <span class="hljs-attr">subject</span>: <span class="hljs-string">`Ticket #<span class="hljs-subst">${ticket.id}</span> created: <span class="hljs-subst">${ticket.subject}</span>`</span>,
+      <span class="hljs-attr">text</span>: <span class="hljs-string">`Hi <span class="hljs-subst">${ticket.customer.name}</span>,\n\nWe&#x27;ve received your ticket and an agent will respond shortly.`</span>,
+    });
+  } <span class="hljs-keyword">catch</span> (err) {
+    <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">error</span>(<span class="hljs-string">&#x27;notifyEmail listener failed for ticket.created:&#x27;</span>, err);
+  }
+});
+</code></pre>
+<p>Nothing here is new mechanism — it's the previous topic's <code>domainEvents.on(...)</code>
+pattern and <code>try</code>/<code>catch</code> discipline, reacting to the same <code>ticket.created</code>
+event <code>notifyInApp.listener.js</code> already reacted to, in a completely separate
+file that has no idea the other one exists. <code>ticket.customer.email</code> and
+<code>ticket.customer.name</code> are only available here because <code>createTicket</code>
+included <code>customer</code> in the payload it emitted (Topic 3) — this listener
+never queries Prisma itself.</p>
+<p>The remaining three events follow the same shape: <code>ticket.assigned</code> emails
+<code>ticket.assignedAgent</code>, <code>ticket.commented</code> loops over the resolved
+<code>recipients</code> and sends one email each (via <code>Promise.all</code>, so they go out
+concurrently rather than one at a time), and <code>ticket.status_changed</code> emails
+the customer with <code>previousStatus</code> and the new one in the message. Four
+events, three listener files, twelve <code>domainEvents.on(...)</code> blocks in total
+— and not one of them calls another.</p>
+</div>
+    
+  </main>
+</body>
+</html>

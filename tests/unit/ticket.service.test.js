@@ -5,6 +5,7 @@
 // about this file (mocking the shared Prisma client via
 // jest.unstable_mockModule + a dynamic import) is unchanged from Week 2/3.
 import { jest } from '@jest/globals';
+import domainEvents, { EVENTS } from '../../src/events/emitter.js';
 
 const mockPrisma = {
   ticket: {
@@ -32,8 +33,11 @@ const agent = { id: 14, role: 'agent' };
 const admin = { id: 99, role: 'admin' };
 
 describe('ticket.service', () => {
+  let emitSpy;
+
   beforeEach(() => {
     jest.clearAllMocks();
+    emitSpy = jest.spyOn(domainEvents, 'emit');
   });
 
   it('getAllTickets returns whatever Prisma finds, plus the total count', async () => {
@@ -150,15 +154,66 @@ describe('ticket.service', () => {
   });
 
   it('updateTicket passes only the given changes through to Prisma', async () => {
-    const updated = { id: 1, subject: 'Cannot log in', status: 'resolved' };
+    const previous = { id: 1, status: 'open', assignedAgentId: null };
+    const updated = { id: 1, subject: 'Cannot log in', status: 'resolved', assignedAgentId: null };
     mockPrisma.ticket.update.mockResolvedValue(updated);
 
-    const ticket = await updateTicket(1, { status: 'resolved' });
+    const ticket = await updateTicket(1, { status: 'resolved' }, previous);
 
     expect(ticket).toBe(updated);
     expect(mockPrisma.ticket.update).toHaveBeenCalledWith(
       expect.objectContaining({ where: { id: 1 }, data: { status: 'resolved' } }),
     );
+  });
+
+  it('updateTicket emits ticket.assigned when a new agent is assigned', async () => {
+    const previous = { id: 1, status: 'open', assignedAgentId: null };
+    const updated = { id: 1, status: 'open', assignedAgentId: 14 };
+    mockPrisma.ticket.update.mockResolvedValue(updated);
+
+    await updateTicket(1, { assignedAgentId: 14 }, previous);
+
+    expect(emitSpy).toHaveBeenCalledWith(EVENTS.TICKET_ASSIGNED, updated);
+  });
+
+  it('updateTicket does not emit ticket.assigned when re-saving the same agent', async () => {
+    const previous = { id: 1, status: 'open', assignedAgentId: 14 };
+    const updated = { id: 1, status: 'in_progress', assignedAgentId: 14 };
+    mockPrisma.ticket.update.mockResolvedValue(updated);
+
+    await updateTicket(1, { status: 'in_progress' }, previous);
+
+    expect(emitSpy).not.toHaveBeenCalledWith(EVENTS.TICKET_ASSIGNED, expect.anything());
+  });
+
+  it('updateTicket does not emit ticket.assigned when un-assigning', async () => {
+    const previous = { id: 1, status: 'open', assignedAgentId: 14 };
+    const updated = { id: 1, status: 'open', assignedAgentId: null };
+    mockPrisma.ticket.update.mockResolvedValue(updated);
+
+    await updateTicket(1, { assignedAgentId: null }, previous);
+
+    expect(emitSpy).not.toHaveBeenCalledWith(EVENTS.TICKET_ASSIGNED, expect.anything());
+  });
+
+  it('updateTicket emits ticket.status_changed with the previous status when status changes', async () => {
+    const previous = { id: 1, status: 'open', assignedAgentId: null };
+    const updated = { id: 1, status: 'resolved', assignedAgentId: null };
+    mockPrisma.ticket.update.mockResolvedValue(updated);
+
+    await updateTicket(1, { status: 'resolved' }, previous);
+
+    expect(emitSpy).toHaveBeenCalledWith(EVENTS.TICKET_STATUS_CHANGED, updated, 'open');
+  });
+
+  it('updateTicket does not emit ticket.status_changed when status is unchanged', async () => {
+    const previous = { id: 1, status: 'open', assignedAgentId: null };
+    const updated = { id: 1, status: 'open', assignedAgentId: 14 };
+    mockPrisma.ticket.update.mockResolvedValue(updated);
+
+    await updateTicket(1, { assignedAgentId: 14 }, previous);
+
+    expect(emitSpy).not.toHaveBeenCalledWith(EVENTS.TICKET_STATUS_CHANGED, expect.anything(), expect.anything());
   });
 
   it('deleteTicket deletes by id', async () => {

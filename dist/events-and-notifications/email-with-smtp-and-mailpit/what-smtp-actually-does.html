@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>What SMTP Actually Does — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        <a class="nav-prev" href="/events-and-notifications/in-app-notifications/why-every-listener-try-catches.html">← Why Every Listener try/catches</a>
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/events-and-notifications/email-with-smtp-and-mailpit/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        <a class="nav-next" href="/events-and-notifications/email-with-smtp-and-mailpit/a-nodemailer-transport-and-mailpit.html">A nodemailer Transport, and Mailpit →</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>What SMTP Actually Does</h1>
+    <p class="lede">Sending mail and reading mail are two different protocols — nodemailer, and this project, only ever need the one that sends.</p>
+
+    
+
+    
+      <div class="slide-body"><p>&quot;Email&quot; is really two separate jobs, handled by two separate protocols, and
+it's easy to blur them together: <strong>SMTP</strong> (Simple Mail Transfer Protocol) is
+how a message gets <em>sent</em> — handed from whoever's sending it to a mail
+server, and from mail server to mail server, until it reaches wherever it's
+going. <strong>POP3</strong> and <strong>IMAP</strong> are how a message gets <em>read</em> back out of a
+mailbox afterwards — what an email client like Outlook or Gmail's own app
+speaks to show you what's sitting in an inbox. Sending a message and later
+retrieving one are opposite directions over the same underlying system, and
+each direction has its own protocol because the two jobs need to solve
+different problems: SMTP cares about routing a message <em>toward</em> a mailbox,
+IMAP/POP3 about listing and fetching what's <em>already in</em> one.</p>
+<p>That split matters here because this project only ever needs one of the
+two. Nothing in this codebase is a mail <em>client</em> reading an inbox — there's
+no feature where the API logs into a mailbox and lists messages. Every use
+of email in this lesson is the API acting purely as a <em>sender</em>: hand a
+finished message to an SMTP server and be done with it. That's the entire
+job <code>nodemailer</code> (next slide) does, and the entire job Mailpit needs to
+fake convincingly for local development — a real SMTP conversation on one
+end, with no need to also implement IMAP or POP3 as if this were a real
+mailbox, because nothing is ever going to try to read this project's &quot;sent&quot;
+folder through them.</p>
+</div>
+    
+  </main>
+</body>
+</html>

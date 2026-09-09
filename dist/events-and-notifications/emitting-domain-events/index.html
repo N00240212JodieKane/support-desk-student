@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Emitting Domain Events — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/events-and-notifications/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>Emitting Domain Events</h1>
+    <p class="lede">Where ticket.service.js and comment.service.js call emit() — always after the write succeeds, carrying whatever payload the listeners need.</p>
+
+    
+      <ul class="listing">
+        
+          <li>
+            <a href="/events-and-notifications/emitting-domain-events/ticket-created-emit-after-the-write.html">ticket.created: Emit After the Write</a>
+            <p>createTicket still does exactly one job of its own — insert the row — and adds a single emit() once that&#39;s actually committed.</p>
+          </li>
+        
+          <li>
+            <a href="/events-and-notifications/emitting-domain-events/diffing-against-the-previous-state.html">Diffing Against the Previous State</a>
+            <p>ticket.assigned and ticket.status_changed only fire on a genuine change — which means updateTicket needs to know what the ticket looked like before.</p>
+          </li>
+        
+          <li>
+            <a href="/events-and-notifications/emitting-domain-events/resolving-comment-recipients.html">ticket.commented: Resolving Recipients Once</a>
+            <p>Who should hear about a new comment — the customer plus opted-in watchers, minus whoever just wrote it — worked out once, here, not by every listener.</p>
+          </li>
+        
+      </ul>
+    
+
+    
+  </main>
+</body>
+</html>
