@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Validating Requests with Zod — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/full-crud-rest-api/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>Validating Requests with Zod</h1>
+    <p class="lede">Replacing hand-rolled `if` checks with schema validation — what it buys you, and how it plugs into Express as middleware.</p>
+
+    
+      <ul class="listing">
+        
+          <li>
+            <a href="/full-crud-rest-api/validating-requests-with-zod/the-limits-of-manual-checks.html">The Limits of Manual Checks</a>
+            <p>Three places doing their own ad hoc validation, and what that costs as the API grows.</p>
+          </li>
+        
+          <li>
+            <a href="/full-crud-rest-api/validating-requests-with-zod/schema-validation-with-zod.html">Schema Validation with Zod</a>
+            <p>Describing a shape once with z.object(...), then asking Zod whether some data matches it.</p>
+          </li>
+        
+          <li>
+            <a href="/full-crud-rest-api/validating-requests-with-zod/the-validate-middleware.html">The validate Middleware</a>
+            <p>A closure that turns any Zod schema into Express middleware — the same shape as asyncHandler.</p>
+          </li>
+        
+          <li>
+            <a href="/full-crud-rest-api/validating-requests-with-zod/coercion-and-defaults.html">Coercion and Defaults</a>
+            <p>Every route param and query value is a string — z.coerce fixes that as part of validating it, not after.</p>
+          </li>
+        
+          <li>
+            <a href="/full-crud-rest-api/validating-requests-with-zod/validating-every-route.html">Validating Every Route</a>
+            <p>validate({ ... }) applied per-route, right where each route is defined.</p>
+          </li>
+        
+      </ul>
+    
+
+    
+  </main>
+</body>
+</html>

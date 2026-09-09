@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Translating Database Errors — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        <a class="nav-prev" href="/full-crud-rest-api/consistent-response-and-error-conventions/a-custom-error-class.html">← A Custom Error Class</a>
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/full-crud-rest-api/consistent-response-and-error-conventions/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        <a class="nav-next" href="/full-crud-rest-api/consistent-response-and-error-conventions/api-conventions-reference.html">API Conventions Reference →</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>Translating Database Errors</h1>
+    <p class="lede">Two bugs found by smoke-testing this lesson&#39;s own DELETE endpoint, and the fix that closes both at once.</p>
+
+    
+
+    
+      <div class="slide-body"><p>Manually testing <code>DELETE /tickets/:id</code> against a real seeded database (this
+lesson's ticket had a comment on it already) turned up a real bug: Prisma
+refused the delete — a <code>Comment</code> row still pointed at that ticket through a
+foreign key — and the raw error reached the client as a <code>500</code> with Prisma's
+own internal error text leaked straight into the response body. Creating a
+<code>Tag</code> with a name that already existed did the same thing for a different
+reason (MySQL's <code>UNIQUE</code> constraint on <code>Tag.name</code>, from Lesson 2's schema).
+Neither is really a <code>500</code> — both are the <em>client</em> asking for something the
+data won't allow, which is what <code>4xx</code> statuses are for.</p>
+<p>Prisma gives every one of its own &quot;known request&quot; errors a <code>.code</code> — a
+handful of them map cleanly onto HTTP statuses:</p>
+<pre><code class="hljs language-js"><span class="hljs-comment">// Figure 3.3: recognising Prisma&#x27;s own error codes (src/middleware/errorHandler.js, excerpt)</span>
+<span class="hljs-keyword">const</span> <span class="hljs-variable constant_">PRISMA_ERROR_STATUS</span> = {
+  <span class="hljs-attr">P2002</span>: <span class="hljs-number">409</span>, <span class="hljs-comment">// unique constraint failed (e.g. a Tag name that already exists)</span>
+  <span class="hljs-attr">P2003</span>: <span class="hljs-number">409</span>, <span class="hljs-comment">// foreign key constraint failed (e.g. deleting a Ticket with Comments)</span>
+  <span class="hljs-attr">P2025</span>: <span class="hljs-number">404</span>, <span class="hljs-comment">// the record a query expected to find/update/delete doesn&#x27;t exist</span>
+};
+
+<span class="hljs-keyword">const</span> <span class="hljs-title function_">describePrismaError</span> = (<span class="hljs-params">err</span>) =&gt; {
+  <span class="hljs-keyword">switch</span> (err.<span class="hljs-property">code</span>) {
+    <span class="hljs-keyword">case</span> <span class="hljs-string">&#x27;P2002&#x27;</span>:
+      <span class="hljs-keyword">return</span> <span class="hljs-string">`A record with that <span class="hljs-subst">${err.meta?.target ?? <span class="hljs-string">&#x27;value&#x27;</span>}</span> already exists`</span>;
+    <span class="hljs-keyword">case</span> <span class="hljs-string">&#x27;P2003&#x27;</span>:
+      <span class="hljs-keyword">return</span> <span class="hljs-string">&#x27;This record cannot be deleted or changed because other records still depend on it&#x27;</span>;
+    <span class="hljs-keyword">case</span> <span class="hljs-string">&#x27;P2025&#x27;</span>:
+      <span class="hljs-keyword">return</span> <span class="hljs-string">&#x27;The requested record was not found&#x27;</span>;
+    <span class="hljs-attr">default</span>:
+      <span class="hljs-keyword">return</span> <span class="hljs-string">&#x27;Database request failed&#x27;</span>;
+  }
+};
+</code></pre>
+<p><code>409 Conflict</code> is the right status for both cases here: the request is
+well-formed, but doing it would conflict with the current state of the data
+(a name that must be unique, or a row other rows still depend on). Neither
+maps to a friendlier fix like cascading the delete automatically — silently
+deleting a ticket's whole comment history because of one <code>DELETE</code> call on
+the ticket itself is exactly the kind of surprising behavior a support desk
+shouldn't have; the client has to delete the comments first, on purpose.</p>
+<p>The handler itself decides <em>when</em> to reach for this map, and — just as
+important — never lets an error it doesn't recognise leak its raw message
+either:</p>
+<pre><code class="hljs language-js"><span class="hljs-comment">// Figure 3.4: deciding the status, and hiding the internals of a real 500 (src/middleware/errorHandler.js, excerpt)</span>
+<span class="hljs-keyword">export</span> <span class="hljs-title function_">default</span> (err, req, res, next) =&gt; {
+  <span class="hljs-keyword">let</span> status = err.<span class="hljs-property">status</span>;
+  <span class="hljs-keyword">let</span> message = err.<span class="hljs-property">message</span>;
+
+  <span class="hljs-keyword">if</span> (!status &amp;&amp; err <span class="hljs-keyword">instanceof</span> <span class="hljs-title class_">Prisma</span>.<span class="hljs-property">PrismaClientKnownRequestError</span> &amp;&amp; <span class="hljs-variable constant_">PRISMA_ERROR_STATUS</span>[err.<span class="hljs-property">code</span>]) {
+    status = <span class="hljs-variable constant_">PRISMA_ERROR_STATUS</span>[err.<span class="hljs-property">code</span>];
+    message = <span class="hljs-title function_">describePrismaError</span>(err);
+  }
+
+  status = status || <span class="hljs-number">500</span>;
+
+  <span class="hljs-keyword">if</span> (status === <span class="hljs-number">500</span>) {
+    <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">error</span>(err);
+    message = <span class="hljs-string">&#x27;Internal Server Error&#x27;</span>;
+  }
+
+  res.<span class="hljs-title function_">status</span>(status).<span class="hljs-title function_">json</span>({ <span class="hljs-attr">error</span>: { message } });
+};
+</code></pre>
+<p><code>err.status</code> still wins first — an <code>ApiError</code> a controller threw on purpose
+(previous slide) already knows exactly what it wants to say. Only when
+nothing set a status <em>and</em> the error is specifically a
+<code>Prisma.PrismaClientKnownRequestError</code> with a code this project recognises
+does the Prisma-specific message take over. Anything left over — a genuine
+bug, not a client mistake — falls through to <code>500</code>, gets logged with
+<code>console.error</code> so it's still visible in the terminal, but the client only
+ever sees the generic <code>'Internal Server Error'</code>: the raw message might
+describe a file path, a SQL fragment, or other internals that have no
+business leaving this server.</p>
+</div>
+    
+  </main>
+</body>
+</html>

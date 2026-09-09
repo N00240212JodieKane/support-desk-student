@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>204 No Content on Delete — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        <a class="nav-prev" href="/full-crud-rest-api/full-crud-and-nested-routes/read-before-write.html">← Read Before Write</a>
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/full-crud-rest-api/full-crud-and-nested-routes/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        <a class="nav-next" href="/full-crud-rest-api/full-crud-and-nested-routes/nesting-comments-under-a-ticket.html">Nesting Comments Under a Ticket →</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>204 No Content on Delete</h1>
+    <p class="lede">A successful delete has nothing left to send back — the status code says so on its own.</p>
+
+    
+
+    
+      <div class="slide-body"><p>Every other successful response so far sends a body — the created/updated/
+fetched resource, wrapped in <code>sendResource</code> (first topic). A delete is
+different: once a row is gone, there's no resource left to describe. REST's
+answer is <code>204 No Content</code> — a success status that comes with an explicitly
+<em>empty</em> body, rather than <code>200</code> with, say, <code>{ &quot;data&quot;: null }</code> standing in
+for nothing.</p>
+<pre><code class="hljs language-js"><span class="hljs-comment">// Figure 3.10: no body, just a status (src/controllers/ticket.controller.js, excerpt)</span>
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">const</span> deleteTicket = <span class="hljs-title function_">asyncHandler</span>(<span class="hljs-title function_">async</span> (req, res) =&gt; {
+  <span class="hljs-keyword">const</span> existing = <span class="hljs-keyword">await</span> ticketService.<span class="hljs-title function_">getTicketById</span>(req.<span class="hljs-property">params</span>.<span class="hljs-property">id</span>);
+
+  <span class="hljs-keyword">if</span> (!existing) {
+    <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">ApiError</span>(<span class="hljs-number">404</span>, <span class="hljs-string">`Ticket <span class="hljs-subst">${req.params.id}</span> not found`</span>);
+  }
+
+  <span class="hljs-keyword">await</span> ticketService.<span class="hljs-title function_">deleteTicket</span>(req.<span class="hljs-property">params</span>.<span class="hljs-property">id</span>);
+  res.<span class="hljs-title function_">status</span>(<span class="hljs-number">204</span>).<span class="hljs-title function_">end</span>();
+});
+</code></pre>
+<p><code>res.status(204).end()</code>, not <code>res.status(204).json(...)</code> — calling <code>.json()</code>
+here would still send a body (even <code>.json(null)</code> sends the four bytes
+<code>null</code>), which technically contradicts what <code>204</code> promises. <code>.end()</code> closes
+the response with no body at all, which is the only combination that
+matches the status code's own meaning. Every <code>DELETE</code> route in this project
+— tickets, comments, tags — ends its controller the same way.</p>
+</div>
+    
+  </main>
+</body>
+</html>

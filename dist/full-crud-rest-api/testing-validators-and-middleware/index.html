@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Testing Validators &amp; Middleware — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/full-crud-rest-api/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>Testing Validators &amp; Middleware</h1>
+    <p class="lede">The Week 3 habit PLAN.md set out: a unit test suite that grows alongside services/validators, not bolted on at the end.</p>
+
+    
+      <ul class="listing">
+        
+          <li>
+            <a href="/full-crud-rest-api/testing-validators-and-middleware/testing-a-validator-directly.html">Testing a Validator Directly</a>
+            <p>No app, no mocked Prisma client — a Zod schema is a plain function call, so testing it is just that.</p>
+          </li>
+        
+          <li>
+            <a href="/full-crud-rest-api/testing-validators-and-middleware/testing-middleware-without-an-app.html">Testing Middleware Without an App</a>
+            <p>validate.js is just a function that reads req and calls next() or res — a fake req/res object is enough.</p>
+          </li>
+        
+          <li>
+            <a href="/full-crud-rest-api/testing-validators-and-middleware/growing-the-integration-suite.html">Growing the Integration Suite</a>
+            <p>Comment and Tag get their own supertest files; Ticket&#39;s grows to cover every new route this lesson added.</p>
+          </li>
+        
+      </ul>
+    
+
+    
+  </main>
+</body>
+</html>

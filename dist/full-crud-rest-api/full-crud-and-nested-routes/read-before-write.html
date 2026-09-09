@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Read Before Write — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        <a class="nav-prev" href="/full-crud-rest-api/full-crud-and-nested-routes/patch-for-partial-updates.html">← PATCH for Partial Updates</a>
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/full-crud-rest-api/full-crud-and-nested-routes/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        <a class="nav-next" href="/full-crud-rest-api/full-crud-and-nested-routes/no-content-on-delete.html">204 No Content on Delete →</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>Read Before Write</h1>
+    <p class="lede">Checking a row exists before updating or deleting it, so a missing id becomes a clean 404, not a raw Prisma error.</p>
+
+    
+
+    
+      <div class="slide-body"><p><code>prisma.tag.update({ where: { id } })</code> against an <code>id</code> that doesn't exist
+doesn't quietly do nothing — it throws (Prisma's <code>P2025</code>, &quot;record not
+found&quot;). Left alone, that throw would still reach the client as a <code>500</code>, or
+now, after the previous topic's error-handler work, a <code>404</code> — but a fairly
+blunt one, without a chance to name <em>which</em> resource wasn't found the way
+<code>getTicketById</code>'s existing <code>ApiError(404, 'Ticket 5 not found')</code> already
+does.</p>
+<p>Every update and delete controller in this project takes the simpler route
+instead: check the row exists first, with the same <code>getById</code> the <code>GET</code>
+route already uses, before ever calling <code>update</code>/<code>delete</code> on it.</p>
+<pre><code class="hljs language-js"><span class="hljs-comment">// Figure 3.9: checking existence before writing (src/controllers/tag.controller.js, excerpt)</span>
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">const</span> updateTag = <span class="hljs-title function_">asyncHandler</span>(<span class="hljs-title function_">async</span> (req, res) =&gt; {
+  <span class="hljs-keyword">const</span> existing = <span class="hljs-keyword">await</span> tagService.<span class="hljs-title function_">getTagById</span>(req.<span class="hljs-property">params</span>.<span class="hljs-property">id</span>);
+
+  <span class="hljs-keyword">if</span> (!existing) {
+    <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">ApiError</span>(<span class="hljs-number">404</span>, <span class="hljs-string">`Tag <span class="hljs-subst">${req.params.id}</span> not found`</span>);
+  }
+
+  <span class="hljs-keyword">const</span> tag = <span class="hljs-keyword">await</span> tagService.<span class="hljs-title function_">updateTag</span>(req.<span class="hljs-property">params</span>.<span class="hljs-property">id</span>, req.<span class="hljs-property">body</span>);
+  <span class="hljs-title function_">sendResource</span>(res, tag);
+});
+</code></pre>
+<p>This costs one extra query — <code>getTagById</code> runs, then <code>updateTag</code> runs again
+right after — which is a deliberate trade, not an oversight: the resulting
+<code>404</code> names exactly what wasn't found, in the exact same shape as every
+other <code>404</code> in this API, and the code reads as two plain, sequential steps
+rather than a <code>try</code>/<code>catch</code> decoding <em>why</em> Prisma's own error was thrown.
+<code>ticket.controller.js</code> and <code>comment.controller.js</code> follow the identical
+shape for their own <code>update</code>/<code>delete</code> functions.</p>
+</div>
+    
+  </main>
+</body>
+</html>

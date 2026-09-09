@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>The validate Middleware — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        <a class="nav-prev" href="/full-crud-rest-api/validating-requests-with-zod/schema-validation-with-zod.html">← Schema Validation with Zod</a>
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/full-crud-rest-api/validating-requests-with-zod/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        <a class="nav-next" href="/full-crud-rest-api/validating-requests-with-zod/coercion-and-defaults.html">Coercion and Defaults →</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>The validate Middleware</h1>
+    <p class="lede">A closure that turns any Zod schema into Express middleware — the same shape as asyncHandler.</p>
+
+    
+
+    
+      <div class="slide-body"><p><code>safeParse</code> (previous slide) is generic — it knows nothing about Express,
+<code>req</code>, or <code>res</code>. <code>middleware/validate.js</code> is what bridges the two: it takes a
+schema (or a small map of them) and returns an actual Express middleware
+function.</p>
+<pre><code class="hljs language-js"><span class="hljs-comment">// Figure 3.5: turning a Zod schema into middleware (src/middleware/validate.js)</span>
+<span class="hljs-keyword">const</span> <span class="hljs-variable constant_">REQUEST_PARTS</span> = [<span class="hljs-string">&#x27;params&#x27;</span>, <span class="hljs-string">&#x27;query&#x27;</span>, <span class="hljs-string">&#x27;body&#x27;</span>];
+
+<span class="hljs-keyword">export</span> <span class="hljs-title function_">default</span> (schemas) =&gt;
+  <span class="hljs-function">(<span class="hljs-params">req, res, next</span>) =&gt;</span> {
+    <span class="hljs-keyword">for</span> (<span class="hljs-keyword">const</span> part <span class="hljs-keyword">of</span> <span class="hljs-variable constant_">REQUEST_PARTS</span>) {
+      <span class="hljs-keyword">const</span> schema = schemas[part];
+      <span class="hljs-keyword">if</span> (!schema) <span class="hljs-keyword">continue</span>;
+
+      <span class="hljs-keyword">const</span> result = schema.<span class="hljs-title function_">safeParse</span>(req[part]);
+      <span class="hljs-keyword">if</span> (!result.<span class="hljs-property">success</span>) {
+        <span class="hljs-keyword">const</span> details = result.<span class="hljs-property">error</span>.<span class="hljs-property">issues</span>.<span class="hljs-title function_">map</span>(<span class="hljs-function">(<span class="hljs-params">issue</span>) =&gt;</span> ({
+          <span class="hljs-attr">field</span>: issue.<span class="hljs-property">path</span>.<span class="hljs-title function_">join</span>(<span class="hljs-string">&#x27;.&#x27;</span>) || part,
+          <span class="hljs-attr">message</span>: issue.<span class="hljs-property">message</span>,
+        }));
+        <span class="hljs-keyword">return</span> <span class="hljs-title function_">next</span>(<span class="hljs-keyword">new</span> <span class="hljs-title class_">ApiError</span>(<span class="hljs-number">400</span>, <span class="hljs-string">&#x27;Validation failed&#x27;</span>, details));
+      }
+
+      req[part] = result.<span class="hljs-property">data</span>;
+    }
+
+    <span class="hljs-title function_">next</span>();
+  };
+</code></pre>
+<p>This is the exact same <code>(a) =&gt; (b) =&gt; ...</code> shape as <code>asyncHandler</code>
+(Lesson 1, Figure 1.10): calling <code>validate({ body: someSchema })</code> doesn't run
+any validation itself — it returns a <em>new</em> function, closing over <code>schemas</code>,
+and <strong>that</strong> function is what Express actually calls on every matching
+request. One call to <code>validate(...)</code> per route, at the point that route is
+defined; the validation work happens later, once per request.</p>
+<p>Inside, it loops over whichever of <code>params</code>/<code>query</code>/<code>body</code> the caller
+actually supplied a schema for — a route with nothing to validate in the
+query string, say, simply never passes a <code>query</code> key, and that part of the
+loop is skipped entirely. <code>ApiError</code> (previous topic, Figure 3.2) is how a
+validation failure gets to the centralized error handler with a <code>400</code> status
+and a field-by-field <code>details</code> list attached, the same route every other
+error in this API already takes (Lesson 1's centralized error handling).</p>
+</div>
+    
+  </main>
+</body>
+</html>

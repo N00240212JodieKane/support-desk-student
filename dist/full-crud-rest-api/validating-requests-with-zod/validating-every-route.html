@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Validating Every Route — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        <a class="nav-prev" href="/full-crud-rest-api/validating-requests-with-zod/coercion-and-defaults.html">← Coercion and Defaults</a>
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/full-crud-rest-api/validating-requests-with-zod/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        <a class="nav-next" href="/full-crud-rest-api/full-crud-and-nested-routes/patch-for-partial-updates.html">PATCH for Partial Updates →</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>Validating Every Route</h1>
+    <p class="lede">validate({ ... }) applied per-route, right where each route is defined.</p>
+
+    
+
+    
+      <div class="slide-body"><p>Everything so far — schemas, the <code>validate</code> factory, coercion — comes
+together at the one place a schema actually gets attached to a request: the
+route definition itself.</p>
+<pre><code class="hljs language-js"><span class="hljs-comment">// Figure 3.7: applying validation per-route (src/routes/ticket.routes.js, excerpt)</span>
+router.<span class="hljs-title function_">get</span>(<span class="hljs-string">&#x27;/&#x27;</span>, <span class="hljs-title function_">validate</span>({ <span class="hljs-attr">query</span>: listTicketsQuerySchema }), ticketController.<span class="hljs-property">getAllTickets</span>);
+router.<span class="hljs-title function_">post</span>(<span class="hljs-string">&#x27;/&#x27;</span>, <span class="hljs-title function_">validate</span>({ <span class="hljs-attr">body</span>: createTicketSchema }), ticketController.<span class="hljs-property">createTicket</span>);
+
+router.<span class="hljs-title function_">get</span>(<span class="hljs-string">&#x27;/:id&#x27;</span>, <span class="hljs-title function_">validate</span>({ <span class="hljs-attr">params</span>: ticketIdParamSchema }), ticketController.<span class="hljs-property">getTicketById</span>);
+router.<span class="hljs-title function_">patch</span>(
+  <span class="hljs-string">&#x27;/:id&#x27;</span>,
+  <span class="hljs-title function_">validate</span>({ <span class="hljs-attr">params</span>: ticketIdParamSchema, <span class="hljs-attr">body</span>: updateTicketSchema }),
+  ticketController.<span class="hljs-property">updateTicket</span>,
+);
+</code></pre>
+<p><code>validate({ ... })</code> sits in the middle of <code>router.get(path, ...)</code>'s argument
+list, between the path and the controller — an ordinary Express middleware
+position (Lesson 1's routing topic). Express runs middleware in the order
+they're listed, so by the time <code>ticketController.createTicket</code> runs, the
+request has already passed <code>validate({ body: createTicketSchema })</code> — if it
+hadn't, <code>validate</code> would have called <code>next(new ApiError(...))</code> instead of
+<code>next()</code>, and Express would have skipped straight past the controller to the
+centralized error handler, exactly like <code>asyncHandler</code> does for a rejected
+Promise.</p>
+<p>Notice <code>PATCH /:id</code> passes <strong>two</strong> schemas at once —
+<code>{ params: ticketIdParamSchema, body: updateTicketSchema }</code> — since that one
+route needs both the URL's <code>:id</code> and the request body checked before either
+is trusted. That's exactly why <code>validate.js</code> loops over
+<code>params</code>/<code>query</code>/<code>body</code> (Figure 3.5) instead of only ever handling one part
+of the request: a single call covers whatever combination a route actually
+needs, nothing more.</p>
+<p>With this in place, every controller function this project writes from here
+on can read <code>req.params</code>, <code>req.query</code>, and <code>req.body</code> and trust their shape
+completely — the manual <code>if (!subject || ...)</code> checks and <code>Number.isNaN</code>
+guards from Lessons 1 and 2 (first slide, this topic) are gone from
+<code>ticket.controller.js</code> for good.</p>
+</div>
+    
+  </main>
+</body>
+</html>

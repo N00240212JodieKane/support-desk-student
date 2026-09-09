@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Full CRUD &amp; Nested Routes — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/full-crud-rest-api/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>Full CRUD &amp; Nested Routes</h1>
+    <p class="lede">PATCH, DELETE, and a whole second resource nested under Ticket — Comment, reached only through its parent.</p>
+
+    
+      <ul class="listing">
+        
+          <li>
+            <a href="/full-crud-rest-api/full-crud-and-nested-routes/patch-for-partial-updates.html">PATCH for Partial Updates</a>
+            <p>Every field optional, but not zero fields — and why that&#39;s PATCH&#39;s job, not PUT&#39;s.</p>
+          </li>
+        
+          <li>
+            <a href="/full-crud-rest-api/full-crud-and-nested-routes/read-before-write.html">Read Before Write</a>
+            <p>Checking a row exists before updating or deleting it, so a missing id becomes a clean 404, not a raw Prisma error.</p>
+          </li>
+        
+          <li>
+            <a href="/full-crud-rest-api/full-crud-and-nested-routes/no-content-on-delete.html">204 No Content on Delete</a>
+            <p>A successful delete has nothing left to send back — the status code says so on its own.</p>
+          </li>
+        
+          <li>
+            <a href="/full-crud-rest-api/full-crud-and-nested-routes/nesting-comments-under-a-ticket.html">Nesting Comments Under a Ticket</a>
+            <p>A Comment never has its own top-level URL — it&#39;s only ever reached through the ticket it belongs to.</p>
+          </li>
+        
+          <li>
+            <a href="/full-crud-rest-api/full-crud-and-nested-routes/scoping-a-nested-lookup.html">Scoping a Nested Lookup</a>
+            <p>Two things a nested URL has to check that a flat one doesn&#39;t: does the parent exist, and does the child actually belong to it.</p>
+          </li>
+        
+      </ul>
+    
+
+    
+  </main>
+</body>
+</html>

@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Testing a Validator Directly — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        <a class="nav-prev" href="/full-crud-rest-api/filtering-sorting-and-pagination/paginating-the-list.html">← Paginating the List</a>
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/full-crud-rest-api/testing-validators-and-middleware/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        <a class="nav-next" href="/full-crud-rest-api/testing-validators-and-middleware/testing-middleware-without-an-app.html">Testing Middleware Without an App →</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>Testing a Validator Directly</h1>
+    <p class="lede">No app, no mocked Prisma client — a Zod schema is a plain function call, so testing it is just that.</p>
+
+    
+
+    
+      <div class="slide-body"><p>Lesson 2's unit tests (<code>ticket.service.test.js</code>) needed
+<code>jest.unstable_mockModule</code> to swap out the real Prisma client before the
+service under test could even be imported (Figure 2.19) — necessary
+work, but work all the same, just to isolate one function from the database
+it talks to. A validator has no such problem: <code>createTicketSchema</code> doesn't
+import Prisma, doesn't touch a network, doesn't have any dependency to fake
+out at all. Testing it is nothing more than calling <code>.safeParse(...)</code> and
+checking the result:</p>
+<pre><code class="hljs language-js"><span class="hljs-comment">// Figure 3.15: a validator test, no mocking required (tests/unit/ticket.validators.test.js, excerpt)</span>
+<span class="hljs-title function_">describe</span>(<span class="hljs-string">&#x27;listTicketsQuerySchema&#x27;</span>, <span class="hljs-function">() =&gt;</span> {
+  <span class="hljs-title function_">it</span>(<span class="hljs-string">&#x27;fills in defaults for an empty query&#x27;</span>, <span class="hljs-function">() =&gt;</span> {
+    <span class="hljs-keyword">const</span> result = listTicketsQuerySchema.<span class="hljs-title function_">safeParse</span>({});
+
+    <span class="hljs-title function_">expect</span>(result.<span class="hljs-property">success</span>).<span class="hljs-title function_">toBe</span>(<span class="hljs-literal">true</span>);
+    <span class="hljs-title function_">expect</span>(result.<span class="hljs-property">data</span>).<span class="hljs-title function_">toEqual</span>({
+      <span class="hljs-attr">sortBy</span>: <span class="hljs-string">&#x27;createdAt&#x27;</span>,
+      <span class="hljs-attr">order</span>: <span class="hljs-string">&#x27;desc&#x27;</span>,
+      <span class="hljs-attr">page</span>: <span class="hljs-number">1</span>,
+      <span class="hljs-attr">pageSize</span>: <span class="hljs-number">10</span>,
+    });
+  });
+
+  <span class="hljs-title function_">it</span>(<span class="hljs-string">&#x27;rejects a pageSize above the cap&#x27;</span>, <span class="hljs-function">() =&gt;</span> {
+    <span class="hljs-keyword">const</span> result = listTicketsQuerySchema.<span class="hljs-title function_">safeParse</span>({ <span class="hljs-attr">pageSize</span>: <span class="hljs-string">&#x27;500&#x27;</span> });
+
+    <span class="hljs-title function_">expect</span>(result.<span class="hljs-property">success</span>).<span class="hljs-title function_">toBe</span>(<span class="hljs-literal">false</span>);
+  });
+});
+</code></pre>
+<p>These are exactly the kind of &quot;unit tests against services/validators&quot; this
+project has grown from Lesson 1's very first Jest test onward — cheap to
+write, fast to run, and precise about what they cover: not &quot;does the
+<code>GET /tickets</code> endpoint work&quot; (the integration suite's job, further down
+this topic), but &quot;does this one schema accept and reject exactly what it
+should,&quot; independent of Express, Prisma, or anything else in the app.
+Worth writing one of these for every schema this project adds, the same
+habit as the tests already alongside <code>ticket.service.js</code>.</p>
+</div>
+    
+  </main>
+</body>
+</html>

@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>API Conventions Reference — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        <a class="nav-prev" href="/full-crud-rest-api/consistent-response-and-error-conventions/translating-database-errors.html">← Translating Database Errors</a>
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/full-crud-rest-api/consistent-response-and-error-conventions/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        <a class="nav-next" href="/full-crud-rest-api/validating-requests-with-zod/the-limits-of-manual-checks.html">The Limits of Manual Checks →</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>API Conventions Reference</h1>
+    <p class="lede">Everything the last three slides established, collected in one place to check new endpoints against.</p>
+
+    
+
+    
+      <div class="slide-body"><p>The previous three slides each introduced one piece of a convention. This
+slide is the reference itself — the short written summary this project
+follows for every endpoint from here on, not just the ones this lesson
+happens to touch.</p>
+<p><strong>Success responses</strong> always go through <code>sendResource</code>/<code>sendCollection</code>
+(Figure 3.1):</p>
+<pre><code class="hljs language-json"><span class="hljs-comment">// A single resource — GET /tickets/:id, POST /tickets, PATCH /tickets/:id</span>
+<span class="hljs-punctuation">{</span> <span class="hljs-attr">&quot;data&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span> <span class="hljs-attr">&quot;id&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">1</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">&quot;subject&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;Cannot log in&quot;</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">&quot;...&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;...&quot;</span> <span class="hljs-punctuation">}</span> <span class="hljs-punctuation">}</span>
+</code></pre>
+<pre><code class="hljs language-json"><span class="hljs-comment">// A list — GET /tickets/:id/comments, GET /tags</span>
+<span class="hljs-punctuation">{</span> <span class="hljs-attr">&quot;data&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span> <span class="hljs-punctuation">{</span> <span class="hljs-attr">&quot;...&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;...&quot;</span> <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span> <span class="hljs-punctuation">{</span> <span class="hljs-attr">&quot;...&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;...&quot;</span> <span class="hljs-punctuation">}</span> <span class="hljs-punctuation">]</span> <span class="hljs-punctuation">}</span>
+</code></pre>
+<pre><code class="hljs language-json"><span class="hljs-comment">// A list that supports pagination — GET /tickets (this lesson, later topic)</span>
+<span class="hljs-punctuation">{</span> <span class="hljs-attr">&quot;data&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span> <span class="hljs-string">&quot;...&quot;</span> <span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">&quot;meta&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span> <span class="hljs-attr">&quot;page&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">1</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">&quot;pageSize&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">10</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">&quot;total&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">42</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">&quot;totalPages&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">5</span> <span class="hljs-punctuation">}</span> <span class="hljs-punctuation">}</span>
+</code></pre>
+<p><strong>Error responses</strong> always go through the centralized error handler
+(Figures 3.2–3.4), never a controller's own <code>res.status(...).json(...)</code>:</p>
+<pre><code class="hljs language-json"><span class="hljs-comment">// Any error — a thrown ApiError, a failed validation, an unrecognised bug</span>
+<span class="hljs-punctuation">{</span> <span class="hljs-attr">&quot;error&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span> <span class="hljs-attr">&quot;message&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;Ticket 5 not found&quot;</span> <span class="hljs-punctuation">}</span> <span class="hljs-punctuation">}</span>
+</code></pre>
+<pre><code class="hljs language-json"><span class="hljs-comment">// A validation failure specifically also carries field-by-field detail</span>
+<span class="hljs-punctuation">{</span> <span class="hljs-attr">&quot;error&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span> <span class="hljs-attr">&quot;message&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;Validation failed&quot;</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">&quot;details&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span>
+  <span class="hljs-punctuation">{</span> <span class="hljs-attr">&quot;field&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;customerId&quot;</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">&quot;message&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;Required&quot;</span> <span class="hljs-punctuation">}</span>
+<span class="hljs-punctuation">]</span> <span class="hljs-punctuation">}</span> <span class="hljs-punctuation">}</span>
+</code></pre>
+<p><strong>Status codes</strong>, applied consistently across Ticket/Comment/Tag:</p>
+<table>
+<thead>
+<tr>
+<th>Situation</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Fetching or updating something that exists</td>
+<td><code>200 OK</code></td>
+</tr>
+<tr>
+<td>Creating something new</td>
+<td><code>201 Created</code></td>
+</tr>
+<tr>
+<td>Deleting something that exists</td>
+<td><code>204 No Content</code> (empty body)</td>
+</tr>
+<tr>
+<td>The request body/params/query fail validation</td>
+<td><code>400 Bad Request</code></td>
+</tr>
+<tr>
+<td>The URL names something that doesn't exist</td>
+<td><code>404 Not Found</code></td>
+</tr>
+<tr>
+<td>The request conflicts with existing data (duplicate, still-referenced row)</td>
+<td><code>409 Conflict</code></td>
+</tr>
+<tr>
+<td>Anything unrecognised — a real bug, not a client mistake</td>
+<td><code>500 Internal Server Error</code> (generic message only)</td>
+</tr>
+</tbody>
+</table>
+<p>Any new endpoint added later in this build is expected to fit into this same
+table rather than inventing its own response shape.</p>
+</div>
+    
+  </main>
+</body>
+</html>

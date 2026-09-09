@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Coercion and Defaults — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        <a class="nav-prev" href="/full-crud-rest-api/validating-requests-with-zod/the-validate-middleware.html">← The validate Middleware</a>
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/full-crud-rest-api/validating-requests-with-zod/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        <a class="nav-next" href="/full-crud-rest-api/validating-requests-with-zod/validating-every-route.html">Validating Every Route →</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>Coercion and Defaults</h1>
+    <p class="lede">Every route param and query value is a string — z.coerce fixes that as part of validating it, not after.</p>
+
+    
+
+    
+      <div class="slide-body"><p>Lesson 2's defensive <code>Number(req.params.id)</code> (Figure 2.16) is still true here
+for exactly the same reason: Express route params, and every query-string
+value, always arrive as strings — <code>/tickets/7</code> gives <code>req.params.id === '7'</code>, never the number <code>7</code>. A validator that only checked
+<code>z.number().int().positive()</code> against that string would reject every single
+request, since <code>'7'</code> isn't a JS number at all.</p>
+<pre><code class="hljs language-js"><span class="hljs-comment">// Figure 3.6: coercing strings into the types they actually mean (src/validators/ticket.validators.js, excerpt)</span>
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">const</span> ticketIdParamSchema = z.<span class="hljs-title function_">object</span>({
+  <span class="hljs-attr">id</span>: z.<span class="hljs-property">coerce</span>.<span class="hljs-title function_">number</span>().<span class="hljs-title function_">int</span>().<span class="hljs-title function_">positive</span>(),
+});
+
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">const</span> listTicketsQuerySchema = z.<span class="hljs-title function_">object</span>({
+  <span class="hljs-attr">status</span>: statusEnum.<span class="hljs-title function_">optional</span>(),
+  <span class="hljs-attr">sortBy</span>: z.<span class="hljs-title function_">enum</span>([<span class="hljs-string">&#x27;createdAt&#x27;</span>, <span class="hljs-string">&#x27;updatedAt&#x27;</span>, <span class="hljs-string">&#x27;subject&#x27;</span>, <span class="hljs-string">&#x27;status&#x27;</span>]).<span class="hljs-title function_">default</span>(<span class="hljs-string">&#x27;createdAt&#x27;</span>),
+  <span class="hljs-attr">order</span>: z.<span class="hljs-title function_">enum</span>([<span class="hljs-string">&#x27;asc&#x27;</span>, <span class="hljs-string">&#x27;desc&#x27;</span>]).<span class="hljs-title function_">default</span>(<span class="hljs-string">&#x27;desc&#x27;</span>),
+  <span class="hljs-attr">page</span>: z.<span class="hljs-property">coerce</span>.<span class="hljs-title function_">number</span>().<span class="hljs-title function_">int</span>().<span class="hljs-title function_">min</span>(<span class="hljs-number">1</span>).<span class="hljs-title function_">default</span>(<span class="hljs-number">1</span>),
+  <span class="hljs-attr">pageSize</span>: z.<span class="hljs-property">coerce</span>.<span class="hljs-title function_">number</span>().<span class="hljs-title function_">int</span>().<span class="hljs-title function_">min</span>(<span class="hljs-number">1</span>).<span class="hljs-title function_">max</span>(<span class="hljs-number">50</span>).<span class="hljs-title function_">default</span>(<span class="hljs-number">10</span>),
+});
+</code></pre>
+<p><code>z.coerce.number()</code> converts <em>before</em> checking — it runs <code>Number(...)</code> on
+whatever it's given, then validates the result, so <code>'7'</code> passes and becomes
+the number <code>7</code> in <code>result.data</code>, while <code>'seven'</code> becomes <code>NaN</code> and correctly
+fails <code>.int().positive()</code>. That single change replaces the manual
+<code>Number.isNaN(id)</code> guard from Lesson 2 entirely: it's now something the
+schema itself expresses, not a follow-up check after the fact.</p>
+<p>(<code>statusEnum</code>, defined just above this excerpt in the same file, is a plain
+<code>z.enum([...])</code> of the four values <code>Ticket.status</code> can hold — the same kind
+of allow-list check as <code>sortBy</code>/<code>order</code> below it.)</p>
+<p><code>.default(...)</code> handles the other half of <code>listTicketsQuerySchema</code>: a bare
+<code>GET /tickets</code> with no query string at all is still a completely valid
+request — it should just mean &quot;first page, ten at a time, newest first.&quot;
+<code>page: z.coerce.number()...default(1)</code> means an absent <code>page</code> doesn't fail
+validation, it becomes exactly <code>1</code> in the parsed result. Combined with
+<code>validate.js</code> replacing <code>req.query</code> with that parsed data (previous slide),
+every route reading <code>req.query.page</code> downstream can trust it's always a real
+number, defaulted or not — never <code>undefined</code>, never a string.</p>
+</div>
+    
+  </main>
+</body>
+</html>

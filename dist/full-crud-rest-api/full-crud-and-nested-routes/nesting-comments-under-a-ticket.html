@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Nesting Comments Under a Ticket — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        <a class="nav-prev" href="/full-crud-rest-api/full-crud-and-nested-routes/no-content-on-delete.html">← 204 No Content on Delete</a>
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/full-crud-rest-api/full-crud-and-nested-routes/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        <a class="nav-next" href="/full-crud-rest-api/full-crud-and-nested-routes/scoping-a-nested-lookup.html">Scoping a Nested Lookup →</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>Nesting Comments Under a Ticket</h1>
+    <p class="lede">A Comment never has its own top-level URL — it&#39;s only ever reached through the ticket it belongs to.</p>
+
+    
+
+    
+      <div class="slide-body"><p><code>Comment</code> isn't a standalone resource the way <code>Ticket</code> and <code>Tag</code> are — the
+domain model (<code>CLAUDE.md</code>) says a comment always belongs to exactly one
+ticket, and the URLs follow that: <code>/tickets/1/comments</code>, not <code>/comments</code>.
+Getting there is two routers, not one — <code>comment.routes.js</code>, mounted inside
+<code>ticket.routes.js</code>:</p>
+<pre><code class="hljs language-js"><span class="hljs-comment">// Figure 3.11: mounting a nested router (src/routes/comment.routes.js, and the mount point in src/routes/ticket.routes.js)</span>
+<span class="hljs-comment">// comment.routes.js</span>
+<span class="hljs-keyword">const</span> router = express.<span class="hljs-title class_">Router</span>({ <span class="hljs-attr">mergeParams</span>: <span class="hljs-literal">true</span> });
+router.<span class="hljs-title function_">get</span>(<span class="hljs-string">&#x27;/&#x27;</span>, <span class="hljs-title function_">validate</span>({ <span class="hljs-attr">params</span>: ticketIdParamSchema }), commentController.<span class="hljs-property">getAllComments</span>);
+<span class="hljs-comment">// ...post/:id routes follow the same shape</span>
+
+<span class="hljs-comment">// ticket.routes.js</span>
+router.<span class="hljs-title function_">use</span>(<span class="hljs-string">&#x27;/:ticketId/comments&#x27;</span>, commentRoutes);
+</code></pre>
+<p><code>router.use('/:ticketId/comments', commentRoutes)</code> means every request
+under that path — <code>GET /tickets/1/comments</code>, <code>DELETE /tickets/1/comments/9</code>, all of it — gets handed off to <code>comment.routes.js</code>
+to actually match. The <code>:ticketId</code> part is already consumed by
+<code>ticket.routes.js</code> by the time that handoff happens, though — which is
+exactly the problem <code>{ mergeParams: true }</code> solves. <strong>Without</strong> it, a nested
+router only ever sees params matched <em>within its own path</em> (an <code>:id</code> from
+<code>/:id</code> inside <code>comment.routes.js</code> itself, say) — <code>req.params.ticketId</code>
+would be <code>undefined</code> in every comment controller, because as far as that
+inner router is concerned, <code>:ticketId</code> belongs to a different router
+entirely. <code>{ mergeParams: true }</code> tells Express to merge the parent
+router's matched params into <code>req.params</code> too, so <code>commentController. getAllComments</code> can read <code>req.params.ticketId</code> like any other param.</p>
+</div>
+    
+  </main>
+</body>
+</html>

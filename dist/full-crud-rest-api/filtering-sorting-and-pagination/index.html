@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Lecture Notes — Support Desk API</title>
+  <title>Filtering, Sorting &amp; Pagination — Support Desk API</title>
   <link rel="stylesheet" href="/assets/hljs-theme.css">
   <link rel="stylesheet" href="/assets/style.css">
 </head>
@@ -21,7 +21,7 @@
         
       </div>
       <div class="nav-slot nav-slot-center">
-        
+        <a class="nav-up" href="/full-crud-rest-api/index.html">↑ Up</a>
       </div>
       <div class="nav-slot nav-slot-right">
         
@@ -30,25 +30,25 @@
   </nav>
 
   <main class="content">
-    <h1>Lecture Notes</h1>
-    
+    <h1>Filtering, Sorting &amp; Pagination</h1>
+    <p class="lede">Turning a validated query string into the where/orderBy/skip/take options a real ticket list needs.</p>
 
     
       <ul class="listing">
         
           <li>
-            <a href="/foundations/index.html">Foundations &amp; REST Basics</a>
-            <p>The Node.js runtime, Express fundamentals, and building GET/POST /tickets against an in-memory store.</p>
+            <a href="/full-crud-rest-api/filtering-sorting-and-pagination/filtering-with-a-conditional-where.html">Filtering with a Conditional where</a>
+            <p>GET /tickets?status=open — building Prisma&#39;s where clause only when a filter was actually given.</p>
           </li>
         
           <li>
-            <a href="/data-modeling-and-persistence/index.html">Data Modeling &amp; Persistence</a>
-            <p>Relational modeling in Prisma, migrations and seeding against MySQL, and swapping the in-memory ticket store for real Prisma queries.</p>
+            <a href="/full-crud-rest-api/filtering-sorting-and-pagination/sorting-with-a-computed-key.html">Sorting with a Computed Key</a>
+            <p>orderBy: { [sortBy]: order } — a property name decided at runtime, not written by hand.</p>
           </li>
         
           <li>
-            <a href="/full-crud-rest-api/index.html">Full CRUD REST API</a>
-            <p>Zod validation, consistent response/error conventions, full CRUD with nested comment routes, filtering/sorting/pagination, and unit tests that grow alongside the code.</p>
+            <a href="/full-crud-rest-api/filtering-sorting-and-pagination/paginating-the-list.html">Paginating the List</a>
+            <p>skip/take turn a page number into a slice of rows; the controller turns the total row count into meta.</p>
           </li>
         
       </ul>

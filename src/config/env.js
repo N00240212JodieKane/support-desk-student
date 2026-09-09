@@ -1,15 +1,25 @@
 // Loads .env into process.env and validates it once at startup, so a missing
 // or malformed value fails fast with a clear message here — instead of
 // surfacing later as a confusing runtime error (e.g. the server silently
-// listening on the wrong port, or `NaN`). Real schema-based validation (Zod)
-// arrives in Week 3 — see PLAN.md; for now this is the same plain manual-check
-// style as ticket.controller.js.
+// listening on the wrong port, or `NaN`). Week 1/2 did this with a plain
+// manual check; now that Zod is in the project for request validation
+// (middleware/validate.js), the same tool validates config too — a schema
+// is a schema, whether it's describing a request body or process.env.
 import 'dotenv/config';
+import { z } from 'zod';
 
-const port = Number(process.env.PORT);
+const envSchema = z.object({
+  PORT: z.coerce.number().int().positive(),
+  DATABASE_URL: z.string().min(1, 'DATABASE_URL is required'),
+});
 
-if (!process.env.PORT || Number.isNaN(port)) {
-  throw new Error('Missing or invalid PORT in .env — expected a number');
+const result = envSchema.safeParse(process.env);
+
+if (!result.success) {
+  const problems = result.error.issues
+    .map((issue) => `${issue.path.join('.')}: ${issue.message}`)
+    .join('; ');
+  throw new Error(`Invalid environment configuration — ${problems}`);
 }
 
-export default { PORT: port };
+export default result.data;

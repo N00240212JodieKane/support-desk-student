@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>The Limits of Manual Checks — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        <a class="nav-prev" href="/full-crud-rest-api/consistent-response-and-error-conventions/api-conventions-reference.html">← API Conventions Reference</a>
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/full-crud-rest-api/validating-requests-with-zod/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        <a class="nav-next" href="/full-crud-rest-api/validating-requests-with-zod/schema-validation-with-zod.html">Schema Validation with Zod →</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>The Limits of Manual Checks</h1>
+    <p class="lede">Three places doing their own ad hoc validation, and what that costs as the API grows.</p>
+
+    
+
+    
+      <div class="slide-body"><p>By now this project has three separate hand-rolled checks, all doing
+roughly the same job in slightly different ways: <code>createTicket</code>'s
+<code>if (!subject || !description || !customerId)</code> (Lesson 1, Figure 1.8),
+<code>getTicketById</code>'s <code>Number.isNaN(id)</code> guard (Lesson 2, Figure 2.16), and — about
+to be written for this lesson — the same two problems again for <code>Comment</code> and
+<code>Tag</code>, plus new ones: is <code>status</code> one of the four values the database actually
+accepts? Is <code>page</code> a positive number, or could <code>?page=-1</code> reach Prisma at all?</p>
+<p>Three things go wrong if this keeps scaling by hand:</p>
+<ul>
+<li><strong>Duplication.</strong> Every route re-invents &quot;is this field present, is this id
+numeric&quot; from scratch, in prose that's easy to phrase inconsistently.</li>
+<li><strong>No coercion.</strong> <code>Number(req.params.id)</code> is a manual conversion step every
+single handler needs to remember, by hand, before the value is usable.</li>
+<li><strong>Drift.</strong> Nothing stops one controller's error message from reading
+<code>'subject and description are required'</code> while another says
+<code>'id must be a number'</code> — the shape of a validation failure isn't
+guaranteed to be consistent even within this one small API.</li>
+</ul>
+<p>A <strong>schema</strong> fixes all three at once: describe once, in one place, what a
+valid request looks like — field names, types, required-ness, allowed
+values — and get both the pass/fail check <em>and</em> the coercion from checking
+against it. That's what Zod is, and what the rest of this topic wires into
+Express.</p>
+</div>
+    
+  </main>
+</body>
+</html>

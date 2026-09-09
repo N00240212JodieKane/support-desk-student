@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Scoping a Nested Lookup — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        <a class="nav-prev" href="/full-crud-rest-api/full-crud-and-nested-routes/nesting-comments-under-a-ticket.html">← Nesting Comments Under a Ticket</a>
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/full-crud-rest-api/full-crud-and-nested-routes/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        <a class="nav-next" href="/full-crud-rest-api/filtering-sorting-and-pagination/filtering-with-a-conditional-where.html">Filtering with a Conditional where →</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>Scoping a Nested Lookup</h1>
+    <p class="lede">Two things a nested URL has to check that a flat one doesn&#39;t: does the parent exist, and does the child actually belong to it.</p>
+
+    
+
+    
+      <div class="slide-body"><p>A flat resource like <code>Tag</code> only ever has one thing to check before an
+update or delete: does this id exist (previous &quot;Read Before Write&quot; slide).
+A nested resource like <code>Comment</code> has a second question sitting right next
+to it — <code>/tickets/1/comments/9</code> names <em>two</em> ids, and both have to be right,
+not just individually valid. <code>comment.controller.js</code> checks the parent
+first, using the exact same <code>ticketService.getTicketById</code> every ticket
+route already calls:</p>
+<pre><code class="hljs language-js"><span class="hljs-comment">// Figure 3.12: confirming the parent exists, then scoping the child lookup (src/controllers/comment.controller.js and src/services/comment.service.js, excerpt)</span>
+<span class="hljs-keyword">const</span> <span class="hljs-title function_">findTicketOr404</span> = <span class="hljs-keyword">async</span> (<span class="hljs-params">ticketId</span>) =&gt; {
+  <span class="hljs-keyword">const</span> ticket = <span class="hljs-keyword">await</span> ticketService.<span class="hljs-title function_">getTicketById</span>(ticketId);
+  <span class="hljs-keyword">if</span> (!ticket) <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">ApiError</span>(<span class="hljs-number">404</span>, <span class="hljs-string">`Ticket <span class="hljs-subst">${ticketId}</span> not found`</span>);
+};
+
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">const</span> <span class="hljs-title function_">getCommentById</span> = <span class="hljs-keyword">async</span> (<span class="hljs-params">ticketId, id</span>) =&gt;
+  prisma.<span class="hljs-property">comment</span>.<span class="hljs-title function_">findFirst</span>({
+    <span class="hljs-attr">where</span>: { id, ticketId },
+    <span class="hljs-attr">include</span>: { <span class="hljs-attr">author</span>: authorSummary },
+  });
+</code></pre>
+<p><code>findTicketOr404</code> runs at the top of every comment controller function —
+list, get, create, update, delete — so a request under a ticket that
+doesn't exist (or was deleted) 404s on the <em>ticket</em>, before ever touching
+<code>Comment</code> at all.</p>
+<p>The second check is subtler: <code>Comment.id</code> is already a unique primary key
+on its own, so <code>prisma.comment.findUnique({ where: { id } })</code> would find
+comment 9 regardless of which ticket it actually belongs to — a request for
+<code>/tickets/1/comments/9</code> would happily return a comment that's really
+attached to ticket 47. <code>findFirst({ where: { id, ticketId } })</code> closes that
+gap by scoping the lookup to <em>both</em> — if comment 9 belongs to ticket 47, a
+request naming ticket 1 finds nothing and reaches the controller's own
+<code>404</code>, exactly as if the comment didn't exist. <code>getCommentsByTicketId</code>
+(this lesson's list endpoint) never had this problem in the first place —
+it only ever queries <code>where: { ticketId }</code> to begin with — but any lookup
+of one <em>specific</em> nested item needs this extra scoping to stay correct.</p>
+</div>
+    
+  </main>
+</body>
+</html>

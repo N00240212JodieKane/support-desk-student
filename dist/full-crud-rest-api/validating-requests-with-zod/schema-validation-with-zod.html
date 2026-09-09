@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Schema Validation with Zod — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        <a class="nav-prev" href="/full-crud-rest-api/validating-requests-with-zod/the-limits-of-manual-checks.html">← The Limits of Manual Checks</a>
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/full-crud-rest-api/validating-requests-with-zod/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        <a class="nav-next" href="/full-crud-rest-api/validating-requests-with-zod/the-validate-middleware.html">The validate Middleware →</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>Schema Validation with Zod</h1>
+    <p class="lede">Describing a shape once with z.object(...), then asking Zod whether some data matches it.</p>
+
+    
+
+    
+      <div class="slide-body"><p>Zod lets you build a <strong>schema</strong> — an object describing what valid data looks
+like — out of small composable pieces, then check real data against it:</p>
+<pre><code class="hljs language-js"><span class="hljs-keyword">import</span> { z } <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;zod&#x27;</span>;
+
+<span class="hljs-keyword">const</span> signupSchema = z.<span class="hljs-title function_">object</span>({
+  <span class="hljs-attr">email</span>: z.<span class="hljs-title function_">string</span>().<span class="hljs-title function_">email</span>(),
+  <span class="hljs-attr">age</span>: z.<span class="hljs-title function_">number</span>().<span class="hljs-title function_">int</span>().<span class="hljs-title function_">min</span>(<span class="hljs-number">13</span>),
+  <span class="hljs-attr">newsletter</span>: z.<span class="hljs-title function_">boolean</span>().<span class="hljs-title function_">optional</span>(),
+});
+
+<span class="hljs-keyword">const</span> result = signupSchema.<span class="hljs-title function_">safeParse</span>({ <span class="hljs-attr">email</span>: <span class="hljs-string">&#x27;not-an-email&#x27;</span>, <span class="hljs-attr">age</span>: <span class="hljs-number">9</span> });
+<span class="hljs-comment">// result.success === false</span>
+<span class="hljs-comment">// result.error.issues → what failed, and why, for each field</span>
+</code></pre>
+<p><code>z.object({...})</code> describes an object's shape field by field: <code>z.string()</code>,
+<code>z.number()</code>, <code>z.boolean()</code> name the type; chained calls like <code>.email()</code>,
+<code>.int()</code>, <code>.min(13)</code> add rules on top; <code>.optional()</code> says a field doesn't have
+to be present at all. None of this runs any check yet — a schema is just a
+description, built once, that can be reused against as many requests as the
+app receives.</p>
+<p><code>.safeParse(data)</code> is what actually checks <code>data</code> against the schema. It
+never throws — instead it returns <code>{ success: true, data }</code> (with <code>data</code> now
+validated, and, as the next slide covers, coerced) or <code>{ success: false, error }</code>, where <code>error.issues</code> is a detailed, field-by-field list of what
+was wrong. That's exactly the shape a validation middleware needs: check
+once, and either continue with clean data or hand back a precise list of
+problems — never a single vague &quot;something's wrong&quot; message.</p>
+<p>(Zod also has a <code>.parse()</code> that throws on failure instead — not used in this
+project, since a thrown validation error would need its own try/catch
+exactly where <code>safeParse</code>'s return value doesn't.)</p>
+</div>
+    
+  </main>
+</body>
+</html>

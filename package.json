@@ -26,7 +26,8 @@
   "dependencies": {
     "@prisma/client": "^6.19.3",
     "dotenv": "^17.4.2",
-    "express": "^4.19.2"
+    "express": "^4.19.2",
+    "zod": "^3.25.76"
   },
   "devDependencies": {
     "jest": "^30.5.1",

@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Filtering with a Conditional where — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        <a class="nav-prev" href="/full-crud-rest-api/full-crud-and-nested-routes/scoping-a-nested-lookup.html">← Scoping a Nested Lookup</a>
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/full-crud-rest-api/filtering-sorting-and-pagination/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        <a class="nav-next" href="/full-crud-rest-api/filtering-sorting-and-pagination/sorting-with-a-computed-key.html">Sorting with a Computed Key →</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>Filtering with a Conditional where</h1>
+    <p class="lede">GET /tickets?status=open — building Prisma&#39;s where clause only when a filter was actually given.</p>
+
+    
+
+    
+      <div class="slide-body"><p><code>listTicketsQuerySchema</code> (Figure 3.6, earlier topic) already validates and
+defaults every option a <code>GET /tickets</code> request can carry — <code>status</code>,
+<code>sortBy</code>, <code>order</code>, <code>page</code>, <code>pageSize</code> — before the controller ever sees
+them. <code>ticket.service.js</code> is where those options actually turn into a
+Prisma query:</p>
+<pre><code class="hljs language-js"><span class="hljs-comment">// Figure 3.13: filtering, sorting, and paginating in one query (src/services/ticket.service.js)</span>
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">const</span> <span class="hljs-title function_">getAllTickets</span> = <span class="hljs-keyword">async</span> (<span class="hljs-params">{ status, sortBy, order, page, pageSize }</span>) =&gt; {
+  <span class="hljs-keyword">const</span> where = status ? { status } : <span class="hljs-literal">undefined</span>;
+
+  <span class="hljs-keyword">const</span> [tickets, total] = <span class="hljs-keyword">await</span> <span class="hljs-title class_">Promise</span>.<span class="hljs-title function_">all</span>([
+    prisma.<span class="hljs-property">ticket</span>.<span class="hljs-title function_">findMany</span>({
+      where,
+      <span class="hljs-attr">orderBy</span>: { [sortBy]: order },
+      <span class="hljs-attr">skip</span>: (page - <span class="hljs-number">1</span>) * pageSize,
+      <span class="hljs-attr">take</span>: pageSize,
+      <span class="hljs-attr">include</span>: { <span class="hljs-attr">customer</span>: userSummary, <span class="hljs-attr">assignedAgent</span>: userSummary },
+    }),
+    prisma.<span class="hljs-property">ticket</span>.<span class="hljs-title function_">count</span>({ where }),
+  ]);
+
+  <span class="hljs-keyword">return</span> { tickets, total };
+};
+</code></pre>
+<p><code>status</code> is optional in the schema — a bare <code>GET /tickets</code> has no filter at
+all — so <code>where</code> is built conditionally: <code>{ status }</code> when one was given,
+or <code>undefined</code> when it wasn't. Prisma treats an <code>undefined</code> <code>where</code> as &quot;no
+filter,&quot; which is exactly the behavior a missing query param should have.
+Passing that same <code>where</code> to <strong>both</strong> <code>findMany</code> and <code>count</code> (next slide's
+<code>Promise.all</code> covers why they run together) matters just as much: the count
+has to reflect the same filtered set the list itself does, or <code>total</code> would
+describe a different set of tickets than what actually came back.</p>
+</div>
+    
+  </main>
+</body>
+</html>

@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sorting with a Computed Key — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        <a class="nav-prev" href="/full-crud-rest-api/filtering-sorting-and-pagination/filtering-with-a-conditional-where.html">← Filtering with a Conditional where</a>
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/full-crud-rest-api/filtering-sorting-and-pagination/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        <a class="nav-next" href="/full-crud-rest-api/filtering-sorting-and-pagination/paginating-the-list.html">Paginating the List →</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>Sorting with a Computed Key</h1>
+    <p class="lede">orderBy: { [sortBy]: order } — a property name decided at runtime, not written by hand.</p>
+
+    
+
+    
+      <div class="slide-body"><p>Still looking at <code>getAllTickets</code> (Figure 3.13, previous slide):
+<code>orderBy: { [sortBy]: order }</code>. An ordinary object literal writes its
+property names directly — <code>{ createdAt: 'asc' }</code> — but <code>sortBy</code> here is a
+<em>variable</em>, one of the four strings <code>listTicketsQuerySchema</code>'s <code>sortBy</code>
+enum allows (<code>'createdAt'</code>, <code>'updatedAt'</code>, <code>'subject'</code>, <code>'status'</code>, Figure
+3.6). Square brackets around a property name in an object literal — <code>{ [sortBy]: order }</code> — is JavaScript's <strong>computed property name</strong> syntax: it
+evaluates <code>sortBy</code> first, and uses <em>that resulting string</em> as the key,
+rather than using the literal five letters <code>s-o-r-t-B-y</code>.</p>
+<p>Without it, the only way to turn a validated <code>sortBy</code> string into the right
+Prisma <code>orderBy</code> shape would be an <code>if</code>/<code>switch</code> naming every allowed field
+by hand:</p>
+<pre><code class="hljs language-js"><span class="hljs-comment">// What computed keys avoid having to write:</span>
+<span class="hljs-keyword">let</span> orderBy;
+<span class="hljs-keyword">if</span> (sortBy === <span class="hljs-string">&#x27;createdAt&#x27;</span>) orderBy = { <span class="hljs-attr">createdAt</span>: order };
+<span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (sortBy === <span class="hljs-string">&#x27;updatedAt&#x27;</span>) orderBy = { <span class="hljs-attr">updatedAt</span>: order };
+<span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (sortBy === <span class="hljs-string">&#x27;subject&#x27;</span>) orderBy = { <span class="hljs-attr">subject</span>: order };
+<span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (sortBy === <span class="hljs-string">&#x27;status&#x27;</span>) orderBy = { <span class="hljs-attr">status</span>: order };
+</code></pre>
+<p><code>{ [sortBy]: order }</code> collapses all four branches into one expression,
+precisely because <code>sortBy</code> was already validated against exactly those four
+values before this line ever runs — the enum in Figure 3.6 is what makes it
+safe to trust <code>sortBy</code> as a real column name here, rather than passing
+whatever a client typed straight through to Prisma.</p>
+</div>
+    
+  </main>
+</body>
+</html>

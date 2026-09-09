@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Testing Middleware Without an App — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        <a class="nav-prev" href="/full-crud-rest-api/testing-validators-and-middleware/testing-a-validator-directly.html">← Testing a Validator Directly</a>
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/full-crud-rest-api/testing-validators-and-middleware/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        <a class="nav-next" href="/full-crud-rest-api/testing-validators-and-middleware/growing-the-integration-suite.html">Growing the Integration Suite →</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>Testing Middleware Without an App</h1>
+    <p class="lede">validate.js is just a function that reads req and calls next() or res — a fake req/res object is enough.</p>
+
+    
+
+    
+      <div class="slide-body"><p><code>validate.js</code> (Figure 3.5) never touches Express internals directly — it
+reads <code>req[part]</code>, and calls either <code>next()</code> or <code>next(someError)</code>. That
+means testing it doesn't need <code>supertest</code>, or a running app, or even a real
+route: a plain object standing in for <code>req</code>, and a <code>jest.fn()</code> standing in
+for <code>next</code>, is a complete enough fake to call the middleware directly.</p>
+<pre><code class="hljs language-js"><span class="hljs-comment">// Figure 3.16: calling middleware directly, with fakes for req/next (tests/unit/validate.middleware.test.js, excerpt)</span>
+<span class="hljs-keyword">const</span> schema = z.<span class="hljs-title function_">object</span>({ <span class="hljs-attr">name</span>: z.<span class="hljs-title function_">string</span>().<span class="hljs-title function_">min</span>(<span class="hljs-number">1</span>) });
+
+<span class="hljs-title function_">it</span>(<span class="hljs-string">&#x27;forwards a 400 ApiError with per-field details when the schema fails&#x27;</span>, <span class="hljs-function">() =&gt;</span> {
+  <span class="hljs-keyword">const</span> req = { <span class="hljs-attr">body</span>: { <span class="hljs-attr">name</span>: <span class="hljs-string">&#x27;&#x27;</span> }, <span class="hljs-attr">params</span>: {}, <span class="hljs-attr">query</span>: {} };
+  <span class="hljs-keyword">const</span> next = jest.<span class="hljs-title function_">fn</span>();
+
+  <span class="hljs-title function_">validate</span>({ <span class="hljs-attr">body</span>: schema })(req, {}, next);
+
+  <span class="hljs-keyword">const</span> err = next.<span class="hljs-property">mock</span>.<span class="hljs-property">calls</span>[<span class="hljs-number">0</span>][<span class="hljs-number">0</span>];
+  <span class="hljs-title function_">expect</span>(err).<span class="hljs-title function_">toBeInstanceOf</span>(<span class="hljs-title class_">ApiError</span>);
+  <span class="hljs-title function_">expect</span>(err.<span class="hljs-property">status</span>).<span class="hljs-title function_">toBe</span>(<span class="hljs-number">400</span>);
+});
+</code></pre>
+<p><code>validate({ body: schema })</code> still returns the actual inner middleware
+function (Figure 3.5's <code>(a) =&gt; (b) =&gt; ...</code> shape) — calling it here as
+<code>(req, {}, next)</code> runs it exactly the way Express would, just with <code>req</code>
+built by hand instead of arriving over HTTP, and <code>res</code> passed as an empty
+object since this particular path through <code>validate</code> never touches it.
+<code>next.mock.calls[0][0]</code> reaches into Jest's own record of every call made to
+the <code>next</code> mock — <code>[0]</code> for the first call, <code>[0]</code> again for that call's
+first argument — to get at the actual error object <code>validate</code> passed
+through, and assert it's a real <code>ApiError</code> with the right <code>status</code>.</p>
+<p>This test also deliberately uses a throwaway <code>schema</code> — <code>z.object({ name: z.string().min(1) })</code> — instead of one of the real validators. The point
+here is what <code>validate.js</code> itself does with <em>any</em> schema's result, not any
+one resource's specific rules, which the previous slide's tests already
+cover on their own.</p>
+</div>
+    
+  </main>
+</body>
+</html>

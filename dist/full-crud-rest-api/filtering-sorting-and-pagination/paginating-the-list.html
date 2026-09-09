@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Paginating the List — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        <a class="nav-prev" href="/full-crud-rest-api/filtering-sorting-and-pagination/sorting-with-a-computed-key.html">← Sorting with a Computed Key</a>
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/full-crud-rest-api/filtering-sorting-and-pagination/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        <a class="nav-next" href="/full-crud-rest-api/testing-validators-and-middleware/testing-a-validator-directly.html">Testing a Validator Directly →</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>Paginating the List</h1>
+    <p class="lede">skip/take turn a page number into a slice of rows; the controller turns the total row count into meta.</p>
+
+    
+
+    
+      <div class="slide-body"><p>Still <code>getAllTickets</code> (Figure 3.13): <code>skip: (page - 1) * pageSize, take: pageSize</code>. Prisma's <code>findMany</code> doesn't know about &quot;pages&quot; — only <code>skip</code>
+(how many rows to leave out at the start) and <code>take</code> (how many to return
+after that). Page 1 skips nothing (<code>(1 - 1) * 10 = 0</code>); page 2 skips the
+first 10 (<code>(2 - 1) * 10 = 10</code>) and takes the next 10; page 3 skips 20, and
+so on — the same idea as Laravel's <code>-&gt;skip()-&gt;take()</code> or <code>-&gt;paginate()</code>
+under the hood, just spelled out by hand here instead of a query builder
+method doing it for you.</p>
+<p><code>findMany</code> (the page of rows) and <code>count</code> (how many rows match <code>where</code> in
+total, ignoring <code>skip</code>/<code>take</code>) run inside one <code>Promise.all([...])</code> rather
+than two separate <code>await</code>s — both queries are independent of each other, so
+there's no reason to wait for one to finish before starting the other; this
+is the same &quot;run independent async work concurrently&quot; idea from Lesson 1's
+async topic, just with two Prisma calls instead of two arbitrary promises.</p>
+<p>The controller turns that <code>total</code> into the pagination <code>meta</code> the response
+envelope (first topic) actually sends:</p>
+<pre><code class="hljs language-js"><span class="hljs-comment">// Figure 3.14: building the meta object (src/controllers/ticket.controller.js, excerpt)</span>
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">const</span> getAllTickets = <span class="hljs-title function_">asyncHandler</span>(<span class="hljs-title function_">async</span> (req, res) =&gt; {
+  <span class="hljs-keyword">const</span> { page, pageSize } = req.<span class="hljs-property">query</span>;
+  <span class="hljs-keyword">const</span> { tickets, total } = <span class="hljs-keyword">await</span> ticketService.<span class="hljs-title function_">getAllTickets</span>(req.<span class="hljs-property">query</span>);
+
+  <span class="hljs-title function_">sendCollection</span>(res, tickets, {
+    page,
+    pageSize,
+    total,
+    <span class="hljs-attr">totalPages</span>: <span class="hljs-title class_">Math</span>.<span class="hljs-title function_">ceil</span>(total / pageSize),
+  });
+});
+</code></pre>
+<p><code>page</code> and <code>pageSize</code> come straight back off <code>req.query</code> — already
+validated numbers, defaults and all, thanks to <code>validate.js</code> replacing
+<code>req.query</code> with Zod's parsed result (Figure 3.5). <code>totalPages</code> is the one
+value nothing upstream computed yet: <code>Math.ceil(total / pageSize)</code> rounds
+up, since a <code>total</code> of 25 with a <code>pageSize</code> of 10 needs 3 pages, not 2.5 —
+a client can now tell from <code>meta</code> alone whether there's another page worth
+requesting, without needing to guess from whether the current page came
+back full.</p>
+</div>
+    
+  </main>
+</body>
+</html>

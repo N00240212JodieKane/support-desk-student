@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>A Custom Error Class — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        <a class="nav-prev" href="/full-crud-rest-api/consistent-response-and-error-conventions/a-response-envelope.html">← A Response Envelope</a>
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/full-crud-rest-api/consistent-response-and-error-conventions/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        <a class="nav-next" href="/full-crud-rest-api/consistent-response-and-error-conventions/translating-database-errors.html">Translating Database Errors →</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>A Custom Error Class</h1>
+    <p class="lede">ApiError — the deliberate error object Lesson 1&#39;s error handler was always ready to read a status from.</p>
+
+    
+
+    
+      <div class="slide-body"><p>Lesson 1's centralized error handler read <code>err.status || 500</code> from day one
+(Figure 1.11) — but nothing in this project actually set <code>.status</code> on an
+error yet, so every thrown error fell through to a generic <code>500</code>. That
+slide flagged it directly: <em>&quot;a schema-based version arrives with Zod in
+Week 3&quot;</em> — this is that arrival, plus the other half of it: a real error
+object controllers can throw <em>on purpose</em>, with the right status already
+attached.</p>
+<pre><code class="hljs language-js"><span class="hljs-comment">// Figure 3.2: an error that knows its own HTTP status (src/utils/ApiError.js)</span>
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">default</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">ApiError</span> <span class="hljs-keyword">extends</span> <span class="hljs-title class_ inherited__">Error</span> {
+  <span class="hljs-title function_">constructor</span>(<span class="hljs-params">status, message, details</span>) {
+    <span class="hljs-variable language_">super</span>(message);
+    <span class="hljs-variable language_">this</span>.<span class="hljs-property">name</span> = <span class="hljs-string">&#x27;ApiError&#x27;</span>;
+    <span class="hljs-variable language_">this</span>.<span class="hljs-property">status</span> = status;
+    <span class="hljs-variable language_">this</span>.<span class="hljs-property">details</span> = details;
+  }
+}
+</code></pre>
+<p><code>extends Error</code> means an <code>ApiError</code> is a real JavaScript <code>Error</code> —
+<code>instanceof Error</code> still works, it still has a <code>.message</code>, <code>.stack</code>, and so
+on — just with two extra properties: <code>status</code> (the HTTP status this error
+should produce) and an optional <code>details</code> (the field-by-field list a
+validation failure attaches — previous topic's <code>validate.js</code>). <code>super(message)</code>
+is required before anything else in a subclass constructor — it's what
+actually sets up the <code>Error</code> half of this object before the two custom
+fields are added on top of it.</p>
+<p><code>throw new ApiError(404, 'Ticket 5 not found')</code> anywhere inside an
+<code>asyncHandler</code>-wrapped controller now reaches the centralized error handler
+with exactly the status this line chose — no controller needs its own
+<code>res.status(...).json(...)</code> call to make that happen, which is the whole
+point of Lesson 1's &quot;no controller handles its own errors&quot; rule holding up
+under a real, growing CRUD API.</p>
+</div>
+    
+  </main>
+</body>
+</html>

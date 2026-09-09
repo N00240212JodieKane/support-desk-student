@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>A Response Envelope — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        <a class="nav-prev" href="/data-modeling-and-persistence/testing-a-prisma-backed-service/mocking-the-integration-test.html">← Mocking the Integration Test</a>
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/full-crud-rest-api/consistent-response-and-error-conventions/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        <a class="nav-next" href="/full-crud-rest-api/consistent-response-and-error-conventions/a-custom-error-class.html">A Custom Error Class →</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>A Response Envelope</h1>
+    <p class="lede">Every success response wraps its payload the same way — data alone, or data plus meta.</p>
+
+    
+
+    
+      <div class="slide-body"><p>So far, a successful response has just been <code>res.json(ticket)</code> or
+<code>res.json(tickets)</code> — whatever shape the service happened to return, sent
+straight to the client. That's fine with one resource. It stops being fine
+once <code>Comment</code> and <code>Tag</code> land in this lesson too, each with their own list
+and single-item responses: nothing guarantees <code>GET /tickets</code>,
+<code>GET /tickets/:id/comments</code>, and <code>GET /tags</code> shape their JSON the same way,
+unless something enforces it.</p>
+<p>The fix is a small, fixed <strong>envelope</strong> every success response goes through,
+defined once:</p>
+<pre><code class="hljs language-js"><span class="hljs-comment">// Figure 3.1: the response envelope (src/utils/response.js)</span>
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">const</span> <span class="hljs-title function_">sendResource</span> = (<span class="hljs-params">res, data, status = <span class="hljs-number">200</span></span>) =&gt; res.<span class="hljs-title function_">status</span>(status).<span class="hljs-title function_">json</span>({ data });
+
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">const</span> <span class="hljs-title function_">sendCollection</span> = (<span class="hljs-params">res, data, meta</span>) =&gt;
+  res.<span class="hljs-title function_">status</span>(<span class="hljs-number">200</span>).<span class="hljs-title function_">json</span>(meta ? { data, meta } : { data });
+</code></pre>
+<p>A single resource — one ticket, one comment — always arrives as
+<code>{ &quot;data&quot;: { ... } }</code>. A list always arrives as <code>{ &quot;data&quot;: [...] }</code>, with an
+optional <code>meta</code> key alongside it for anything about the <em>list itself</em> rather
+than its items — pagination info, added later this lesson, is the only thing
+that uses it so far. <code>sendResource</code> also takes an optional <code>status</code>, so the
+same helper covers both <code>200 OK</code> (fetching/updating something) and
+<code>201 Created</code> (making something new) without needing two functions.</p>
+<p>This is two plain functions, not a <code>Resource</code>/<code>Transformer</code> class a
+controller would extend or instantiate (see <code>CLAUDE.md</code>) — it doesn't
+describe what fields a ticket <em>has</em>, only the envelope every response sits
+inside, which is a much smaller job.</p>
+</div>
+    
+  </main>
+</body>
+</html>

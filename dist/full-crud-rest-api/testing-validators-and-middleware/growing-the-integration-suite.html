@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Growing the Integration Suite — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        <a class="nav-prev" href="/full-crud-rest-api/testing-validators-and-middleware/testing-middleware-without-an-app.html">← Testing Middleware Without an App</a>
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/full-crud-rest-api/testing-validators-and-middleware/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        <a class="nav-next" href="/full-crud-rest-api/validating-configuration-with-zod/schema-validating-env.html">Schema-Validating .env →</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>Growing the Integration Suite</h1>
+    <p class="lede">Comment and Tag get their own supertest files; Ticket&#39;s grows to cover every new route this lesson added.</p>
+
+    
+
+    
+      <div class="slide-body"><p>The integration-testing approach itself doesn't change from Lesson 2:
+mock <code>db.js</code> with <code>jest.unstable_mockModule</code> before importing <code>app.js</code>
+(Figure 2.20), then drive real routes through it with <code>supertest</code> — no
+database, but real Express routing and middleware, <code>validate.js</code> included.
+What's new this lesson is scale: <code>tickets.routes.test.js</code> grows to cover
+<code>PATCH</code>/<code>DELETE</code> and the filtering/pagination query string, and two new
+files — <code>comments.routes.test.js</code>, <code>tags.routes.test.js</code> — apply the same
+pattern to this lesson's other two resources.</p>
+<pre><code class="hljs language-js"><span class="hljs-comment">// Figure 3.17: the same mocked-app pattern, applied to a nested resource (tests/integration/comments.routes.test.js, excerpt)</span>
+<span class="hljs-title function_">it</span>(<span class="hljs-string">&#x27;PATCH .../comments/:id 404s when the comment is on a different ticket&#x27;</span>, <span class="hljs-title function_">async</span> () =&gt; {
+  mockPrisma.<span class="hljs-property">comment</span>.<span class="hljs-property">findFirst</span>.<span class="hljs-title function_">mockResolvedValue</span>(<span class="hljs-literal">null</span>);
+
+  <span class="hljs-keyword">const</span> res = <span class="hljs-keyword">await</span> <span class="hljs-title function_">request</span>(app).<span class="hljs-title function_">patch</span>(<span class="hljs-string">&#x27;/tickets/1/comments/9&#x27;</span>).<span class="hljs-title function_">send</span>({ <span class="hljs-attr">body</span>: <span class="hljs-string">&#x27;Edited&#x27;</span> });
+
+  <span class="hljs-title function_">expect</span>(res.<span class="hljs-property">status</span>).<span class="hljs-title function_">toBe</span>(<span class="hljs-number">404</span>);
+  <span class="hljs-title function_">expect</span>(mockPrisma.<span class="hljs-property">comment</span>.<span class="hljs-property">update</span>).<span class="hljs-property">not</span>.<span class="hljs-title function_">toHaveBeenCalled</span>();
+});
+</code></pre>
+<p>This one exercises the scoped-lookup behavior from the nested-routes topic
+directly: mocking <code>comment.findFirst</code> to resolve <code>null</code> simulates exactly
+the case where a comment exists but belongs to a <em>different</em> ticket than
+the URL names, and the test asserts both halves of the correct outcome — a
+<code>404</code> reaches the client, and <code>comment.update</code> is never even attempted.</p>
+<p>Between the validator tests, the middleware test, and this growing
+integration suite, the project now tests the same behavior at three
+different levels — a schema in isolation, one piece of middleware in
+isolation, and a full request through real routing — each catching a
+different kind of mistake, and each cheap enough to keep writing as more
+routes are added in the weeks ahead.</p>
+</div>
+    
+  </main>
+</body>
+</html>
