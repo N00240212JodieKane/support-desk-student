@@ -41,8 +41,8 @@ reach it — but &quot;every role sees the same list&quot; is exactly wrong for 
 support desk: a customer should only ever see their own tickets; an agent
 should see their own assigned queue, plus whatever's still unclaimed; an
 admin should see everything. That's <strong>role-scoped queries</strong>, this lesson's
-other deliverable alongside protected routes (<code>PLAN.md</code>), and it lives
-entirely in <code>ticket.service.js</code>, not in a controller or middleware:</p>
+other deliverable alongside protected routes, and it lives entirely in
+<code>ticket.service.js</code>, not in a controller or middleware:</p>
 <pre><code class="hljs language-js"><span class="hljs-comment">// Figure 4.11: one where-clause fragment per role (src/services/ticket.service.js, excerpt)</span>
 <span class="hljs-keyword">const</span> <span class="hljs-title function_">scopeForViewer</span> = (<span class="hljs-params">viewer</span>) =&gt; {
   <span class="hljs-keyword">if</span> (viewer.<span class="hljs-property">role</span> === <span class="hljs-string">&#x27;customer&#x27;</span>) <span class="hljs-keyword">return</span> { <span class="hljs-attr">customerId</span>: viewer.<span class="hljs-property">id</span> };

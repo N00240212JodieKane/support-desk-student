@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>A Real Job Queue for Background Work — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        <a class="nav-prev" href="/planning/the-architecture/events-decouple-side-effects.html">← Events Decouple Side Effects</a>
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/planning/the-architecture/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        <a class="nav-next" href="/planning/the-architecture/a-structure-built-to-stay-testable.html">A Structure Built to Stay Testable →</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>A Real Job Queue for Background Work</h1>
+    <p class="lede">Why the SLA-breach scan runs on BullMQ and Redis, not a bare setInterval.</p>
+
+    
+
+    
+      <div class="slide-body"><p>The SLA-breach scan is different from every other event in this system:
+nothing about a request triggers it. It has to notice, on its own, that a
+ticket has sat open too long — which means something has to run on a
+schedule, independent of any client ever calling the API. The obvious tool
+is Node's own <code>setInterval</code>, and it's exactly what this project <em>doesn't</em>
+use, for reasons that only show up once you ask what happens when things go
+wrong: what if the scan throws partway through — does it just silently never
+run again until the process restarts? What if the API process itself
+restarts — does the timer restart cleanly, or double up? A bare timer has no
+answer to either question built in.</p>
+<p><strong>BullMQ</strong>, backed by <strong>Redis</strong>, is a real job queue: retries with backoff,
+a schedule that survives a process restart, and a <strong>separate worker
+process</strong> actually doing the work, decoupled from the API process that
+scheduled it.</p>
+<pre><code class="hljs language-js"><span class="hljs-comment">// Figure 0.4: scheduling a repeatable job (jobs/slaScan.queue.js, excerpt)</span>
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">const</span> <span class="hljs-title function_">scheduleSlaScan</span> = <span class="hljs-keyword">async</span> (<span class="hljs-params"></span>) =&gt;
+  slaScanQueue.<span class="hljs-title function_">upsertJobScheduler</span>(
+    <span class="hljs-string">&#x27;sla-scan-repeatable&#x27;</span>,
+    { <span class="hljs-attr">every</span>: env.<span class="hljs-property">SLA_SCAN_INTERVAL_MS</span> },
+    {
+      <span class="hljs-attr">name</span>: <span class="hljs-string">&#x27;scan&#x27;</span>,
+      <span class="hljs-attr">opts</span>: {
+        <span class="hljs-attr">attempts</span>: <span class="hljs-number">3</span>,
+        <span class="hljs-attr">backoff</span>: { <span class="hljs-attr">type</span>: <span class="hljs-string">&#x27;exponential&#x27;</span>, <span class="hljs-attr">delay</span>: <span class="hljs-number">5_000</span> },
+      },
+    },
+  );
+</code></pre>
+<p><code>attempts: 3</code> with an <code>exponential</code> <code>backoff</code> is the direct answer to &quot;what
+if it throws&quot;: a failed run gets retried automatically, with a growing delay
+between attempts, instead of quietly never happening again. <code>upsertJobScheduler</code>
+with a fixed id is the answer to &quot;what if the process restarts&quot;: calling it
+again replaces the existing schedule rather than stacking up a second one.</p>
+<p>Scheduling the job and actually <em>running</em> it are deliberately two separate
+files: this one only ever queues the work (from the API process), while a
+second file, run by a completely separate <code>src/worker.js</code> process, is the
+one that does the scanning. Splitting producer from processor is standard
+job-queue shape — it's what lets the worker be scaled, restarted, or
+deployed independently of the API that schedules the work for it.</p>
+</div>
+    
+  </main>
+</body>
+</html>

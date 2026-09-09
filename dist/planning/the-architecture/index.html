@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Architecture Decisions — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/planning/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>Architecture Decisions</h1>
+    <p class="lede">The recurring shapes this codebase uses on purpose, and the rationale behind each one — referenced throughout the lessons that follow.</p>
+
+    
+      <ul class="listing">
+        
+          <li>
+            <a href="/planning/the-architecture/plain-functions-not-classes.html">Plain Functions, Not Classes</a>
+            <p>Why controllers and services here are grouped functions, not a Laravel-style class hierarchy.</p>
+          </li>
+        
+          <li>
+            <a href="/planning/the-architecture/events-decouple-side-effects.html">Events Decouple Side Effects</a>
+            <p>Why creating a ticket doesn&#39;t itself send an email, write a notification, or push a socket update.</p>
+          </li>
+        
+          <li>
+            <a href="/planning/the-architecture/a-real-job-queue.html">A Real Job Queue for Background Work</a>
+            <p>Why the SLA-breach scan runs on BullMQ and Redis, not a bare setInterval.</p>
+          </li>
+        
+          <li>
+            <a href="/planning/the-architecture/a-structure-built-to-stay-testable.html">A Structure Built to Stay Testable</a>
+            <p>The app.js/server.js split, centralized error handling, and other seams that exist so this project can be tested without exotic setup.</p>
+          </li>
+        
+      </ul>
+    
+
+    
+  </main>
+</body>
+</html>

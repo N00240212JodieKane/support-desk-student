@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Why This Course Opens With a Spec — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/planning/specs-and-agents/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        <a class="nav-next" href="/planning/specs-and-agents/reading-this-brief.html">Reading This as a Brief →</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>Why This Course Opens With a Spec</h1>
+    <p class="lede">Software is increasingly written with an AI coding agent&#39;s help — the skill that matters is directing it, not typing every line yourself.</p>
+
+    
+
+    
+      <div class="slide-body"><p>Every project you've built in Laravel so far started the same way: open the
+editor, scaffold a migration, write a controller. This one starts
+differently — with a document instead of a line of code. That's deliberate,
+and it's worth explaining why before diving into what the document actually
+says.</p>
+<p>A skill that's quietly becoming as important as writing code is <em>directing</em>
+code that gets written by something other than you — increasingly, by an AI
+coding agent. Ask an agent to &quot;build a ticketing system&quot; with nothing more
+than that sentence, and you'll get <em>something</em>, but not necessarily the
+something you meant: which fields does a ticket have, does a comment need
+its own URL, what happens when an assigned agent leaves the team? Left
+unspecified, an agent fills every one of those gaps with a guess. Some
+guesses will be wrong, and you won't have a clean way to catch it early or
+steer the work back on course, because there was never anything concrete to
+check the output against in the first place.</p>
+<p>An <strong>architecture brief</strong> — what a system is, what it's made of, and why
+it's shaped the way it is, written down before any code exists — is the tool
+that closes that gap. It gives an agent something concrete to build against.
+It gives you something concrete to check the result against, question by
+question, before a single line is wrong in a way that's expensive to unwind.
+And it gives whoever reads the code afterwards — a teammate, a reviewer,
+future-you in six weeks — a fast way back into <em>why</em> something looks the way
+it does, without archaeology through commit history.</p>
+<p>That's what this page is: the brief for the system you're about to build,
+lesson by lesson, for the rest of this course. It isn't a one-off exercise
+either. Real engineering teams increasingly keep a document exactly like this
+one in the repository itself — partly because it's useful on its own, and
+partly because it turns out to be the natural interface for directing an AI
+agent's work: something to hand it before it starts, something to check its
+output against once it's done, something both a human reviewer and the
+agent's <em>next</em> session can re-read to pick up where things left off. The
+codebase you're about to build was itself built against a document that
+plays exactly that role.</p>
+</div>
+    
+  </main>
+</body>
+</html>

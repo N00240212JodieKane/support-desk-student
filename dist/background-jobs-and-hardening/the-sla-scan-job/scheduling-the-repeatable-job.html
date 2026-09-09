@@ -81,9 +81,11 @@ waiting longer between each attempt.</p>
 httpServer.<span class="hljs-title function_">listen</span>(env.<span class="hljs-property">PORT</span>, <span class="hljs-function">() =&gt;</span> { <span class="hljs-comment">/* ... */</span> });
 </code></pre>
 <p>Same reasoning as <code>initSocket()</code> right above it: this needs a real Redis
-connection, which a test importing <code>app.js</code> directly via <code>supertest</code>
-(CLAUDE.md's <code>app.js</code>/<code>server.js</code> split) should never be forced to have
-running. Calling <code>scheduleSlaScan()</code> only <em>writes a repeat schedule to
+connection, which a test importing <code>app.js</code> directly via <code>supertest</code> — the
+whole point of the
+<a href="/planning/the-architecture/a-structure-built-to-stay-testable.html"><code>app.js</code>/<code>server.js</code> split</a> —
+should never be forced to have running. Calling <code>scheduleSlaScan()</code> only
+<em>writes a repeat schedule to
 Redis</em> — it doesn't run the scan itself. Actually running it is the
 worker's job, covered next.</p>
 </div>

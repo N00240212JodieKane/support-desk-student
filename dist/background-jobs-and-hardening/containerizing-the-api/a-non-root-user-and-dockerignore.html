@@ -63,10 +63,10 @@ tests/
 <p><code>node_modules/</code> matters most: without it, Docker would upload the host's
 own <code>node_modules</code> (platform-specific native bindings included) only to
 have <code>npm ci</code> inside the image overwrite it anyway — pure wasted transfer.
-The rest excludes what CLAUDE.md already establishes has no business in a
-running container at all: <code>content/</code> (never even reaches students, per
-CLAUDE.md's &quot;Students never receive <code>content/</code>&quot;), the tutorial's own
-toolchain, and test files this image never runs.</p>
+The rest excludes what has no business in a running container at all:
+<code>content/</code> (this tutorial's own markdown source — separate from the API
+entirely, and never something a running API container needs), the tutorial's
+own toolchain, and test files this image never runs.</p>
 </div>
     
   </main>

@@ -55,11 +55,12 @@ announcement and reacts independently:</p>
 <p>Each arrow on the right is a listener that exists in its own file, knows
 nothing about the other two, and can be added, removed, or rewritten without
 <code>createTicket</code> — or either of the other listeners — changing at all. This is
-the same shape CLAUDE.md's Architecture conventions describe: &quot;listeners
-(email, in-app notifications, real-time push) are decoupled from the
-controllers that trigger them.&quot; The rest of this lesson builds exactly that —
-a shared way to announce an event (next topic), the four places this project
-announces one, and the three listener modules reacting to them.</p>
+exactly the shape the
+<a href="/planning/the-architecture/events-decouple-side-effects.html">planning brief lays out</a>:
+listeners for email, in-app notifications, and real-time push, decoupled from
+the controllers that trigger them. The rest of this lesson builds exactly
+that — a shared way to announce an event (next topic), the four places this
+project announces one, and the three listener modules reacting to them.</p>
 </div>
     
   </main>

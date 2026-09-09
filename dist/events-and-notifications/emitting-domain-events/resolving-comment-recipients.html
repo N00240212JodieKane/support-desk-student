@@ -37,7 +37,8 @@
 
     
       <div class="slide-body"><p><code>ticket.commented</code> needs to answer a question the other three events don't:
-<em>who</em> cares about this comment? CLAUDE.md's data model has an answer —
+<em>who</em> cares about this comment? The
+<a href="/planning/the-system/the-domain-model.html">domain model</a> has an answer —
 the ticket's customer, plus any watcher whose <code>TicketWatcher.notifyOnComment</code>
 is <code>true</code> — but resolving that answer takes two more queries, and doing it
 separately in each of three listeners would mean three copies of the same

@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>A Structure Built to Stay Testable — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        <a class="nav-prev" href="/planning/the-architecture/a-real-job-queue.html">← A Real Job Queue for Background Work</a>
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/planning/the-architecture/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        <a class="nav-next" href="/foundations/nodejs-basics/what-is-nodejs.html">What Is Node.js? →</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>A Structure Built to Stay Testable</h1>
+    <p class="lede">The app.js/server.js split, centralized error handling, and other seams that exist so this project can be tested without exotic setup.</p>
+
+    
+
+    
+      <div class="slide-body"><p>A few more shapes recur throughout this codebase, all pulling toward the
+same goal: keep the pieces testable in isolation, without needing a real
+server, database, or Redis connection running just to check that a function
+does the right thing.</p>
+<p><strong><code>app.js</code> builds; <code>server.js</code> runs.</strong> <code>app.js</code> builds and exports the
+Express app, but never calls <code>.listen()</code>. <code>server.js</code> imports that app and
+is the only file that actually starts it listening.</p>
+<pre><code class="hljs language-js"><span class="hljs-comment">// Figure 0.5: the split, reduced to its essentials</span>
+<span class="hljs-comment">// app.js</span>
+<span class="hljs-keyword">const</span> app = <span class="hljs-title function_">express</span>();
+app.<span class="hljs-title function_">use</span>(<span class="hljs-comment">/* ...middleware, routes... */</span>);
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">default</span> app;
+
+<span class="hljs-comment">// server.js</span>
+<span class="hljs-keyword">import</span> app <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;./app.js&#x27;</span>;
+<span class="hljs-keyword">const</span> httpServer = http.<span class="hljs-title function_">createServer</span>(app);
+httpServer.<span class="hljs-title function_">listen</span>(env.<span class="hljs-property">PORT</span>, <span class="hljs-comment">/* ... */</span>);
+</code></pre>
+<p>The payoff shows up in testing: <code>supertest</code> (introduced early, used
+throughout) can import <code>app.js</code> directly and fire requests at it entirely
+in-memory, with no port ever bound. Anything that genuinely needs a live
+connection — Socket.IO needs a real <code>http.Server</code> to attach to, the SLA-job
+scheduler needs Redis — lives in <code>server.js</code> instead, specifically so a test
+importing <code>app.js</code> is never forced to have either of those running just to
+check an HTTP response.</p>
+<p><strong>Errors are handled in one place, not scattered through every controller.</strong>
+Every route handler is wrapped in <code>asyncHandler</code>, which forwards a rejected
+promise to Express's <code>next(err)</code> instead of letting it crash the process —
+Express only catches <em>thrown</em> errors in synchronous handlers on its own, not
+rejected promises, so this closes that gap once, centrally, rather than
+wrapping every controller function in its own <code>try</code>/<code>catch</code>. Every error,
+from any controller, ends up in one error-handling middleware registered at
+the bottom of <code>app.js</code>, which decides the response shape once for the whole
+API.</p>
+<p><strong>Validation and response-shaping are functions, not framework hooks.</strong>
+Incoming requests are checked against a Zod schema by a small middleware
+<em>function</em> (<code>validate({ body: createTicketSchema })</code>, applied per route) —
+not a <code>BaseRequest</code> class a controller extends. Outgoing responses go
+through a couple of small helper functions, not a <code>Resource</code>/<code>Transformer</code>
+class either — the same &quot;plain functions first&quot; reasoning from the previous
+topic, applied to the two ends of a request instead of the controller layer
+in the middle.</p>
+<p>Nothing here is exotic — Express itself doesn't ask for any of it. It's a
+set of seams chosen on purpose, so that testing this API never requires more
+than importing <code>app.js</code> and making a request.</p>
+</div>
+    
+  </main>
+</body>
+</html>

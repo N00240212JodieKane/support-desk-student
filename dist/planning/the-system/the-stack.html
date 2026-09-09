@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>The Stack — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        <a class="nav-prev" href="/planning/the-system/the-domain-model.html">← The Domain Model</a>
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/planning/the-system/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        <a class="nav-next" href="/planning/the-architecture/plain-functions-not-classes.html">Plain Functions, Not Classes →</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>The Stack</h1>
+    <p class="lede">Every major dependency this project takes on, and the one job each is there to do.</p>
+
+    
+
+    
+      <div class="slide-body"><p>Every piece of this stack earns its place for a specific reason — nothing
+here is the default just because it's popular. A quick map of what's coming,
+grouped by the problem each one solves:</p>
+<p><strong>The server itself</strong></p>
+<ul>
+<li><strong>Node.js</strong> — runs JavaScript outside the browser, as a standalone server
+process. Covered from first principles in the very next lesson.</li>
+<li><strong>Express</strong> — routing and middleware on top of Node's raw HTTP handling;
+the equivalent role Laravel's routing layer plays, minus everything
+Laravel bundles beyond routing itself.</li>
+</ul>
+<p><strong>Data</strong></p>
+<ul>
+<li><strong>MySQL</strong> — the relational database, running in a Docker container so
+nobody needs to install it by hand.</li>
+<li><strong>Prisma</strong> — the ORM: schema, migrations, and a generated query client,
+covering the same ground as Eloquent but as a schema-first, standalone
+library rather than a framework feature.</li>
+<li><strong>Zod</strong> — validates the <em>shape</em> of incoming request data (a schema for
+request bodies, not for the database) before a controller ever sees it.</li>
+</ul>
+<p><strong>Auth</strong></p>
+<ul>
+<li><strong><code>jsonwebtoken</code></strong> — issues and verifies <strong>JWTs</strong>: a signed, stateless
+token the client holds and resends, instead of Laravel's server-side
+session.</li>
+<li><strong><code>bcrypt</code></strong> — one-way password hashing, checked on login, never reversed.</li>
+</ul>
+<p><strong>Reacting to what happens</strong></p>
+<ul>
+<li><strong>Node's built-in <code>EventEmitter</code></strong> — no extra dependency; the backbone
+domain events (a ticket created, assigned, commented on, its status
+changed) get broadcast on.</li>
+<li><strong><code>nodemailer</code></strong> — sends the confirmation/notification emails those events
+trigger, to a local dev inbox (<strong>Mailpit</strong>, another Docker container)
+instead of anyone's real inbox while building.</li>
+<li><strong><code>socket.io</code></strong> — pushes those same events to a connected browser in real
+time, for a notification bell that updates without a page refresh.</li>
+</ul>
+<p><strong>Background work</strong></p>
+<ul>
+<li><strong>BullMQ</strong> + <strong><code>ioredis</code></strong> (Redis) — a real job queue: retries, backoff,
+a separate worker process, scheduled/repeatable jobs. Used for the one
+piece of work nothing triggers directly — a periodic scan for tickets
+that have breached their SLA.</li>
+</ul>
+<p><strong>Hardening</strong></p>
+<ul>
+<li><strong><code>helmet</code></strong>, <strong><code>cors</code></strong>, <strong><code>express-rate-limit</code></strong> — response headers,
+cross-origin rules, and request-rate limits: baseline defenses every
+production API needs, added once the core functionality exists to protect.</li>
+</ul>
+<p><strong>Testing</strong></p>
+<ul>
+<li><strong><code>jest</code></strong> + <strong><code>supertest</code></strong> — the unit/integration test runner and its
+HTTP-request-against-<code>app.js</code> helper, introduced early and used
+throughout, not bolted on at the end.</li>
+</ul>
+<p>Nothing above needs to make full sense yet — each one gets introduced
+properly, with working code, in the lesson where it's first needed. This is
+the map; the territory comes lesson by lesson.</p>
+</div>
+    
+  </main>
+</body>
+</html>

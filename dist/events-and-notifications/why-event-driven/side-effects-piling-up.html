@@ -37,8 +37,9 @@
 
     
       <div class="slide-body"><p>Creating a ticket, from Week 3, is one Prisma call: <code>prisma.ticket.create(...)</code>.
-But CLAUDE.md's domain events list a lot more that's supposed to happen the
-moment a ticket exists — a confirmation email to the customer, an in-app
+But the <a href="/planning/the-architecture/events-decouple-side-effects.html">planning brief's domain events</a>
+list a lot more that's supposed to happen the moment a ticket exists — a
+confirmation email to the customer, an in-app
 notification for every agent, a live update if one happens to be online. If
 none of that lived anywhere else, it would all have to be written directly
 into <code>createTicket</code> itself:</p>

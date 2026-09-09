@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Plain Functions, Not Classes — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        <a class="nav-prev" href="/planning/the-system/the-stack.html">← The Stack</a>
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/planning/the-architecture/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        <a class="nav-next" href="/planning/the-architecture/events-decouple-side-effects.html">Events Decouple Side Effects →</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>Plain Functions, Not Classes</h1>
+    <p class="lede">Why controllers and services here are grouped functions, not a Laravel-style class hierarchy.</p>
+
+    
+
+    
+      <div class="slide-body"><p>Every Laravel controller you've written extends a base <code>Controller</code> class;
+every model extends <code>Eloquent</code>. Inheritance is baked in from the first line.
+Express itself has no equivalent expectation — a &quot;controller&quot; is just
+whatever function you hand a route — and this project doesn't invent one to
+fill the gap. <strong>Controllers and services here are plain functions, grouped
+per module</strong>, not classes:</p>
+<pre><code class="hljs language-js"><span class="hljs-comment">// Figure 0.2: two of ticket.controller.js&#x27;s exported functions (excerpt)</span>
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">const</span> getTicketById = <span class="hljs-title function_">asyncHandler</span>(<span class="hljs-title function_">async</span> (req, res) =&gt; {
+  <span class="hljs-keyword">const</span> ticket = <span class="hljs-keyword">await</span> ticketService.<span class="hljs-title function_">getTicketById</span>(req.<span class="hljs-property">params</span>.<span class="hljs-property">id</span>, req.<span class="hljs-property">user</span>);
+
+  <span class="hljs-keyword">if</span> (!ticket) {
+    <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">ApiError</span>(<span class="hljs-number">404</span>, <span class="hljs-string">`Ticket <span class="hljs-subst">${req.params.id}</span> not found`</span>);
+  }
+
+  <span class="hljs-title function_">sendResource</span>(res, ticket);
+});
+
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">const</span> createTicket = <span class="hljs-title function_">asyncHandler</span>(<span class="hljs-title function_">async</span> (req, res) =&gt; {
+  <span class="hljs-keyword">const</span> ticket = <span class="hljs-keyword">await</span> ticketService.<span class="hljs-title function_">createTicket</span>({ ...req.<span class="hljs-property">body</span>, <span class="hljs-attr">customerId</span>: req.<span class="hljs-property">user</span>.<span class="hljs-property">id</span> });
+  <span class="hljs-title function_">sendResource</span>(res, ticket, <span class="hljs-number">201</span>);
+});
+</code></pre>
+<p><code>ticket.controller.js</code> is a file full of functions like these, not a class
+with methods. <code>ticket.service.js</code>, imported at the top as <code>ticketService</code>,
+is the same shape one layer down.</p>
+<p>Where does dependency injection go, then — how does a controller get &quot;its&quot;
+service without a constructor to inject one into? It doesn't need to: <strong>an
+imported module is already a singleton in Node.</strong> <code>import * as ticketService from '../services/ticket.service.js'</code> gives every file that imports it the
+exact same object, created once, the first time anything imports it. A DI
+container exists to solve the problem of wiring up and sharing single
+instances of things — Node's module system already does that for free, so
+there's nothing left for a container to add.</p>
+<p>The same reasoning rules out a <code>Resource</code>/<code>Transformer</code> class hierarchy for
+shaping responses, too — covered properly once there's a response to shape.
+For now, the pattern to notice: this codebase reaches for <em>plain functions
+and plain objects</em> first, and only reaches for more structure (a class, a
+container, a framework convention) when plain functions stop being enough —
+never as the default starting point.</p>
+</div>
+    
+  </main>
+</body>
+</html>

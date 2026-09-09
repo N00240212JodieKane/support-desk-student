@@ -59,9 +59,11 @@ that uses it so far. <code>sendResource</code> also takes an optional <code>stat
 same helper covers both <code>200 OK</code> (fetching/updating something) and
 <code>201 Created</code> (making something new) without needing two functions.</p>
 <p>This is two plain functions, not a <code>Resource</code>/<code>Transformer</code> class a
-controller would extend or instantiate (see <code>CLAUDE.md</code>) — it doesn't
-describe what fields a ticket <em>has</em>, only the envelope every response sits
-inside, which is a much smaller job.</p>
+controller would extend or instantiate — the same
+<a href="/planning/the-architecture/plain-functions-not-classes.html">&quot;plain functions, not classes&quot;</a>
+reasoning behind every controller and service in this project, applied here
+to the response side. It doesn't describe what fields a ticket <em>has</em>, only
+the envelope every response sits inside, which is a much smaller job.</p>
 </div>
     
   </main>

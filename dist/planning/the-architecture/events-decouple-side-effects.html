@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Events Decouple Side Effects — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        <a class="nav-prev" href="/planning/the-architecture/plain-functions-not-classes.html">← Plain Functions, Not Classes</a>
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/planning/the-architecture/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        <a class="nav-next" href="/planning/the-architecture/a-real-job-queue.html">A Real Job Queue for Background Work →</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>Events Decouple Side Effects</h1>
+    <p class="lede">Why creating a ticket doesn&#39;t itself send an email, write a notification, or push a socket update.</p>
+
+    
+
+    
+      <div class="slide-body"><p>Creating a ticket needs to trigger a lot: a confirmation email to the
+customer, an in-app notification for every agent, a live update if one
+happens to be online watching the dashboard. The obvious way to write that
+is directly inside the function that creates the ticket — call the mailer,
+write the notification row, push the socket event, all in one place. The
+obvious way is also the wrong one here: it means <code>createTicket</code> has to know
+about email, in-app notifications, <em>and</em> real-time delivery, and changing any
+one of those three means editing and re-testing the function that actually
+creates tickets.</p>
+<p>This project separates the two concerns instead, using <strong>domain events</strong>:</p>
+<pre><code class="hljs language-js"><span class="hljs-comment">// Figure 0.3: the domain event names, one per moment something happens</span>
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">const</span> <span class="hljs-variable constant_">EVENTS</span> = {
+  <span class="hljs-attr">TICKET_CREATED</span>: <span class="hljs-string">&#x27;ticket.created&#x27;</span>,
+  <span class="hljs-attr">TICKET_ASSIGNED</span>: <span class="hljs-string">&#x27;ticket.assigned&#x27;</span>,
+  <span class="hljs-attr">TICKET_COMMENTED</span>: <span class="hljs-string">&#x27;ticket.commented&#x27;</span>,
+  <span class="hljs-attr">TICKET_STATUS_CHANGED</span>: <span class="hljs-string">&#x27;ticket.status_changed&#x27;</span>,
+};
+</code></pre>
+<p>A service does its actual job — create the ticket, save it — and then
+<strong>announces</strong> that it happened, using Node's built-in <code>EventEmitter</code>
+(<code>node:events</code>; no extra dependency). It doesn't know or care who, if
+anyone, is listening. Separately, three <strong>listener</strong> modules each subscribe
+to the events they care about and react independently: one sends email
+(<code>nodemailer</code>), one writes the in-app <code>Notification</code> row, one pushes a live
+update over <strong>Socket.IO</strong>. Removing, breaking, or rewriting any one listener
+never touches the service that fired the event, or either of the other two
+listeners.</p>
+<p>One more event exists beyond the four above, and it's different from the
+rest: a scheduled scan for tickets that have breached their SLA, which
+nothing in a request triggers — the next topic covers why that one needs a
+different mechanism entirely to run at all.</p>
+</div>
+    
+  </main>
+</body>
+</html>

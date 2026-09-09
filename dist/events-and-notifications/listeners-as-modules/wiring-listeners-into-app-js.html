@@ -44,8 +44,9 @@ so something has to. That import goes in <code>app.js</code>, not <code>server.j
 <span class="hljs-keyword">import</span> errorHandler <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;./middleware/errorHandler.js&#x27;</span>;
 <span class="hljs-keyword">import</span> <span class="hljs-string">&#x27;./events/index.js&#x27;</span>;
 </code></pre>
-<p>This leans on the same <code>app.js</code>/<code>server.js</code> split CLAUDE.md's Architecture
-conventions call out: <code>app.js</code> builds the Express app and exports it,
+<p>This leans on the same
+<a href="/planning/the-architecture/a-structure-built-to-stay-testable.html"><code>app.js</code>/<code>server.js</code> split</a>
+from the planning brief: <code>app.js</code> builds the Express app and exports it,
 <code>server.js</code> imports that app and calls <code>.listen()</code>. The integration tests
 introduced in Lesson 3 import <code>app.js</code> directly through <code>supertest</code>, and
 never touch <code>server.js</code> or call <code>.listen()</code> at all — so if this import lived

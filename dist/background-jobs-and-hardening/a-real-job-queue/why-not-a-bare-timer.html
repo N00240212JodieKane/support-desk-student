@@ -31,13 +31,14 @@
 
   <main class="content">
     <h1>Why Not a Bare Timer?</h1>
-    <p class="lede">The SLA monitor from CLAUDE.md&#39;s domain events — and why setInterval isn&#39;t good enough to build it on.</p>
+    <p class="lede">The SLA monitor from the planning brief&#39;s domain events — and why setInterval isn&#39;t good enough to build it on.</p>
 
     
 
     
-      <div class="slide-body"><p>CLAUDE.md's domain events end with one that's different from the other four:
-&quot;a BullMQ-scheduled SLA-breach scan.&quot; <code>ticket.created</code>, <code>ticket.assigned</code>,
+      <div class="slide-body"><p>The <a href="/planning/the-architecture/events-decouple-side-effects.html">planning brief's domain events</a>
+end with one that's different from the other four: a BullMQ-scheduled
+SLA-breach scan. <code>ticket.created</code>, <code>ticket.assigned</code>,
 <code>ticket.commented</code>, and <code>ticket.status_changed</code> (Week 5) all fire because a
 request came in and a service handled it. The SLA monitor has no request to
 react to — it has to notice, on its own, that a ticket has sat open too long,

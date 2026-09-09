@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>A Real Job Queue — Support Desk API</title>
+  <title>Planning the System — Support Desk API</title>
   <link rel="stylesheet" href="/assets/hljs-theme.css">
   <link rel="stylesheet" href="/assets/style.css">
 </head>
@@ -21,7 +21,7 @@
         
       </div>
       <div class="nav-slot nav-slot-center">
-        <a class="nav-up" href="/background-jobs-and-hardening/index.html">↑ Up</a>
+        <a class="nav-up" href="/index.html">↑ Up</a>
       </div>
       <div class="nav-slot nav-slot-right">
         
@@ -30,25 +30,25 @@
   </nav>
 
   <main class="content">
-    <h1>A Real Job Queue</h1>
-    <p class="lede">Why the SLA-breach scan runs on BullMQ + Redis instead of a bare setInterval, and the queue/worker split that comes with it.</p>
+    <h1>Planning the System</h1>
+    <p class="lede">Before any code: what we&#39;re building, the stack it&#39;s built from, and why the architecture takes the shape it does.</p>
 
     
       <ul class="listing">
         
           <li>
-            <a href="/background-jobs-and-hardening/a-real-job-queue/why-not-a-bare-timer.html">Why Not a Bare Timer?</a>
-            <p>The SLA monitor from the planning brief&#39;s domain events — and why setInterval isn&#39;t good enough to build it on.</p>
+            <a href="/planning/specs-and-agents/index.html">Specs, Agents, and Staying in Control</a>
+            <p>Why this course opens with a written brief instead of jumping straight to code.</p>
           </li>
         
           <li>
-            <a href="/background-jobs-and-hardening/a-real-job-queue/queues-and-workers.html">Queues and Workers</a>
-            <p>BullMQ&#39;s two halves — a Queue that adds jobs, a Worker that processes them — and why splitting them into separate processes is the whole point.</p>
+            <a href="/planning/the-system/index.html">The System We&#39;re Building</a>
+            <p>The support-desk domain and the technology stack it runs on, at a glance.</p>
           </li>
         
           <li>
-            <a href="/background-jobs-and-hardening/a-real-job-queue/a-shared-redis-connection.html">A Shared Redis Connection</a>
-            <p>config/redis.js — the ioredis connection both the Queue (API process) and the Worker (worker process) are built on.</p>
+            <a href="/planning/the-architecture/index.html">Architecture Decisions</a>
+            <p>The recurring shapes this codebase uses on purpose, and the rationale behind each one — referenced throughout the lessons that follow.</p>
           </li>
         
       </ul>

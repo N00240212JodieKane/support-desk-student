@@ -36,8 +36,8 @@
     
 
     
-      <div class="slide-body"><p>&quot;Scan open tickets past a threshold and escalate&quot; (PLAN.md) sounds like a
-read-only query, but running it on repeat immediately raises a question: once
+      <div class="slide-body"><p>&quot;Scan open tickets past a threshold and escalate&quot; sounds like a read-only
+query, but running it on repeat immediately raises a question: once
 a ticket has been escalated, the <em>next</em> scan will still find it — it's still
 <code>open</code>, still past the threshold — so it would escalate again, and again,
 every time the job runs. Something has to record &quot;already escalated&quot; so the

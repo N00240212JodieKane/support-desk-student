@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>The Domain Model — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        <a class="nav-prev" href="/planning/specs-and-agents/reading-this-brief.html">← Reading This as a Brief</a>
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/planning/the-system/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        <a class="nav-next" href="/planning/the-system/the-stack.html">The Stack →</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>The Domain Model</h1>
+    <p class="lede">Users, tickets, comments, tags, and watchers — the entities this whole API exists to manage, and how they relate.</p>
+
+    
+
+    
+      <div class="slide-body"><p>The system is a support ticketing app: customers submit tickets, agents get
+assigned to and comment on them, tickets carry tags for categorization, and
+users can watch a ticket to be notified when something happens on it. Six
+entities cover the whole thing:</p>
+<ul>
+<li><strong><code>User</code></strong> — one table for everyone, distinguished by a <code>role</code>: <code>customer</code>,
+<code>agent</code>, or <code>admin</code>. What a user can do and see depends entirely on this
+field, not on which table they're stored in.</li>
+<li><strong><code>Ticket</code></strong> — belongs to exactly one customer (<strong>1:M</strong> — a customer can
+have many tickets), and optionally to one assigned agent (also <strong>1:M</strong>, on
+the <em>same</em> <code>User</code> table, via a second, separately-named foreign key).</li>
+<li><strong><code>Comment</code></strong> — belongs to exactly one <code>Ticket</code> and one author <code>User</code>
+(<strong>1:M</strong> on both).</li>
+<li><strong><code>Tag</code></strong> — a <strong>M:N</strong> relationship with <code>Ticket</code>, through a plain join
+table (<code>TicketTag</code>) that carries no data of its own beyond the link.</li>
+<li><strong>Watchers</strong> — also <strong>M:N</strong> between <code>User</code> and <code>Ticket</code>, but through a join
+table (<code>TicketWatcher</code>) that <em>does</em> carry its own data: a
+<code>notifyOnComment</code> flag, per watcher, per ticket.</li>
+<li><strong><code>Notification</code></strong> — belongs to one <code>User</code> (<strong>1:M</strong>); populated later by
+event listeners, not written directly by a controller.</li>
+</ul>
+<p>None of this modeling is new to you — 1:M and M:N relationships are exactly
+what you already built in Laravel with Eloquent migrations and models. What's
+new is expressing the same relationships in <strong>Prisma's schema file</strong>
+(<code>prisma/schema.prisma</code>) instead of a series of migration files: one
+declarative file <em>is</em> the schema, rather than a sequence of changes that
+produce it.</p>
+<pre><code class="hljs language-prisma"><span class="hljs-comment">// Figure 0.1: Ticket&#x27;s two relations to User (prisma/schema.prisma, excerpt)</span>
+<span class="hljs-class"><span class="hljs-keyword">model</span> <span class="hljs-title">Ticket</span> </span>{
+  id              <span class="hljs-type">Int</span>          <span class="hljs-attribute">@id</span> <span class="hljs-attribute">@default</span>(<span class="hljs-built_in">autoincrement</span>())
+  subject         <span class="hljs-type">String</span>
+  description     <span class="hljs-type">String</span>       <span class="hljs-attribute">@db</span>.Text
+  status          TicketStatus <span class="hljs-attribute">@default</span>(open)
+  customerId      <span class="hljs-type">Int</span>
+  assignedAgentId <span class="hljs-type">Int</span><span class="hljs-symbol">?</span>
+
+  customer      User  <span class="hljs-attribute">@relation</span>(<span class="hljs-string">&quot;CustomerTickets&quot;</span>, fields: [customerId], references: [id])
+  assignedAgent User<span class="hljs-symbol">?</span> <span class="hljs-attribute">@relation</span>(<span class="hljs-string">&quot;AssignedTickets&quot;</span>, fields: [assignedAgentId], references: [id])
+  comments      Comment<span class="hljs-symbol">[]</span>
+  tags          TicketTag<span class="hljs-symbol">[]</span>
+  watchers      TicketWatcher<span class="hljs-symbol">[]</span>
+}
+</code></pre>
+<p>Two named relations (<code>&quot;CustomerTickets&quot;</code>, <code>&quot;AssignedTickets&quot;</code>) on the same
+<code>customer</code>/<code>assignedAgent</code> fields are what make the dual <code>User</code> relationship
+possible at all — without a name on each, Prisma has no way to tell which
+foreign key belongs to which relation. <code>assignedAgentId Int?</code> (nullable) is
+what makes assignment optional: a ticket exists, and can be queried, before
+any agent picks it up.</p>
+<p>This core shape stays fixed for the rest of the course — every lesson from
+here on builds <em>on</em> this model. It gets exactly one addition later (a single
+new column, to support a background job you haven't met yet), flagged
+clearly when that lesson introduces it — never a change to what's shown
+above.</p>
+</div>
+    
+  </main>
+</body>
+</html>

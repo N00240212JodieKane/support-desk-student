@@ -37,8 +37,9 @@
 
     
       <div class="slide-body"><p><code>Comment</code> isn't a standalone resource the way <code>Ticket</code> and <code>Tag</code> are — the
-domain model (<code>CLAUDE.md</code>) says a comment always belongs to exactly one
-ticket, and the URLs follow that: <code>/tickets/1/comments</code>, not <code>/comments</code>.
+<a href="/planning/the-system/the-domain-model.html">domain model</a> says a comment
+always belongs to exactly one ticket, and the URLs follow that:
+<code>/tickets/1/comments</code>, not <code>/comments</code>.
 Getting there is two routers, not one — <code>comment.routes.js</code>, mounted inside
 <code>ticket.routes.js</code>:</p>
 <pre><code class="hljs language-js"><span class="hljs-comment">// Figure 3.11: mounting a nested router (src/routes/comment.routes.js, and the mount point in src/routes/ticket.routes.js)</span>
