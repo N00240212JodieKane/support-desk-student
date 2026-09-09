@@ -1,0 +1,23 @@
+# Never useful inside the image, and node_modules especially would fight
+# with the fresh `npm ci` the Dockerfile itself runs (see "API
+# containerization" in PLAN.md's Key decisions).
+node_modules/
+npm-debug.log*
+*.log
+coverage/
+.git/
+.env
+.env.*
+!.env.example
+
+# Instructor-only / not part of the running app (see CLAUDE.md — students
+# never receive content/ at all; the rest of these just have nothing to do
+# with what the container runs).
+content/
+tutorial/
+dist/
+tests/
+PLAN.md
+PEDAGOGY.md
+TUTORIAL.md
+CLAUDE.md

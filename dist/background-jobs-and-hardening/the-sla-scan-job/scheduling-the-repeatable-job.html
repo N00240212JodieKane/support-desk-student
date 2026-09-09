@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Scheduling the Repeatable Job — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        <a class="nav-prev" href="/background-jobs-and-hardening/the-sla-scan-job/the-escalation-service-function.html">← The Escalation Service Function</a>
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/background-jobs-and-hardening/the-sla-scan-job/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        <a class="nav-next" href="/background-jobs-and-hardening/the-sla-scan-job/the-worker-process.html">The Worker Process →</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>Scheduling the Repeatable Job</h1>
+    <p class="lede">slaScan.queue.js adds a repeatable job to Redis; server.js schedules it once, on API startup — never app.js.</p>
+
+    
+
+    
+      <div class="slide-body"><pre><code class="hljs language-js"><span class="hljs-comment">// Figure 6.4: scheduling a repeatable job (src/jobs/slaScan.queue.js)</span>
+<span class="hljs-keyword">import</span> { <span class="hljs-title class_">Queue</span> } <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;bullmq&#x27;</span>;
+<span class="hljs-keyword">import</span> connection <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;../config/redis.js&#x27;</span>;
+<span class="hljs-keyword">import</span> env <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;../config/env.js&#x27;</span>;
+
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">const</span> <span class="hljs-variable constant_">QUEUE_NAME</span> = <span class="hljs-string">&#x27;sla-scan&#x27;</span>;
+
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">const</span> slaScanQueue = <span class="hljs-keyword">new</span> <span class="hljs-title class_">Queue</span>(<span class="hljs-variable constant_">QUEUE_NAME</span>, { connection });
+
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">const</span> <span class="hljs-title function_">scheduleSlaScan</span> = <span class="hljs-keyword">async</span> (<span class="hljs-params"></span>) =&gt;
+  slaScanQueue.<span class="hljs-title function_">upsertJobScheduler</span>(
+    <span class="hljs-string">&#x27;sla-scan-repeatable&#x27;</span>,
+    { <span class="hljs-attr">every</span>: env.<span class="hljs-property">SLA_SCAN_INTERVAL_MS</span> },
+    {
+      <span class="hljs-attr">name</span>: <span class="hljs-string">&#x27;scan&#x27;</span>,
+      <span class="hljs-attr">opts</span>: {
+        <span class="hljs-attr">attempts</span>: <span class="hljs-number">3</span>,
+        <span class="hljs-attr">backoff</span>: { <span class="hljs-attr">type</span>: <span class="hljs-string">&#x27;exponential&#x27;</span>, <span class="hljs-attr">delay</span>: <span class="hljs-number">5_000</span> },
+      },
+    },
+  );
+</code></pre>
+<p>A <strong>Job Scheduler</strong> is BullMQ's own object for &quot;keep adding a job on this
+recurring pattern,&quot; identified by the id in the first argument
+(<code>'sla-scan-repeatable'</code>) — creating one is what makes a job keep coming
+back on its own, every <code>SLA_SCAN_INTERVAL_MS</code>, without anything in this
+project calling <code>.add()</code> again. <code>upsertJobScheduler</code> — <em>upsert</em>, not
+<em>create</em> — matters because <code>scheduleSlaScan()</code> runs every time the API
+process starts (see below): calling it again with the same id updates that
+same schedule instead of creating a second one running alongside it, so
+restarting the API under <code>npm run dev</code> never leaves two scans running side
+by side. <code>attempts</code>/<code>backoff</code> are the retry behaviour flagged back in
+&quot;Queues and Workers&quot; — a scan that throws gets retried up to three times,
+waiting longer between each attempt.</p>
+<pre><code class="hljs language-js"><span class="hljs-comment">// Figure 6.5: scheduling it from server.js, not app.js (src/server.js)</span>
+<span class="hljs-keyword">import</span> { scheduleSlaScan } <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;./jobs/slaScan.queue.js&#x27;</span>;
+
+<span class="hljs-keyword">const</span> httpServer = http.<span class="hljs-title function_">createServer</span>(app);
+<span class="hljs-title function_">initSocket</span>(httpServer);
+
+<span class="hljs-title function_">scheduleSlaScan</span>();
+
+httpServer.<span class="hljs-title function_">listen</span>(env.<span class="hljs-property">PORT</span>, <span class="hljs-function">() =&gt;</span> { <span class="hljs-comment">/* ... */</span> });
+</code></pre>
+<p>Same reasoning as <code>initSocket()</code> right above it: this needs a real Redis
+connection, which a test importing <code>app.js</code> directly via <code>supertest</code>
+(CLAUDE.md's <code>app.js</code>/<code>server.js</code> split) should never be forced to have
+running. Calling <code>scheduleSlaScan()</code> only <em>writes a repeat schedule to
+Redis</em> — it doesn't run the scan itself. Actually running it is the
+worker's job, covered next.</p>
+</div>
+    
+  </main>
+</body>
+</html>

@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>A Shared Redis Connection — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        <a class="nav-prev" href="/background-jobs-and-hardening/a-real-job-queue/queues-and-workers.html">← Queues and Workers</a>
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/background-jobs-and-hardening/a-real-job-queue/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        <a class="nav-next" href="/background-jobs-and-hardening/the-sla-scan-job/modeling-escalation-state.html">Modeling Escalation State →</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>A Shared Redis Connection</h1>
+    <p class="lede">config/redis.js — the ioredis connection both the Queue (API process) and the Worker (worker process) are built on.</p>
+
+    
+
+    
+      <div class="slide-body"><pre><code class="hljs language-js"><span class="hljs-comment">// Figure 6.1: the shared Redis connection (src/config/redis.js)</span>
+<span class="hljs-keyword">import</span> <span class="hljs-title class_">IORedis</span> <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;ioredis&#x27;</span>;
+<span class="hljs-keyword">import</span> env <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;./env.js&#x27;</span>;
+
+<span class="hljs-keyword">const</span> connection = <span class="hljs-keyword">new</span> <span class="hljs-title class_">IORedis</span>({
+  <span class="hljs-attr">host</span>: env.<span class="hljs-property">REDIS_HOST</span>,
+  <span class="hljs-attr">port</span>: env.<span class="hljs-property">REDIS_PORT</span>,
+  <span class="hljs-attr">maxRetriesPerRequest</span>: <span class="hljs-literal">null</span>,
+});
+
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">default</span> connection;
+</code></pre>
+<p>Same <strong>import-as-singleton</strong> idiom as <code>config/db.js</code>'s <code>PrismaClient</code> and
+<code>config/mailer.js</code>'s transport (see Week 5) — one connection object, created
+once, that every importer shares. What's different here is <em>which</em> processes
+import it: <code>db.js</code> and <code>mailer.js</code> are only ever imported by the API process.
+This module is imported by both <code>jobs/slaScan.queue.js</code> (in the API process)
+and <code>src/worker.js</code> (its own, separate process) — so &quot;singleton&quot; here means
+one connection <em>per process that imports this module</em>, not one connection
+for the whole application. Each process ends up with its own TCP connection
+to Redis, exactly as each would get its own <code>PrismaClient</code> if two processes
+both imported <code>db.js</code>.</p>
+<p><code>maxRetriesPerRequest: null</code> isn't a style preference — it's BullMQ's own
+documented requirement. BullMQ issues Redis commands that deliberately block
+while waiting for a job to arrive; ioredis's default retry behaviour would
+time those out and retry them, which fights with how BullMQ expects the
+connection to behave. Every BullMQ connection needs this option set, whether
+it belongs to a <code>Queue</code> or a <code>Worker</code>.</p>
+</div>
+    
+  </main>
+</body>
+</html>

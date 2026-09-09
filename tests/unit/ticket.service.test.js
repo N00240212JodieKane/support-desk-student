@@ -22,9 +22,8 @@ jest.unstable_mockModule('../../src/config/db.js', () => ({
   default: mockPrisma,
 }));
 
-const { getAllTickets, getTicketById, createTicket, updateTicket, deleteTicket } = await import(
-  '../../src/services/ticket.service.js'
-);
+const { getAllTickets, getTicketById, createTicket, updateTicket, deleteTicket, escalateOverdueTickets } =
+  await import('../../src/services/ticket.service.js');
 
 const listOptions = { sortBy: 'createdAt', order: 'desc', page: 1, pageSize: 10 };
 
@@ -222,5 +221,58 @@ describe('ticket.service', () => {
     await deleteTicket(1);
 
     expect(mockPrisma.ticket.delete).toHaveBeenCalledWith({ where: { id: 1 } });
+  });
+
+  // Week 6: called by jobs/slaScan.job.js, never by a controller — see that
+  // file and this function's own comment in src/services/ticket.service.js.
+  describe('escalateOverdueTickets', () => {
+    beforeEach(() => {
+      jest.useFakeTimers().setSystemTime(new Date('2026-01-10T12:00:00Z'));
+    });
+
+    afterEach(() => {
+      jest.useRealTimers();
+    });
+
+    it('only looks for open tickets past the threshold that have not already been escalated', async () => {
+      mockPrisma.ticket.findMany.mockResolvedValue([]);
+
+      await escalateOverdueTickets(24);
+
+      expect(mockPrisma.ticket.findMany).toHaveBeenCalledWith({
+        where: {
+          status: 'open',
+          createdAt: { lte: new Date('2026-01-09T12:00:00Z') },
+          slaBreachedAt: null,
+        },
+        select: { id: true },
+      });
+    });
+
+    it('marks every matching ticket breached and emits ticket.sla_breached for each', async () => {
+      mockPrisma.ticket.findMany.mockResolvedValue([{ id: 1 }, { id: 2 }]);
+      const updated1 = { id: 1, subject: 'Overdue A', assignedAgentId: 14 };
+      const updated2 = { id: 2, subject: 'Overdue B', assignedAgentId: null };
+      mockPrisma.ticket.update.mockResolvedValueOnce(updated1).mockResolvedValueOnce(updated2);
+
+      const count = await escalateOverdueTickets(24);
+
+      expect(count).toBe(2);
+      expect(mockPrisma.ticket.update).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { id: 1 }, data: { slaBreachedAt: new Date() } }),
+      );
+      expect(emitSpy).toHaveBeenCalledWith(EVENTS.TICKET_SLA_BREACHED, updated1);
+      expect(emitSpy).toHaveBeenCalledWith(EVENTS.TICKET_SLA_BREACHED, updated2);
+    });
+
+    it('does nothing when no ticket is overdue', async () => {
+      mockPrisma.ticket.findMany.mockResolvedValue([]);
+
+      const count = await escalateOverdueTickets(24);
+
+      expect(count).toBe(0);
+      expect(mockPrisma.ticket.update).not.toHaveBeenCalled();
+      expect(emitSpy).not.toHaveBeenCalledWith(EVENTS.TICKET_SLA_BREACHED, expect.anything());
+    });
   });
 });

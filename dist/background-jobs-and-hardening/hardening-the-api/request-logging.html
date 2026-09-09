@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Request Logging — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        <a class="nav-prev" href="/background-jobs-and-hardening/hardening-the-api/rate-limiting.html">← Rate Limiting</a>
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/background-jobs-and-hardening/hardening-the-api/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        <a class="nav-next" href="/background-jobs-and-hardening/containerizing-the-api/a-multi-stage-dockerfile.html">A Multi-Stage Dockerfile →</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>Request Logging</h1>
+    <p class="lede">morgan(&#39;dev&#39;) prints one line per request/response — the access log a running API needs and gets nothing like for free.</p>
+
+    
+
+    
+      <div class="slide-body"><p>Every request this API has ever handled, across five weeks of manual
+smoke-testing and the <code>jest</code>/<code>supertest</code> suite, has been silent — nothing
+printed to the console unless <code>console.error</code> in <code>errorHandler.js</code> had
+something to complain about. That's fine for a test run, but not for an API
+someone is actually operating: when something goes wrong in a running
+process, &quot;what requests has this even been getting&quot; is the first thing worth
+being able to see.</p>
+<pre><code class="hljs language-js"><span class="hljs-comment">// Figure 6.18: app.js</span>
+<span class="hljs-keyword">import</span> morgan <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;morgan&#x27;</span>;
+
+app.<span class="hljs-title function_">use</span>(<span class="hljs-title function_">morgan</span>(<span class="hljs-string">&#x27;dev&#x27;</span>));
+</code></pre>
+<p><code>morgan('dev')</code> logs one colour-coded line per request as it completes —
+method, path, status code, response time — to the console. It's registered
+alongside <code>helmet</code>/<code>cors</code>/<code>generalLimiter</code>, ahead of every route, so it logs
+every request this API receives, successful or not. <code>'dev'</code>, one of a
+handful of built-in formats morgan ships with, is the terse, human-readable
+one meant for exactly this: watching a <code>npm run dev</code> terminal scroll by
+while you work, not parsing a log file after the fact — a concern a real
+production deployment would reach for structured logging (a library like
+<code>pino</code>) to address instead, but out of scope for what this course needs.</p>
+</div>
+    
+  </main>
+</body>
+</html>

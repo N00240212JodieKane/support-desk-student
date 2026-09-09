@@ -75,3 +75,23 @@ domainEvents.on(EVENTS.TICKET_STATUS_CHANGED, async (ticket, previousStatus) => 
     console.error('notifyEmail listener failed for ticket.status_changed:', err);
   }
 });
+
+// ticket.sla_breached -> an email to the assigned agent. Deliberately no
+// email branch for the unassigned case (unlike notifyInApp.listener.js's
+// admin fan-out) — an inbox-full-of-admins is the kind of alert fatigue
+// that gets filtered/ignored; the in-app + realtime channels already
+// surface it there.
+domainEvents.on(EVENTS.TICKET_SLA_BREACHED, async (ticket) => {
+  try {
+    if (!ticket.assignedAgentId) return;
+
+    await mailer.sendMail({
+      from: env.MAIL_FROM,
+      to: ticket.assignedAgent.email,
+      subject: `SLA breached: ticket #${ticket.id} needs attention`,
+      text: `Hi ${ticket.assignedAgent.name},\n\nTicket "${ticket.subject}" has been open past its SLA threshold and needs attention.`,
+    });
+  } catch (err) {
+    console.error('notifyEmail listener failed for ticket.sla_breached:', err);
+  }
+});

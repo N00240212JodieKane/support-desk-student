@@ -24,4 +24,10 @@ export const EVENTS = {
   TICKET_ASSIGNED: 'ticket.assigned',
   TICKET_COMMENTED: 'ticket.commented',
   TICKET_STATUS_CHANGED: 'ticket.status_changed',
+  // Week 6: emitted by services/ticket.service.js's escalateOverdueTickets,
+  // called only from jobs/slaScan.job.js — the one emit() in this project
+  // that a request never triggers. See jobs/slaScan.job.js and "the
+  // cross-process realtime gap" topic for why this event's payload reaches
+  // two of the three notification channels but not the third.
+  TICKET_SLA_BREACHED: 'ticket.sla_breached',
 };

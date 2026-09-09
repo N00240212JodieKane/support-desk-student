@@ -94,3 +94,33 @@ domainEvents.on(EVENTS.TICKET_STATUS_CHANGED, async (ticket, previousStatus) => 
     console.error('notifyInApp listener failed for ticket.status_changed:', err);
   }
 });
+
+// ticket.sla_breached -> a Notification row for whoever owns fixing this:
+// the assigned agent if there is one, otherwise every admin (nobody's
+// picked it up yet, so there's no one narrower to escalate to). See
+// jobs/slaScan.job.js for what emits this and why it's never a controller.
+domainEvents.on(EVENTS.TICKET_SLA_BREACHED, async (ticket) => {
+  try {
+    if (ticket.assignedAgentId) {
+      await prisma.notification.create({
+        data: {
+          userId: ticket.assignedAgentId,
+          type: EVENTS.TICKET_SLA_BREACHED,
+          message: `Ticket "${ticket.subject}" has breached its SLA and needs attention.`,
+        },
+      });
+      return;
+    }
+
+    const admins = await prisma.user.findMany({ where: { role: 'admin' }, select: { id: true } });
+    await prisma.notification.createMany({
+      data: admins.map((admin) => ({
+        userId: admin.id,
+        type: EVENTS.TICKET_SLA_BREACHED,
+        message: `Unassigned ticket "${ticket.subject}" has breached its SLA — needs an agent.`,
+      })),
+    });
+  } catch (err) {
+    console.error('notifyInApp listener failed for ticket.sla_breached:', err);
+  }
+});

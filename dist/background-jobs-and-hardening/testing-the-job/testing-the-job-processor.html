@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Testing the Job Processor — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        <a class="nav-prev" href="/background-jobs-and-hardening/testing-the-job/unit-testing-the-service-function.html">← Unit Testing the Service Function</a>
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/background-jobs-and-hardening/testing-the-job/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        <a class="nav-next" href="/background-jobs-and-hardening/hardening-the-api/security-headers-with-helmet.html">Security Headers with Helmet →</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>Testing the Job Processor</h1>
+    <p class="lede">slaScan.job.test.js mocks the whole service away — this file has nothing to test except that it wired the two together correctly.</p>
+
+    
+
+    
+      <div class="slide-body"><p><code>jobs/slaScan.job.js</code> has almost no logic of its own — it reads
+<code>env.SLA_BREACH_HOURS</code>, calls <code>escalateOverdueTickets</code>, and reshapes the
+result. Testing it doesn't need Prisma mocked, fake timers, or anything
+<code>ticket.service.test.js</code> already covers — it needs the <em>service</em> mocked
+instead, so the test can check the glue on its own:</p>
+<pre><code class="hljs language-js"><span class="hljs-comment">// Figure 6.13: mocking the service, not Prisma (tests/unit/slaScan.job.test.js)</span>
+<span class="hljs-keyword">const</span> mockEscalateOverdueTickets = jest.<span class="hljs-title function_">fn</span>();
+
+jest.<span class="hljs-title function_">unstable_mockModule</span>(<span class="hljs-string">&#x27;../../src/services/ticket.service.js&#x27;</span>, <span class="hljs-function">() =&gt;</span> ({
+  <span class="hljs-attr">escalateOverdueTickets</span>: mockEscalateOverdueTickets,
+}));
+
+<span class="hljs-keyword">const</span> { <span class="hljs-attr">default</span>: processSlaScan } = <span class="hljs-keyword">await</span> <span class="hljs-keyword">import</span>(<span class="hljs-string">&#x27;../../src/jobs/slaScan.job.js&#x27;</span>);
+
+<span class="hljs-title function_">it</span>(<span class="hljs-string">&#x27;escalates using the configured SLA threshold and reports how many tickets it escalated&#x27;</span>, <span class="hljs-title function_">async</span> () =&gt; {
+  mockEscalateOverdueTickets.<span class="hljs-title function_">mockResolvedValue</span>(<span class="hljs-number">2</span>);
+
+  <span class="hljs-keyword">const</span> result = <span class="hljs-keyword">await</span> <span class="hljs-title function_">processSlaScan</span>();
+
+  <span class="hljs-title function_">expect</span>(mockEscalateOverdueTickets).<span class="hljs-title function_">toHaveBeenCalledWith</span>(env.<span class="hljs-property">SLA_BREACH_HOURS</span>);
+  <span class="hljs-title function_">expect</span>(result).<span class="hljs-title function_">toEqual</span>({ <span class="hljs-attr">escalatedCount</span>: <span class="hljs-number">2</span> });
+});
+</code></pre>
+<p>Same <code>jest.unstable_mockModule</code> + dynamic <code>import()</code> pattern every other
+test in this suite uses to swap out a real dependency (Week 2/3), just
+aimed at a different module than usual — <code>services/ticket.service.js</code>
+instead of <code>config/db.js</code>. This is the same layering argument as &quot;The
+Escalation Service Function&quot; earlier in this lesson, seen from the test
+side: because the real logic lives in a service function <code>slaScan.job.js</code>
+merely calls, testing the job only means testing that it <em>calls that
+function correctly</em> — the threshold it reads, and the shape it returns —
+and nothing about tickets, Prisma, or events needs to appear in this file
+at all.</p>
+</div>
+    
+  </main>
+</body>
+</html>

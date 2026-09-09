@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CORS — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        <a class="nav-prev" href="/background-jobs-and-hardening/hardening-the-api/security-headers-with-helmet.html">← Security Headers with Helmet</a>
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/background-jobs-and-hardening/hardening-the-api/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        <a class="nav-next" href="/background-jobs-and-hardening/hardening-the-api/rate-limiting.html">Rate Limiting →</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>CORS</h1>
+    <p class="lede">Browsers block cross-origin requests by default — the cors middleware is what lets a frontend on a different origin actually call this API.</p>
+
+    
+
+    
+      <div class="slide-body"><p>A Laravel app rendering its own Blade views never runs into this: the page
+and the API it calls are the same origin (same scheme, host, and port), so
+the browser never has anything to block. This project is different by
+design — a JSON-only API (Week 1) meant to be called from a <strong>separate</strong>
+frontend, on a different origin (a different port in dev, a different
+domain entirely once deployed). Browsers refuse cross-origin requests by
+default — the <strong>Same-Origin Policy</strong> — unless the server's response
+explicitly says otherwise via an <code>Access-Control-Allow-Origin</code> header. This
+has nothing to do with authentication or a JWT being valid; a request
+blocked by CORS never even reaches a point where that would matter — the
+browser refuses to let the calling page read the response at all.</p>
+<p><code>cors</code>, like <code>helmet</code>, is a middleware that sets response headers — in this
+case, exactly the <code>Access-Control-*</code> headers that tell a browser cross-origin
+access is allowed:</p>
+<pre><code class="hljs language-js"><span class="hljs-comment">// Figure 6.15: app.js</span>
+app.<span class="hljs-title function_">use</span>(<span class="hljs-title function_">cors</span>());
+</code></pre>
+<p>Called with no options, <code>cors()</code> allows every origin — the same &quot;wide open
+for now&quot; choice <code>config/socket.js</code> already made for Socket.IO's own CORS
+setting back in Week 5: there's no deployed frontend origin yet to
+restrict this to. Once the React frontend module has a real dev/production
+origin, this is the line that would change to <code>cors({ origin: 'https://your-frontend-origin' })</code> — the same shape of change either
+project would make once it exists.</p>
+</div>
+    
+  </main>
+</body>
+</html>

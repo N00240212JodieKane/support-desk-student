@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Why Not a Bare Timer? — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        <a class="nav-prev" href="/events-and-notifications/testing-events/mocking-one-more-prisma-call.html">← Mocking One More Prisma Call</a>
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/background-jobs-and-hardening/a-real-job-queue/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        <a class="nav-next" href="/background-jobs-and-hardening/a-real-job-queue/queues-and-workers.html">Queues and Workers →</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>Why Not a Bare Timer?</h1>
+    <p class="lede">The SLA monitor from CLAUDE.md&#39;s domain events — and why setInterval isn&#39;t good enough to build it on.</p>
+
+    
+
+    
+      <div class="slide-body"><p>CLAUDE.md's domain events end with one that's different from the other four:
+&quot;a BullMQ-scheduled SLA-breach scan.&quot; <code>ticket.created</code>, <code>ticket.assigned</code>,
+<code>ticket.commented</code>, and <code>ticket.status_changed</code> (Week 5) all fire because a
+request came in and a service handled it. The SLA monitor has no request to
+react to — it has to notice, on its own, that a ticket has sat open too long,
+which means something has to keep checking on a schedule.</p>
+<p>The obvious first idea is a plain <code>setInterval</code>, running right inside the API
+process:</p>
+<pre><code class="hljs language-js"><span class="hljs-comment">// Not real code — the shape this would take with no queue at all.</span>
+<span class="hljs-built_in">setInterval</span>(<span class="hljs-title function_">async</span> () =&gt; {
+  <span class="hljs-comment">// ...find overdue tickets, escalate them...</span>
+}, <span class="hljs-number">60</span> * <span class="hljs-number">60</span> * <span class="hljs-number">1000</span>);
+</code></pre>
+<p>This looks simple, but everything about it is fragile in a way that matters
+more here than it might elsewhere:</p>
+<ul>
+<li><strong>It dies with the process.</strong> Restart the API (a deploy, a crash, <code>npm run dev</code>'s own <code>--watch</code> reload) and the timer is gone until the process comes
+back up — there's no record anywhere that a scan was even supposed to have
+happened while it was down.</li>
+<li><strong>A thrown error inside it is silent.</strong> An uncaught rejection in the
+callback doesn't retry, doesn't get logged anywhere obvious, and doesn't
+stop the <em>next</em> tick from running — it just quietly skipped one scan.</li>
+<li><strong>It runs inside the same process serving HTTP traffic.</strong> A slow scan (many
+tickets, a slow query) competes with the API for the same event loop.</li>
+</ul>
+<p>A real job queue — BullMQ, backed by Redis — solves all three by moving &quot;a
+scan needs to happen&quot; out of process memory and into Redis instead: a
+scheduled job is a row of state something else can see, retry, and hand to a
+<em>different</em> process to actually run. That last part is the one this lesson
+leans on hardest — see &quot;Queues and Workers&quot; next.</p>
+</div>
+    
+  </main>
+</body>
+</html>

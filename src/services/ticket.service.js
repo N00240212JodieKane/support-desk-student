@@ -108,3 +108,36 @@ export const updateTicket = async (id, changes, previous) => {
 };
 
 export const deleteTicket = async (id) => prisma.ticket.delete({ where: { id } });
+
+// Week 6: the one write path in this file that no controller ever calls —
+// jobs/slaScan.job.js calls this on a schedule instead of in response to a
+// request (see jobs/slaScan.queue.js). Same service layer either way: a job
+// processor is just another caller, exactly like a controller.
+//
+// `slaBreachedAt: null` is what makes this idempotent across runs — a
+// ticket already escalated on a previous scan is never matched again, even
+// though it's still `open` (see the column's comment in schema.prisma).
+// One update + emit per ticket, sequentially, rather than
+// Promise.all/updateMany: there's normally a handful of these at most, and
+// this keeps "escalate ticket A" from starting before "escalate ticket B"
+// has actually committed and emitted.
+export const escalateOverdueTickets = async (thresholdHours) => {
+  const cutoff = new Date(Date.now() - thresholdHours * 60 * 60 * 1000);
+
+  const overdue = await prisma.ticket.findMany({
+    where: { status: 'open', createdAt: { lte: cutoff }, slaBreachedAt: null },
+    select: { id: true },
+  });
+
+  for (const { id } of overdue) {
+    const ticket = await prisma.ticket.update({
+      where: { id },
+      data: { slaBreachedAt: new Date() },
+      include: { customer: userSummary, assignedAgent: userSummary },
+    });
+
+    domainEvents.emit(EVENTS.TICKET_SLA_BREACHED, ticket);
+  }
+
+  return overdue.length;
+};

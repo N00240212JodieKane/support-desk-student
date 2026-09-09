@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Testing the Job — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/background-jobs-and-hardening/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>Testing the Job</h1>
+    <p class="lede">Fake timers for a threshold that depends on &#39;now&#39;, and why the job processor gets its own thin test with the service mocked out entirely.</p>
+
+    
+      <ul class="listing">
+        
+          <li>
+            <a href="/background-jobs-and-hardening/testing-the-job/unit-testing-the-service-function.html">Unit Testing the Service Function</a>
+            <p>Fake timers pin down &#39;now&#39;, so the cutoff escalateOverdueTickets computes is something a test can assert on exactly.</p>
+          </li>
+        
+          <li>
+            <a href="/background-jobs-and-hardening/testing-the-job/testing-the-job-processor.html">Testing the Job Processor</a>
+            <p>slaScan.job.test.js mocks the whole service away — this file has nothing to test except that it wired the two together correctly.</p>
+          </li>
+        
+      </ul>
+    
+
+    
+  </main>
+</body>
+</html>

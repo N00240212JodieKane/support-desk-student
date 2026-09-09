@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>A Non-Root User, and .dockerignore — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        <a class="nav-prev" href="/background-jobs-and-hardening/containerizing-the-api/a-multi-stage-dockerfile.html">← A Multi-Stage Dockerfile</a>
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/background-jobs-and-hardening/containerizing-the-api/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        <a class="nav-next" href="/background-jobs-and-hardening/containerizing-the-api/api-and-worker-compose-services.html">api and worker Compose Services →</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>A Non-Root User, and .dockerignore</h1>
+    <p class="lede">USER node costs one line because the official image already ships the user; .dockerignore keeps the build context to what the image actually needs.</p>
+
+    
+
+    
+      <div class="slide-body"><p>A container image built with no <code>USER</code> instruction runs as <code>root</code> by
+default — meaning a bug or a dependency vulnerability that lets an attacker
+execute arbitrary code in this process hands them root <em>inside the
+container</em> as a bonus, for no benefit this API actually needs (it never
+writes to the filesystem, binds a privileged port, or does anything else
+that requires elevated permissions). The Dockerfile's <code>USER node</code> line, right
+before <code>EXPOSE</code>, switches to a non-root user for every instruction after it —
+one line, not a new user to create, because the official <code>node:22-alpine</code>
+image already ships a <code>node</code> user built in.</p>
+<p><code>.dockerignore</code> works like <code>.gitignore</code>, but for what gets sent to Docker as
+the <em>build context</em> — every <code>COPY</code> in the Dockerfile can only reach files
+Docker actually received:</p>
+<pre><code class="hljs"># Figure 6.20: .dockerignore (excerpt)
+node_modules/
+.git/
+.env
+.env.*
+!.env.example
+
+content/
+tutorial/
+dist/
+tests/
+</code></pre>
+<p><code>node_modules/</code> matters most: without it, Docker would upload the host's
+own <code>node_modules</code> (platform-specific native bindings included) only to
+have <code>npm ci</code> inside the image overwrite it anyway — pure wasted transfer.
+The rest excludes what CLAUDE.md already establishes has no business in a
+running container at all: <code>content/</code> (never even reaches students, per
+CLAUDE.md's &quot;Students never receive <code>content/</code>&quot;), the tutorial's own
+toolchain, and test files this image never runs.</p>
+</div>
+    
+  </main>
+</body>
+</html>

@@ -87,6 +87,34 @@ async function main() {
     },
   });
 
+  // Week 6: both deliberately backdated well past SLA_BREACH_HOURS's
+  // default (24h) and still `open`, so jobs/slaScan.job.js has something to
+  // find on its very first run instead of you needing to wait a day —
+  // covers both escalation paths in events/listeners/notifyInApp.listener.js:
+  // one has an agent to escalate to, the other doesn't.
+  const TWO_DAYS_AGO = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000);
+
+  const overdueAssignedTicket = await prisma.ticket.create({
+    data: {
+      subject: 'Export button does nothing',
+      description: 'Clicking "Export CSV" on the reports page has no effect',
+      status: 'open',
+      customerId: customer1.id,
+      assignedAgentId: agent1.id,
+      createdAt: TWO_DAYS_AGO,
+    },
+  });
+
+  const overdueUnassignedTicket = await prisma.ticket.create({
+    data: {
+      subject: 'Dashboard shows wrong currency',
+      description: 'Amounts display in USD instead of EUR',
+      status: 'open',
+      customerId: customer2.id,
+      createdAt: TWO_DAYS_AGO,
+    },
+  });
+
   await prisma.ticketTag.createMany({
     data: [
       { ticketId: loginTicket.id, tagId: bugTag.id },

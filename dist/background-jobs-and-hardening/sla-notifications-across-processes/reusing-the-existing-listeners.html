@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Reusing the Existing Listeners — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        <a class="nav-prev" href="/background-jobs-and-hardening/the-sla-scan-job/the-worker-process.html">← The Worker Process</a>
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/background-jobs-and-hardening/sla-notifications-across-processes/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        <a class="nav-next" href="/background-jobs-and-hardening/sla-notifications-across-processes/the-cross-process-realtime-gap.html">The Cross-Process Realtime Gap →</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>Reusing the Existing Listeners</h1>
+    <p class="lede">ticket.sla_breached gets its own domainEvents.on(...) block in each Week 5 listener file — no new notification machinery needed.</p>
+
+    
+
+    
+      <div class="slide-body"><p><code>escalateOverdueTickets</code> emits <code>EVENTS.TICKET_SLA_BREACHED</code> exactly the way
+<code>createTicket</code>/<code>updateTicket</code> emit their events — so the three listener files
+from Week 5 each just gain one more <code>domainEvents.on(...)</code> block, same as
+every event before it.</p>
+<pre><code class="hljs language-js"><span class="hljs-comment">// Figure 6.8: in-app notification (src/events/listeners/notifyInApp.listener.js)</span>
+domainEvents.<span class="hljs-title function_">on</span>(<span class="hljs-variable constant_">EVENTS</span>.<span class="hljs-property">TICKET_SLA_BREACHED</span>, <span class="hljs-title function_">async</span> (ticket) =&gt; {
+  <span class="hljs-keyword">try</span> {
+    <span class="hljs-keyword">if</span> (ticket.<span class="hljs-property">assignedAgentId</span>) {
+      <span class="hljs-keyword">await</span> prisma.<span class="hljs-property">notification</span>.<span class="hljs-title function_">create</span>({
+        <span class="hljs-attr">data</span>: {
+          <span class="hljs-attr">userId</span>: ticket.<span class="hljs-property">assignedAgentId</span>,
+          <span class="hljs-attr">type</span>: <span class="hljs-variable constant_">EVENTS</span>.<span class="hljs-property">TICKET_SLA_BREACHED</span>,
+          <span class="hljs-attr">message</span>: <span class="hljs-string">`Ticket &quot;<span class="hljs-subst">${ticket.subject}</span>&quot; has breached its SLA and needs attention.`</span>,
+        },
+      });
+      <span class="hljs-keyword">return</span>;
+    }
+
+    <span class="hljs-keyword">const</span> admins = <span class="hljs-keyword">await</span> prisma.<span class="hljs-property">user</span>.<span class="hljs-title function_">findMany</span>({ <span class="hljs-attr">where</span>: { <span class="hljs-attr">role</span>: <span class="hljs-string">&#x27;admin&#x27;</span> }, <span class="hljs-attr">select</span>: { <span class="hljs-attr">id</span>: <span class="hljs-literal">true</span> } });
+    <span class="hljs-keyword">await</span> prisma.<span class="hljs-property">notification</span>.<span class="hljs-title function_">createMany</span>({
+      <span class="hljs-attr">data</span>: admins.<span class="hljs-title function_">map</span>(<span class="hljs-function">(<span class="hljs-params">admin</span>) =&gt;</span> ({ <span class="hljs-attr">userId</span>: admin.<span class="hljs-property">id</span>, <span class="hljs-attr">type</span>: <span class="hljs-variable constant_">EVENTS</span>.<span class="hljs-property">TICKET_SLA_BREACHED</span>, <span class="hljs-attr">message</span>: <span class="hljs-string">&#x27;...&#x27;</span> })),
+    });
+  } <span class="hljs-keyword">catch</span> (err) { <span class="hljs-comment">/* ... */</span> }
+});
+</code></pre>
+<p>Who gets notified depends on whether the ticket has an owner: an assigned
+ticket escalates to that one agent directly; an unassigned ticket has no
+one narrower to point at, so every admin gets it instead — a real escalation
+path, not just &quot;the queue&quot; the way <code>ticket.created</code>'s agent fan-out works.</p>
+<pre><code class="hljs language-js"><span class="hljs-comment">// Figure 6.9: email (src/events/listeners/notifyEmail.listener.js)</span>
+domainEvents.<span class="hljs-title function_">on</span>(<span class="hljs-variable constant_">EVENTS</span>.<span class="hljs-property">TICKET_SLA_BREACHED</span>, <span class="hljs-title function_">async</span> (ticket) =&gt; {
+  <span class="hljs-keyword">try</span> {
+    <span class="hljs-keyword">if</span> (!ticket.<span class="hljs-property">assignedAgentId</span>) <span class="hljs-keyword">return</span>;
+
+    <span class="hljs-keyword">await</span> mailer.<span class="hljs-title function_">sendMail</span>({
+      <span class="hljs-attr">to</span>: ticket.<span class="hljs-property">assignedAgent</span>.<span class="hljs-property">email</span>,
+      <span class="hljs-attr">subject</span>: <span class="hljs-string">`SLA breached: ticket #<span class="hljs-subst">${ticket.id}</span> needs attention`</span>,
+      <span class="hljs-attr">text</span>: <span class="hljs-string">`Ticket &quot;<span class="hljs-subst">${ticket.subject}</span>&quot; has been open past its SLA threshold.`</span>,
+    });
+  } <span class="hljs-keyword">catch</span> (err) { <span class="hljs-comment">/* ... */</span> }
+});
+</code></pre>
+<p>Email deliberately doesn't mirror the admin fan-out: there's no email branch
+for the unassigned case, only a quiet <code>return</code>. An inbox that gets a message
+every time <em>any</em> ticket goes unassigned-and-overdue is exactly the kind of
+alert an admin learns to filter out or ignore — the in-app notification
+above (visible next time they open the dashboard) and the realtime push
+covered next already surface it there without the fatigue an email blast to
+every admin would cause.</p>
+</div>
+    
+  </main>
+</body>
+</html>

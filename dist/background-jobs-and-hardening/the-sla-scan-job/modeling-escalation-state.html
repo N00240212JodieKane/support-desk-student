@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Modeling Escalation State — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        <a class="nav-prev" href="/background-jobs-and-hardening/a-real-job-queue/a-shared-redis-connection.html">← A Shared Redis Connection</a>
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/background-jobs-and-hardening/the-sla-scan-job/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        <a class="nav-next" href="/background-jobs-and-hardening/the-sla-scan-job/the-escalation-service-function.html">The Escalation Service Function →</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>Modeling Escalation State</h1>
+    <p class="lede">A new slaBreachedAt column on Ticket — the first schema change since Week 2 — and why the scan needs it to avoid re-escalating the same ticket forever.</p>
+
+    
+
+    
+      <div class="slide-body"><p>&quot;Scan open tickets past a threshold and escalate&quot; (PLAN.md) sounds like a
+read-only query, but running it on repeat immediately raises a question: once
+a ticket has been escalated, the <em>next</em> scan will still find it — it's still
+<code>open</code>, still past the threshold — so it would escalate again, and again,
+every time the job runs. Something has to record &quot;already escalated&quot; so the
+scan can skip it next time.</p>
+<p>That something is a new column on <code>Ticket</code>:</p>
+<pre><code class="hljs language-prisma"><span class="hljs-comment">// Figure 6.2: escalation state on Ticket (prisma/schema.prisma)</span>
+<span class="hljs-class"><span class="hljs-keyword">model</span> <span class="hljs-title">Ticket</span> </span>{
+  <span class="hljs-comment">// ...existing columns from Week 2...</span>
+  slaBreachedAt <span class="hljs-type">DateTime</span><span class="hljs-symbol">?</span>
+}
+</code></pre>
+<p><code>null</code> means &quot;not yet breached&quot;; a timestamp means &quot;breached, and here's
+when.&quot; This is deliberately its own column rather than a new <code>TicketStatus</code>
+value (<code>open</code> / <code>in_progress</code> / <code>resolved</code> / <code>closed</code>, unchanged since Week
+2) — SLA breach is a fact layered <em>on top of</em> the customer-facing workflow
+status, not a replacement for it. A ticket can be <code>open</code> and breached at the
+same time; folding &quot;breached&quot; into <code>status</code> would mean a ticket can no longer
+be both, and would force every existing <code>status</code>-based query in
+<code>ticket.service.js</code> to account for a state that has nothing to do with what
+the customer sees.</p>
+<p>This is the first schema change since the Week 2 migration — a reminder that
+&quot;the data model is settled&quot; was never a permanent claim, just true until a
+new requirement (here, idempotent escalation) needs a place to live that
+nothing existing covers.</p>
+</div>
+    
+  </main>
+</body>
+</html>

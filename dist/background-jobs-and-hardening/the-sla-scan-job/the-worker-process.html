@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>The Worker Process — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        <a class="nav-prev" href="/background-jobs-and-hardening/the-sla-scan-job/scheduling-the-repeatable-job.html">← Scheduling the Repeatable Job</a>
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/background-jobs-and-hardening/the-sla-scan-job/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        <a class="nav-next" href="/background-jobs-and-hardening/sla-notifications-across-processes/reusing-the-existing-listeners.html">Reusing the Existing Listeners →</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>The Worker Process</h1>
+    <p class="lede">src/worker.js — a second, standalone Node process that&#39;s the only place the scan actually runs, started with its own npm run worker.</p>
+
+    
+
+    
+      <div class="slide-body"><pre><code class="hljs language-js"><span class="hljs-comment">// Figure 6.6: the job processor BullMQ calls (src/jobs/slaScan.job.js)</span>
+<span class="hljs-keyword">import</span> env <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;../config/env.js&#x27;</span>;
+<span class="hljs-keyword">import</span> { escalateOverdueTickets } <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;../services/ticket.service.js&#x27;</span>;
+
+<span class="hljs-keyword">const</span> <span class="hljs-title function_">processSlaScan</span> = <span class="hljs-keyword">async</span> (<span class="hljs-params"></span>) =&gt; {
+  <span class="hljs-keyword">const</span> escalatedCount = <span class="hljs-keyword">await</span> <span class="hljs-title function_">escalateOverdueTickets</span>(env.<span class="hljs-property">SLA_BREACH_HOURS</span>);
+  <span class="hljs-keyword">return</span> { escalatedCount };
+};
+
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">default</span> processSlaScan;
+</code></pre>
+<p>Deliberately thin — every actual decision (what &quot;overdue&quot; means, how to mark
+a ticket escalated, what event to emit) already happened in the previous
+topic's service function. This file's only job is the glue BullMQ needs: a
+plain function that takes a job and returns a result.</p>
+<pre><code class="hljs language-js"><span class="hljs-comment">// Figure 6.7: the worker entry point (src/worker.js)</span>
+<span class="hljs-keyword">import</span> <span class="hljs-string">&#x27;./events/index.js&#x27;</span>;
+<span class="hljs-keyword">import</span> { <span class="hljs-title class_">Worker</span> } <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;bullmq&#x27;</span>;
+<span class="hljs-keyword">import</span> connection <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;./config/redis.js&#x27;</span>;
+<span class="hljs-keyword">import</span> { <span class="hljs-variable constant_">QUEUE_NAME</span> } <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;./jobs/slaScan.queue.js&#x27;</span>;
+<span class="hljs-keyword">import</span> processSlaScan <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;./jobs/slaScan.job.js&#x27;</span>;
+
+<span class="hljs-keyword">const</span> worker = <span class="hljs-keyword">new</span> <span class="hljs-title class_">Worker</span>(<span class="hljs-variable constant_">QUEUE_NAME</span>, processSlaScan, { connection });
+
+worker.<span class="hljs-title function_">on</span>(<span class="hljs-string">&#x27;completed&#x27;</span>, <span class="hljs-function">(<span class="hljs-params">job, result</span>) =&gt;</span> {
+  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">`[worker] <span class="hljs-subst">${job.name}</span> completed — escalated <span class="hljs-subst">${result.escalatedCount}</span> ticket(s).`</span>);
+});
+
+worker.<span class="hljs-title function_">on</span>(<span class="hljs-string">&#x27;failed&#x27;</span>, <span class="hljs-function">(<span class="hljs-params">job, err</span>) =&gt;</span> {
+  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">error</span>(<span class="hljs-string">`[worker] <span class="hljs-subst">${job?.name ?? <span class="hljs-string">&#x27;job&#x27;</span>}</span> failed:`</span>, err);
+});
+</code></pre>
+<p>This is a whole separate file run as its own process — <code>npm run worker</code>,
+never imported by <code>app.js</code> or <code>server.js</code> — and it's the reason for that
+<code>import './events/index.js'</code> at the top. That import is a side effect (see
+Week 5): it registers every domain-event listener by module-loading each one.
+<code>server.js</code> already does this via <code>app.js</code>, but registering a listener only
+affects the process that ran the <code>.on()</code> call — an <code>EventEmitter</code>'s listeners
+live in that process's memory, not in Redis or anywhere shared. Without its
+own copy of this import, the worker process would call
+<code>domainEvents.emit(EVENTS.TICKET_SLA_BREACHED, ticket)</code> in
+<code>escalateOverdueTickets</code> and nothing would happen — no listener in <em>this</em>
+process to hear it. What each of those three listeners actually manages to
+do once they are registered here is the next topic.</p>
+</div>
+    
+  </main>
+</body>
+</html>

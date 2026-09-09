@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>api and worker Compose Services — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        <a class="nav-prev" href="/background-jobs-and-hardening/containerizing-the-api/a-non-root-user-and-dockerignore.html">← A Non-Root User, and .dockerignore</a>
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/background-jobs-and-hardening/containerizing-the-api/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>api and worker Compose Services</h1>
+    <p class="lede">Same Dockerfile, same image, two docker-compose services — one running server.js, one running worker.js — mirroring how a real BullMQ deployment splits web and worker.</p>
+
+    
+
+    
+      <div class="slide-body"><p><code>docker-compose.yml</code> has held only infrastructure up to now — <code>mysql</code>,
+<code>mailpit</code>, and (earlier in this lesson) <code>redis</code>. Week 6 adds two more
+services, both built from the Dockerfile above, that finally run the app
+itself:</p>
+<pre><code class="hljs language-yaml"><span class="hljs-comment"># Figure 6.21: docker-compose.yml (excerpt)</span>
+<span class="hljs-attr">services:</span>
+  <span class="hljs-attr">api:</span>
+    <span class="hljs-attr">build:</span> <span class="hljs-string">.</span>
+    <span class="hljs-attr">ports:</span> [<span class="hljs-string">&#x27;3000:3000&#x27;</span>]
+    <span class="hljs-attr">environment:</span>
+      <span class="hljs-attr">DATABASE_URL:</span> <span class="hljs-string">mysql://root:root@mysql:3306/support_desk</span>
+      <span class="hljs-attr">REDIS_HOST:</span> <span class="hljs-string">redis</span>
+      <span class="hljs-attr">MAIL_HOST:</span> <span class="hljs-string">mailpit</span>
+    <span class="hljs-attr">depends_on:</span> [<span class="hljs-string">mysql</span>, <span class="hljs-string">redis</span>, <span class="hljs-string">mailpit</span>]
+
+  <span class="hljs-attr">worker:</span>
+    <span class="hljs-attr">build:</span> <span class="hljs-string">.</span>
+    <span class="hljs-attr">command:</span> [<span class="hljs-string">&#x27;node&#x27;</span>, <span class="hljs-string">&#x27;src/worker.js&#x27;</span>]
+    <span class="hljs-attr">environment:</span>
+      <span class="hljs-attr">DATABASE_URL:</span> <span class="hljs-string">mysql://root:root@mysql:3306/support_desk</span>
+      <span class="hljs-attr">REDIS_HOST:</span> <span class="hljs-string">redis</span>
+      <span class="hljs-attr">MAIL_HOST:</span> <span class="hljs-string">mailpit</span>
+    <span class="hljs-attr">depends_on:</span> [<span class="hljs-string">mysql</span>, <span class="hljs-string">redis</span>, <span class="hljs-string">mailpit</span>]
+</code></pre>
+<p>Both <code>build: .</code> from the exact same Dockerfile — Compose builds the image
+once and reuses it for both services, since neither <code>Dockerfile</code> nor build
+context differs between them. <code>worker</code> just overrides <code>command</code> to run
+<code>src/worker.js</code> instead of the image's default <code>CMD</code> (<code>src/server.js</code>) —
+this <em>is</em> the queue/worker split from earlier in this lesson, made concrete
+as two containers instead of two terminals running <code>npm run dev</code> / <code>npm run worker</code> on the host.</p>
+<p>The environment variables point at <code>mysql</code>/<code>redis</code>/<code>mailpit</code> — the other
+services' own names — rather than <code>localhost</code>: inside Compose's network,
+each service reaches another by its service name, the same way
+<code>docker-compose.yml</code>'s existing services always have. <code>depends_on</code> only
+waits for a container to have <em>started</em>, not for MySQL to actually be ready
+to accept connections yet — a genuinely cold <code>docker compose up</code> may need
+<code>docker compose restart api worker</code> once if either wins that race; <code>env.js</code>
+still fails fast with a clear error rather than hanging silently either way.</p>
+</div>
+    
+  </main>
+</body>
+</html>

@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Rate Limiting — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        <a class="nav-prev" href="/background-jobs-and-hardening/hardening-the-api/cors.html">← CORS</a>
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/background-jobs-and-hardening/hardening-the-api/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        <a class="nav-next" href="/background-jobs-and-hardening/hardening-the-api/request-logging.html">Request Logging →</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>Rate Limiting</h1>
+    <p class="lede">Two express-rate-limit instances — a generous one on every route, a tight one on /auth — the same idea as Laravel&#39;s throttle middleware.</p>
+
+    
+
+    
+      <div class="slide-body"><p>If you've used Laravel's <code>throttle</code> middleware, <code>express-rate-limit</code> is the
+same idea: cap how many requests one client can make in a time window,
+reject the rest with a <code>429 Too Many Requests</code> until the window resets. This
+project uses two separately-configured limiters rather than one blanket
+rule, because &quot;how many requests is too many&quot; is genuinely different for
+different routes:</p>
+<pre><code class="hljs language-js"><span class="hljs-comment">// Figure 6.16: two limiters (src/middleware/rateLimiter.js)</span>
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">const</span> generalLimiter = <span class="hljs-title function_">rateLimit</span>({
+  <span class="hljs-attr">windowMs</span>: <span class="hljs-number">15</span> * <span class="hljs-number">60</span> * <span class="hljs-number">1000</span>,
+  <span class="hljs-attr">limit</span>: <span class="hljs-number">300</span>,
+  <span class="hljs-attr">standardHeaders</span>: <span class="hljs-literal">true</span>,
+  <span class="hljs-attr">legacyHeaders</span>: <span class="hljs-literal">false</span>,
+});
+
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">const</span> authLimiter = <span class="hljs-title function_">rateLimit</span>({
+  <span class="hljs-attr">windowMs</span>: <span class="hljs-number">15</span> * <span class="hljs-number">60</span> * <span class="hljs-number">1000</span>,
+  <span class="hljs-attr">limit</span>: <span class="hljs-number">10</span>,
+  <span class="hljs-attr">standardHeaders</span>: <span class="hljs-literal">true</span>,
+  <span class="hljs-attr">legacyHeaders</span>: <span class="hljs-literal">false</span>,
+});
+</code></pre>
+<p><code>generalLimiter</code> is a generous backstop against something going seriously
+wrong — a runaway client, a scraper — applied to every route in <code>app.js</code>,
+right alongside <code>helmet</code>/<code>cors</code>. <code>authLimiter</code> is deliberately far tighter,
+and applied only to <code>/auth/register</code> and <code>/auth/login</code>:</p>
+<pre><code class="hljs language-js"><span class="hljs-comment">// Figure 6.17: routes/auth.routes.js</span>
+router.<span class="hljs-title function_">post</span>(<span class="hljs-string">&#x27;/register&#x27;</span>, authLimiter, <span class="hljs-title function_">validate</span>({ <span class="hljs-attr">body</span>: registerSchema }), authController.<span class="hljs-property">register</span>);
+router.<span class="hljs-title function_">post</span>(<span class="hljs-string">&#x27;/login&#x27;</span>, authLimiter, <span class="hljs-title function_">validate</span>({ <span class="hljs-attr">body</span>: loginSchema }), authController.<span class="hljs-property">login</span>);
+</code></pre>
+<p>Login and register are the one place in this API where hammering an
+endpoint can actually profit an attacker — credential stuffing, brute-forcing
+a password — in a way that requesting the ticket list too often never does.
+Ten attempts per fifteen minutes is tight enough to make that impractical
+without locking out a real user who just mistyped their password a couple of
+times. <code>standardHeaders: true</code> is what put the <code>RateLimit-*</code> headers you'd
+see on any response — <code>RateLimit-Limit</code>, <code>RateLimit-Remaining</code> — there for a
+client to actually see how close it is to being cut off, rather than finding
+out only once it gets a <code>429</code>.</p>
+</div>
+    
+  </main>
+</body>
+</html>

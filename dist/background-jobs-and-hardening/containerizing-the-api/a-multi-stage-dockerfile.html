@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>A Multi-Stage Dockerfile — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        <a class="nav-prev" href="/background-jobs-and-hardening/hardening-the-api/request-logging.html">← Request Logging</a>
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/background-jobs-and-hardening/containerizing-the-api/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        <a class="nav-next" href="/background-jobs-and-hardening/containerizing-the-api/a-non-root-user-and-dockerignore.html">A Non-Root User, and .dockerignore →</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>A Multi-Stage Dockerfile</h1>
+    <p class="lede">Why generating the Prisma client needs devDependencies, and npm prune&#39;s trick for keeping the generated client while still shipping a lean image.</p>
+
+    
+
+    
+      <div class="slide-body"><p>The API's first Dockerfile — Weeks 1–5 only ever containerized
+<em>infrastructure</em> (MySQL, Mailpit), never the app itself, precisely because a
+fast host-side edit/reload loop matters more while it's under active
+development than a production-shaped image does. Week 6 is where that stops
+being true: there's now a worker process to run alongside the API, and
+that's the natural point to show what running this &quot;for real&quot; looks like.</p>
+<pre><code class="hljs language-dockerfile"><span class="hljs-comment"># Figure 6.19: Dockerfile</span>
+<span class="hljs-keyword">FROM</span> node:<span class="hljs-number">22</span>-alpine AS deps
+<span class="hljs-keyword">WORKDIR</span><span class="language-bash"> /app</span>
+<span class="hljs-keyword">COPY</span><span class="language-bash"> package.json package-lock.json ./</span>
+<span class="hljs-keyword">COPY</span><span class="language-bash"> prisma ./prisma</span>
+<span class="hljs-keyword">RUN</span><span class="language-bash"> npm ci</span>
+
+<span class="hljs-keyword">FROM</span> node:<span class="hljs-number">22</span>-alpine AS production
+<span class="hljs-keyword">WORKDIR</span><span class="language-bash"> /app</span>
+<span class="hljs-keyword">ENV</span> NODE_ENV=production
+
+<span class="hljs-keyword">COPY</span><span class="language-bash"> package.json package-lock.json ./</span>
+<span class="hljs-keyword">COPY</span><span class="language-bash"> --from=deps /app/node_modules ./node_modules</span>
+<span class="hljs-keyword">RUN</span><span class="language-bash"> npm prune --omit=dev</span>
+
+<span class="hljs-keyword">COPY</span><span class="language-bash"> prisma ./prisma</span>
+<span class="hljs-keyword">COPY</span><span class="language-bash"> src ./src</span>
+
+<span class="hljs-keyword">USER</span> node
+<span class="hljs-keyword">EXPOSE</span> <span class="hljs-number">3000</span>
+<span class="hljs-keyword">CMD</span><span class="language-bash"> [<span class="hljs-string">&quot;node&quot;</span>, <span class="hljs-string">&quot;src/server.js&quot;</span>]</span>
+</code></pre>
+<p>Two stages, for a reason specific to Prisma: <code>package.json</code>'s <code>postinstall</code>
+script runs <code>prisma generate</code>, which needs the <code>prisma</code> CLI — a
+<em>dev</em>Dependency — and <code>prisma/schema.prisma</code> to generate a client against.
+A plain <code>npm ci --omit=dev</code> in one stage would skip installing <code>prisma</code>
+entirely, and <code>postinstall</code> would fail. The <code>deps</code> stage runs a full
+<code>npm ci</code> (every dependency) purely to produce a <code>node_modules</code> with the
+generated client sitting inside it; the <code>production</code> stage copies that whole
+<code>node_modules</code> over, then <code>npm prune --omit=dev</code> strips out everything
+listed under <code>devDependencies</code> (<code>prisma</code>, <code>jest</code>, <code>supertest</code>, ...) —
+leaving the runtime dependency <code>@prisma/client</code> and the query engine
+<code>prisma generate</code> already produced untouched, since neither is itself a
+devDependency being pruned. The result: a final image with the same
+dev-dependency-free <code>node_modules</code> a plain <code>npm ci --omit=dev</code> would give,
+without ever needing the <code>prisma</code> CLI present in the stage that actually
+ships.</p>
+</div>
+    
+  </main>
+</body>
+</html>

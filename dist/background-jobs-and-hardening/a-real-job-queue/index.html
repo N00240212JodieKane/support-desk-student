@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>A Real Job Queue — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/background-jobs-and-hardening/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>A Real Job Queue</h1>
+    <p class="lede">Why the SLA-breach scan runs on BullMQ + Redis instead of a bare setInterval, and the queue/worker split that comes with it.</p>
+
+    
+      <ul class="listing">
+        
+          <li>
+            <a href="/background-jobs-and-hardening/a-real-job-queue/why-not-a-bare-timer.html">Why Not a Bare Timer?</a>
+            <p>The SLA monitor from CLAUDE.md&#39;s domain events — and why setInterval isn&#39;t good enough to build it on.</p>
+          </li>
+        
+          <li>
+            <a href="/background-jobs-and-hardening/a-real-job-queue/queues-and-workers.html">Queues and Workers</a>
+            <p>BullMQ&#39;s two halves — a Queue that adds jobs, a Worker that processes them — and why splitting them into separate processes is the whole point.</p>
+          </li>
+        
+          <li>
+            <a href="/background-jobs-and-hardening/a-real-job-queue/a-shared-redis-connection.html">A Shared Redis Connection</a>
+            <p>config/redis.js — the ioredis connection both the Queue (API process) and the Worker (worker process) are built on.</p>
+          </li>
+        
+      </ul>
+    
+
+    
+  </main>
+</body>
+</html>

@@ -1,8 +1,11 @@
-# Week 2: local infrastructure only (MySQL). Mailpit (dev email) joins in
-# Week 5, Redis in Week 6, and the app itself (`api`/`worker` services) isn't
-# containerized until Week 6 either — see "API containerization" and "Dev
-# email" in PLAN.md's Key decisions, and "Hosting" in TUTORIAL.md. Until then
-# the app runs on the host via `npm run dev`.
+# Week 2 added MySQL, Week 5 added Mailpit (dev email). Week 6 adds Redis
+# (BullMQ's backing store — see "Background jobs" in PLAN.md's Key
+# decisions) plus `api`/`worker`, the first time the app itself runs in a
+# container rather than only its infrastructure — see "API
+# containerization" in PLAN.md's Key decisions and the Dockerfile these two
+# services build from. `npm run dev`/`npm run worker` on the host stays how
+# you iterate day to day; `docker compose up` is "what running this for
+# real looks like."
 services:
   mysql:
     image: mysql:8.0
@@ -24,6 +27,61 @@ services:
     ports:
       - '1025:1025' # SMTP — nodemailer's transport target
       - '8025:8025' # web UI — http://localhost:8025
+
+  # BullMQ's backing store (config/redis.js) — the sla-scan queue's jobs
+  # live here, not in MySQL. See "Background jobs" in PLAN.md's Key
+  # decisions for why BullMQ + Redis over a bare node-cron timer.
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - '6379:6379'
+
+  # The API, built from the project's own Dockerfile — see "API
+  # containerization" in PLAN.md's Key decisions. `depends_on` only waits
+  # for each container to have *started*, not for MySQL/Redis to actually be
+  # ready to accept connections — env.js still fails fast if DATABASE_URL is
+  # wrong, but a genuinely cold `docker compose up` may need a restart
+  # (`docker compose restart api`) if the api container wins that race.
+  api:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      - mysql
+      - redis
+      - mailpit
+    ports:
+      - '3000:3000'
+    environment:
+      PORT: 3000
+      DATABASE_URL: mysql://root:root@mysql:3306/support_desk
+      JWT_SECRET: ${JWT_SECRET:-replace-with-a-long-random-string}
+      MAIL_HOST: mailpit
+      MAIL_PORT: 1025
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+
+  # Same image as `api`, same environment, different command — this is the
+  # separate process PLAN.md's "API containerization" is about: `api`
+  # schedules the repeatable sla-scan job (src/server.js), `worker` is the
+  # only process that ever actually runs it (src/worker.js). Neither knows
+  # the other is a container instead of a plain host process — both just
+  # talk to `redis`/`mysql`/`mailpit` by service name, same as `api` does.
+  worker:
+    build: .
+    command: ['node', 'src/worker.js']
+    restart: unless-stopped
+    depends_on:
+      - mysql
+      - redis
+      - mailpit
+    environment:
+      DATABASE_URL: mysql://root:root@mysql:3306/support_desk
+      JWT_SECRET: ${JWT_SECRET:-replace-with-a-long-random-string}
+      MAIL_HOST: mailpit
+      MAIL_PORT: 1025
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
 
 volumes:
   mysql-data:

@@ -59,6 +59,14 @@ model Ticket {
   assignedAgentId Int?
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
+  // Week 6: set once by the BullMQ SLA-scan job (jobs/slaScan.job.js) the
+  // first time it finds this ticket open past the SLA threshold — null
+  // means "not yet breached". This is what makes the scan idempotent: a
+  // ticket the job already escalated is never picked up again on the next
+  // run, even though it's still `open`. Deliberately its own column, not a
+  // new TicketStatus value — SLA breach is an escalation flag layered on
+  // top of the customer-facing workflow status, not a replacement for it.
+  slaBreachedAt   DateTime?
 
   customer      User            @relation("CustomerTickets", fields: [customerId], references: [id])
   assignedAgent User?           @relation("AssignedTickets", fields: [assignedAgentId], references: [id])

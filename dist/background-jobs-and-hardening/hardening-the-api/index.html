@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Hardening the API — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/background-jobs-and-hardening/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>Hardening the API</h1>
+    <p class="lede">Four middleware additions to app.js — security headers, CORS, rate limiting, and request logging — none of them specific to this domain.</p>
+
+    
+      <ul class="listing">
+        
+          <li>
+            <a href="/background-jobs-and-hardening/hardening-the-api/security-headers-with-helmet.html">Security Headers with Helmet</a>
+            <p>helmet() sets over a dozen safe-default response headers in one line — registered first, so every response gets them.</p>
+          </li>
+        
+          <li>
+            <a href="/background-jobs-and-hardening/hardening-the-api/cors.html">CORS</a>
+            <p>Browsers block cross-origin requests by default — the cors middleware is what lets a frontend on a different origin actually call this API.</p>
+          </li>
+        
+          <li>
+            <a href="/background-jobs-and-hardening/hardening-the-api/rate-limiting.html">Rate Limiting</a>
+            <p>Two express-rate-limit instances — a generous one on every route, a tight one on /auth — the same idea as Laravel&#39;s throttle middleware.</p>
+          </li>
+        
+          <li>
+            <a href="/background-jobs-and-hardening/hardening-the-api/request-logging.html">Request Logging</a>
+            <p>morgan(&#39;dev&#39;) prints one line per request/response — the access log a running API needs and gets nothing like for free.</p>
+          </li>
+        
+      </ul>
+    
+
+    
+  </main>
+</body>
+</html>

@@ -71,3 +71,31 @@ domainEvents.on(EVENTS.TICKET_STATUS_CHANGED, (ticket, previousStatus) => {
     console.error('notifyRealtime listener failed for ticket.status_changed:', err);
   }
 });
+
+// ticket.sla_breached -> the assigned agent, or every connected agent if
+// still unassigned. Registered here for symmetry with the other events, but
+// this is the one that never actually fires in practice: this event is
+// only ever emitted from jobs/slaScan.job.js, which runs in the separate
+// worker process (src/worker.js) — a process that never calls initSocket(),
+// so getIO() here returns undefined and every push below is skipped, same
+// as it already is for a test importing app.js directly (see getIO()'s own
+// comment in config/socket.js). The in-app and email channels don't have
+// this problem because Prisma/nodemailer both talk to shared infrastructure
+// (MySQL, Mailpit) any process can reach — Socket.IO's connected clients,
+// by contrast, live only in the API process's memory. A production setup
+// would add Socket.IO's Redis adapter so any process can broadcast to any
+// connected client; out of scope here, but worth knowing this is why.
+domainEvents.on(EVENTS.TICKET_SLA_BREACHED, (ticket) => {
+  try {
+    const io = getIO();
+    if (!io) return;
+
+    if (ticket.assignedAgentId) {
+      io.to(`user:${ticket.assignedAgentId}`).emit(EVENTS.TICKET_SLA_BREACHED, ticket);
+    } else {
+      io.to('role:agent').emit(EVENTS.TICKET_SLA_BREACHED, ticket);
+    }
+  } catch (err) {
+    console.error('notifyRealtime listener failed for ticket.sla_breached:', err);
+  }
+});

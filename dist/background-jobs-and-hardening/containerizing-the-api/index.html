@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Containerizing the API — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/background-jobs-and-hardening/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>Containerizing the API</h1>
+    <p class="lede">A production-style Dockerfile, and the api/worker docker-compose services built from it — the app&#39;s own infrastructure, for the first time.</p>
+
+    
+      <ul class="listing">
+        
+          <li>
+            <a href="/background-jobs-and-hardening/containerizing-the-api/a-multi-stage-dockerfile.html">A Multi-Stage Dockerfile</a>
+            <p>Why generating the Prisma client needs devDependencies, and npm prune&#39;s trick for keeping the generated client while still shipping a lean image.</p>
+          </li>
+        
+          <li>
+            <a href="/background-jobs-and-hardening/containerizing-the-api/a-non-root-user-and-dockerignore.html">A Non-Root User, and .dockerignore</a>
+            <p>USER node costs one line because the official image already ships the user; .dockerignore keeps the build context to what the image actually needs.</p>
+          </li>
+        
+          <li>
+            <a href="/background-jobs-and-hardening/containerizing-the-api/api-and-worker-compose-services.html">api and worker Compose Services</a>
+            <p>Same Dockerfile, same image, two docker-compose services — one running server.js, one running worker.js — mirroring how a real BullMQ deployment splits web and worker.</p>
+          </li>
+        
+      </ul>
+    
+
+    
+  </main>
+</body>
+</html>

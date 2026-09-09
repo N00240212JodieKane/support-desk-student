@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Queues and Workers — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        <a class="nav-prev" href="/background-jobs-and-hardening/a-real-job-queue/why-not-a-bare-timer.html">← Why Not a Bare Timer?</a>
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/background-jobs-and-hardening/a-real-job-queue/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        <a class="nav-next" href="/background-jobs-and-hardening/a-real-job-queue/a-shared-redis-connection.html">A Shared Redis Connection →</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>Queues and Workers</h1>
+    <p class="lede">BullMQ&#39;s two halves — a Queue that adds jobs, a Worker that processes them — and why splitting them into separate processes is the whole point.</p>
+
+    
+
+    
+      <div class="slide-body"><p>BullMQ splits &quot;schedule this&quot; from &quot;do this&quot; into two separate objects, both
+backed by the same Redis instance so either one can be created in a process
+that never sees the other:</p>
+<ul>
+<li>A <strong><code>Queue</code></strong> adds jobs. Calling <code>queue.add(name, data, options)</code> writes a
+job into Redis — that call returns as soon as the write is done, whether or
+not anything is currently listening to process it.</li>
+<li>A <strong><code>Worker</code></strong> processes jobs. <code>new Worker(queueName, processorFn, options)</code>
+connects to that same Redis instance, watches for jobs on that queue, and
+calls <code>processorFn</code> for each one as it arrives.</li>
+</ul>
+<p>Nothing requires the <code>Queue</code> and the <code>Worker</code> to live in the same process —
+in fact the usual reason to reach for BullMQ at all is so they <em>don't</em>. This
+project's SLA monitor puts the <code>Queue</code> half in the API process (it just needs
+to say &quot;run a scan periodically&quot;) and the <code>Worker</code> half in a brand new
+process this lesson introduces, <code>src/worker.js</code>, started separately with its
+own <code>npm run worker</code> script. If the worker process is down, jobs still queue
+up in Redis and get picked up the moment it comes back — the crash-loses-
+everything problem from the previous slide, solved by not keeping any of
+this state in a process's memory in the first place.</p>
+<p>BullMQ also handles retries for you: a <code>Worker</code>'s processor function that
+throws gets the job retried automatically, with a configurable delay between
+attempts (<strong>backoff</strong>) — precisely the &quot;silent failure&quot; problem a bare
+<code>setInterval</code> has no answer for. The next slide sets up the one thing both
+halves need before either can be created: a connection to Redis itself.</p>
+</div>
+    
+  </main>
+</body>
+</html>

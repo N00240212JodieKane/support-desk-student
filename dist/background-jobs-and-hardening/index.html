@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Background Jobs &amp; Hardening — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>Background Jobs &amp; Hardening</h1>
+    <p class="lede">A BullMQ-scheduled SLA-breach scan running in its own worker process, plus the security/logging middleware and Dockerfile that make the API deployable for real.</p>
+
+    
+      <ul class="listing">
+        
+          <li>
+            <a href="/background-jobs-and-hardening/a-real-job-queue/index.html">A Real Job Queue</a>
+            <p>Why the SLA-breach scan runs on BullMQ + Redis instead of a bare setInterval, and the queue/worker split that comes with it.</p>
+          </li>
+        
+          <li>
+            <a href="/background-jobs-and-hardening/the-sla-scan-job/index.html">The SLA-Scan Job</a>
+            <p>Modeling escalation state, the escalateOverdueTickets service function, and the queue/worker pair that runs it on a schedule.</p>
+          </li>
+        
+          <li>
+            <a href="/background-jobs-and-hardening/sla-notifications-across-processes/index.html">SLA Notifications Across Processes</a>
+            <p>The same three Week 5 listeners handle ticket.sla_breached — and one of them quietly can&#39;t, because of where this event gets emitted from.</p>
+          </li>
+        
+          <li>
+            <a href="/background-jobs-and-hardening/testing-the-job/index.html">Testing the Job</a>
+            <p>Fake timers for a threshold that depends on &#39;now&#39;, and why the job processor gets its own thin test with the service mocked out entirely.</p>
+          </li>
+        
+          <li>
+            <a href="/background-jobs-and-hardening/hardening-the-api/index.html">Hardening the API</a>
+            <p>Four middleware additions to app.js — security headers, CORS, rate limiting, and request logging — none of them specific to this domain.</p>
+          </li>
+        
+          <li>
+            <a href="/background-jobs-and-hardening/containerizing-the-api/index.html">Containerizing the API</a>
+            <p>A production-style Dockerfile, and the api/worker docker-compose services built from it — the app&#39;s own infrastructure, for the first time.</p>
+          </li>
+        
+      </ul>
+    
+
+    
+  </main>
+</body>
+</html>

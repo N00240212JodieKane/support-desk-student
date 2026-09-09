@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>The Escalation Service Function — Support Desk API</title>
+  <link rel="stylesheet" href="/assets/hljs-theme.css">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="site-nav-inner">
+      <div class="nav-slot nav-slot-left">
+        <a class="nav-home" href="/index.html" aria-label="Home">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11 12 3l9 8" />
+            <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+          </svg>
+        </a>
+        <a class="nav-prev" href="/background-jobs-and-hardening/the-sla-scan-job/modeling-escalation-state.html">← Modeling Escalation State</a>
+      </div>
+      <div class="nav-slot nav-slot-center">
+        <a class="nav-up" href="/background-jobs-and-hardening/the-sla-scan-job/index.html">↑ Up</a>
+      </div>
+      <div class="nav-slot nav-slot-right">
+        <a class="nav-next" href="/background-jobs-and-hardening/the-sla-scan-job/scheduling-the-repeatable-job.html">Scheduling the Repeatable Job →</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+    <h1>The Escalation Service Function</h1>
+    <p class="lede">escalateOverdueTickets in ticket.service.js — the one write path in the project a controller never calls.</p>
+
+    
+
+    
+      <div class="slide-body"><pre><code class="hljs language-js"><span class="hljs-comment">// Figure 6.3: escalateOverdueTickets (src/services/ticket.service.js)</span>
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">const</span> <span class="hljs-title function_">escalateOverdueTickets</span> = <span class="hljs-keyword">async</span> (<span class="hljs-params">thresholdHours</span>) =&gt; {
+  <span class="hljs-keyword">const</span> cutoff = <span class="hljs-keyword">new</span> <span class="hljs-title class_">Date</span>(<span class="hljs-title class_">Date</span>.<span class="hljs-title function_">now</span>() - thresholdHours * <span class="hljs-number">60</span> * <span class="hljs-number">60</span> * <span class="hljs-number">1000</span>);
+
+  <span class="hljs-keyword">const</span> overdue = <span class="hljs-keyword">await</span> prisma.<span class="hljs-property">ticket</span>.<span class="hljs-title function_">findMany</span>({
+    <span class="hljs-attr">where</span>: { <span class="hljs-attr">status</span>: <span class="hljs-string">&#x27;open&#x27;</span>, <span class="hljs-attr">createdAt</span>: { <span class="hljs-attr">lte</span>: cutoff }, <span class="hljs-attr">slaBreachedAt</span>: <span class="hljs-literal">null</span> },
+    <span class="hljs-attr">select</span>: { <span class="hljs-attr">id</span>: <span class="hljs-literal">true</span> },
+  });
+
+  <span class="hljs-keyword">for</span> (<span class="hljs-keyword">const</span> { id } <span class="hljs-keyword">of</span> overdue) {
+    <span class="hljs-keyword">const</span> ticket = <span class="hljs-keyword">await</span> prisma.<span class="hljs-property">ticket</span>.<span class="hljs-title function_">update</span>({
+      <span class="hljs-attr">where</span>: { id },
+      <span class="hljs-attr">data</span>: { <span class="hljs-attr">slaBreachedAt</span>: <span class="hljs-keyword">new</span> <span class="hljs-title class_">Date</span>() },
+      <span class="hljs-attr">include</span>: { <span class="hljs-attr">customer</span>: userSummary, <span class="hljs-attr">assignedAgent</span>: userSummary },
+    });
+
+    domainEvents.<span class="hljs-title function_">emit</span>(<span class="hljs-variable constant_">EVENTS</span>.<span class="hljs-property">TICKET_SLA_BREACHED</span>, ticket);
+  }
+
+  <span class="hljs-keyword">return</span> overdue.<span class="hljs-property">length</span>;
+};
+</code></pre>
+<p><code>slaBreachedAt: null</code> in the <code>where</code> is the idempotency guard from the
+previous slide made concrete: a ticket the scan already escalated has a
+timestamp there now, so it's excluded from every future scan, even though
+it's still <code>open</code>.</p>
+<p>Notice what's <em>not</em> different about this function compared to every other
+exported function in this file: it's <code>prisma</code> calls, a <code>where</code>/<code>data</code> shape,
+and a <code>domainEvents.emit(...)</code> at the end — the same three ingredients
+<code>createTicket</code> and <code>updateTicket</code> use. Nothing here is called from a
+controller (there's no route for it), but the service layer doesn't need to
+know or care who calls it. The next topic's job processor calls this exactly
+the way a controller calls any other service function — which is the whole
+argument for keeping business logic in services rather than controllers in
+the first place: it's reusable from callers that were never anticipated when
+the function was written.</p>
+<p>The loop runs sequentially — one ticket's update-then-emit finishes before
+the next one starts — rather than firing all the updates at once with
+<code>Promise.all</code>. There are normally only a handful of overdue tickets at any
+one time, so there's no real performance cost, and it keeps each ticket's
+escalation fully independent: one ticket's row failing to update, or one
+listener throwing further down the line, has no way to interfere with any
+other ticket's.</p>
+</div>
+    
+  </main>
+</body>
+</html>

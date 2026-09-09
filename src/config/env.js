@@ -23,6 +23,17 @@ const envSchema = z.object({
   MAIL_HOST: z.string().min(1).default('localhost'),
   MAIL_PORT: z.coerce.number().int().positive().default(1025),
   MAIL_FROM: z.string().min(1).default('Support Desk <support@example.test>'),
+  // Week 6: where BullMQ's shared connection (config/redis.js) finds Redis.
+  // Defaults match the `redis` service in docker-compose.yml.
+  REDIS_HOST: z.string().min(1).default('localhost'),
+  REDIS_PORT: z.coerce.number().int().positive().default(6379),
+  // How overdue an `open` ticket must be before jobs/slaScan.job.js
+  // escalates it, and how often the repeatable job checks — see
+  // jobs/slaScan.queue.js. The interval defaults low enough to see the job
+  // fire during a dev session; a real deployment would use something more
+  // like 15 minutes.
+  SLA_BREACH_HOURS: z.coerce.number().positive().default(24),
+  SLA_SCAN_INTERVAL_MS: z.coerce.number().int().positive().default(60_000),
 });
 
 const result = envSchema.safeParse(process.env);
