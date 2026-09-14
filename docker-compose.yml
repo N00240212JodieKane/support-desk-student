@@ -5,7 +5,7 @@
 # containerization" in PLAN.md's Key decisions and the Dockerfile these two
 # services build from. `npm run dev`/`npm run worker` on the host stays how
 # you iterate day to day; `docker compose up` is "what running this for
-# real looks like."
+# real looks like"
 services:
   mysql:
     image: mysql:8.0
