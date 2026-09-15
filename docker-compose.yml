@@ -76,6 +76,7 @@ services:
       - redis
       - mailpit
     environment:
+      PORT: 3000
       DATABASE_URL: mysql://root:root@mysql:3306/support_desk
       JWT_SECRET: ${JWT_SECRET:-replace-with-a-long-random-string}
       MAIL_HOST: mailpit
