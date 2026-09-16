@@ -16,7 +16,7 @@ COPY package.json package-lock.json ./
 COPY prisma ./prisma
 RUN npm ci
 
-# ---- production: the image actually shipped ------------------------------
+# ----production: the image actually shipped------------------------------
 FROM node:22-alpine AS production
 WORKDIR /app
 ENV NODE_ENV=production
